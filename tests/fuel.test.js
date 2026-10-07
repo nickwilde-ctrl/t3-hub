@@ -50,3 +50,22 @@ test('Wartung: unbekannt, ok, bald, fällig', () => {
   assert.equal(serviceStatus({ intervalKm: 7500, intervalMonths: 12, lastKm: 7000, lastDate: '2026-05-01' }, 14000, today).state, 'soon');
   assert.equal(serviceStatus({ intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-09-20' }, 14000, today).state, 'over');
 });
+
+import { completeFill, parseNumber } from '../js/logic/fuel.js';
+
+test('Zapfsäulen-Rechner: zwei von drei Werten reichen', () => {
+  assert.deepEqual(completeFill({ liters: 51.51, pricePerLiter: 1.709, total: NaN }), { liters: 51.51, pricePerLiter: 1.709, total: 88.03 });
+  assert.deepEqual(completeFill({ liters: 51.51, pricePerLiter: NaN, total: 88.03 }), { liters: 51.51, pricePerLiter: 1.709, total: 88.03 });
+  assert.deepEqual(completeFill({ liters: NaN, pricePerLiter: 1.709, total: 88.03 }), { liters: 51.51, pricePerLiter: 1.709, total: 88.03 });
+  assert.equal(completeFill({ liters: 40, pricePerLiter: NaN, total: NaN }), null);
+});
+
+test('deutsche Zahleneingaben', () => {
+  assert.equal(parseNumber('48,30'), 48.3);
+  assert.equal(parseNumber('1,729'), 1.729);
+  assert.equal(parseNumber('14.302', 'km'), 14302);
+  assert.equal(parseNumber('14302', 'km'), 14302);
+  assert.equal(parseNumber('1.234,5'), 1234.5);
+  assert.equal(parseNumber('1.729'), 1.729);
+  assert.ok(Number.isNaN(parseNumber('')));
+});

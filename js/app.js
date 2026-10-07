@@ -1,5 +1,5 @@
 // Einstieg: Daten laden, Navigation, Bildschirme zeichnen.
-import { state, load, onChange, currentKm, saveVehicle } from './store.js';
+import { state, load, onChange, currentKm, saveVehicle, saveItem, deleteItem } from './store.js';
 import { requestPersistence } from './db.js';
 import { fuelStats } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
@@ -8,6 +8,7 @@ import { homeView, comingSoon } from './views/home.js';
 import { vehicleCard, editVehicleSheet } from './views/vehicle.js';
 import { toast } from './views/sheet.js';
 import { readPhoto } from './photo.js';
+import { tankenView, fuelSheet, setSub } from './views/tanken.js';
 
 const TABS = [
   ['home', 'Home', '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'],
@@ -23,11 +24,11 @@ if (!TABS.some(([id]) => id === tab)) tab = 'home';
 const VIEWS = {
   home: () => homeView({ services: state.services, fuels: state.fuels, km: currentKm() }),
   wartung: () => comingSoon('Wartung und Serviceheft', '2.5', 'Intervalle mit den richtigen Werten für deinen Motor, Serviceheft und Fälligkeits-Ampel.'),
-  tanken: () => comingSoon('Tankbuch und Auswertung', '2.4', 'Tankungen eintragen, bearbeiten und löschen, dazu Verbrauch, Verbrauch je Monat und Spritpreise.'),
+  tanken: () => tankenView(state),
   touren: () => comingSoon('Touren und Kosten', '2.6', 'Echte Reisen mit zugeordneten Tankungen und sonstigen Kosten.'),
   mehr: () => vehicleCard(state.vehicle)
     + comingSoon('Backup und Import', '2.7', 'Daten als Datei sichern und deine Tankungen aus Road Trip übernehmen.')
-    + '<p class="foot">T3 Hub · Version 0.3 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.4 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -54,6 +55,22 @@ document.addEventListener('click', (e) => {
   const action = e.target.closest('[data-action]');
   if (action && action.dataset.action === 'edit-vehicle') {
     editVehicleSheet(state.vehicle, saveVehicle);
+    return;
+  }
+  const fuelOps = { save: (f) => saveItem('fuels', f), remove: (id) => deleteItem('fuels', id), currentKm: currentKm() };
+  if (action && action.dataset.action === 'add-fuel') {
+    fuelSheet(state, null, fuelOps);
+    return;
+  }
+  const editFuel = e.target.closest('[data-edit-fuel]');
+  if (editFuel) {
+    fuelSheet(state, state.fuels.find((f) => f.id === editFuel.dataset.editFuel), fuelOps);
+    return;
+  }
+  const subBtn = e.target.closest('[data-sub]');
+  if (subBtn) {
+    setSub(subBtn.dataset.sub);
+    render();
     return;
   }
   const b = e.target.closest('[data-tab]');

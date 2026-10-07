@@ -91,3 +91,29 @@ export function consumptionByMonth(fuels) {
 export function cost(f) {
   return f.liters * f.pricePerLiter;
 }
+
+/**
+ * An der Zapfsäule stehen Liter, Preis pro Liter und Betrag. Zwei davon reichen, der dritte wird berechnet.
+ * Gibt { liters, pricePerLiter, total } zurück oder null, wenn weniger als zwei Werte vorhanden sind.
+ */
+export function completeFill({ liters, pricePerLiter, total }) {
+  const ok = (n) => typeof n === 'number' && Number.isFinite(n) && n > 0;
+  if (ok(liters) && ok(pricePerLiter)) return { liters, pricePerLiter, total: round(liters * pricePerLiter, 2) };
+  if (ok(liters) && ok(total)) return { liters, pricePerLiter: round(total / liters, 3), total };
+  if (ok(pricePerLiter) && ok(total)) return { liters: round(total / pricePerLiter, 2), pricePerLiter, total };
+  return null;
+}
+
+const round = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
+
+/**
+ * Liest eine deutsche Zahleneingabe. Leer → NaN.
+ * kind 'decimal' (Liter, Preise): „48,30“, „1,729“ und auch „1.729“ (Punkt als Komma).
+ * kind 'km' (Kilometerstand): Punkte sind Tausendertrenner, „14.302“ → 14302.
+ */
+export function parseNumber(text, kind = 'decimal') {
+  const s = String(text ?? '').trim().replace(/\s/g, '');
+  if (!s) return NaN;
+  if (kind === 'km') return Number(s.replace(/\./g, '').replace(',', '.'));
+  return Number(s.includes(',') ? s.replace(/\./g, '').replace(',', '.') : s);
+}

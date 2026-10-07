@@ -1,5 +1,7 @@
 import { de, esc, fmtDate, fmtMonthYear } from '../format.js';
 import { serviceStatus } from '../logic/services.js';
+import { fuelStats } from '../logic/fuel.js';
+import { lineChart } from './charts.js';
 
 const PILL = { ok: 'OK', soon: 'Bald', over: 'Fällig', unknown: 'Offen' };
 const CLS = { ok: 'ok', soon: 'soon', over: 'over', unknown: 'unk' };
@@ -27,14 +29,17 @@ export function homeView({ services, fuels, km }) {
     .slice(0, 3)
     .map(({ s, st }) => `<div class="row"><div class="t">${esc(s.name)}</div><div class="s">${statusText(st)}</div><div class="r">${pill(st.state)}</div></div>`)
     .join('');
-  const last = [...fuels].sort((a, b) => b.km - a.km)[0];
+  const s = fuelStats(fuels);
+  const last = s.rows[s.rows.length - 1];
+  const recent = s.series.slice(-20).map((r) => ({ date: r.date, y: r.cons, tip: `<b>${de(r.cons, 1)} l/100 km</b><br>${fmtDate(r.date)}` }));
   return `
   <section class="sec"><div class="sec-head"><h2>Als Nächstes fällig</h2></div>
     <div class="card list">${rows}</div></section>
-  <section class="sec"><div class="sec-head"><h2>Tankbuch</h2></div>
+  <section class="sec"><div class="sec-head"><h2>Tanken</h2><button type="button" class="add" data-action="add-fuel">+ Tankung</button></div>
     ${last
-      ? `<div class="card list"><div class="row"><div class="t">Letzte Tankung</div><div class="s">${fmtDate(last.date)} · ${de(last.liters, 1)} l</div></div></div>`
-      : `<div class="card soon-card"><h3>Noch keine Tankungen</h3><p>Deine Daten aus Road Trip kannst du ab Schritt 2.7 mit einem Klick übernehmen. Tankungen eintragen kommt in Schritt 2.4.</p></div>`}
+      ? `<div class="card list"><button type="button" class="row row-btn" data-tab="tanken"><div class="t">Letzte Tankung</div><div class="s">${fmtDate(last.date)} · ${de(last.liters, 1)} l · ${de(last.pricePerLiter, 3)} €/l</div><div class="r"><span class="num big">${de(last.liters * last.pricePerLiter, 0)} €</span></div></button></div>
+         ${recent.length >= 2 ? `<div class="card pad">${lineChart('home-cons', recent, { label: 'Verbrauch der letzten Volltankungen', step: 2, dec: 0, avg: s.avgConsumption, avgDec: 1 })}<p class="hint">Verbrauch der letzten ${recent.length} Volltankungen in l/100 km</p></div>` : ''}`
+      : `<div class="card soon-card"><h3>Noch keine Tankungen</h3><p>Trag deine erste Tankung ein. Deine bisherigen Daten aus Road Trip kannst du ab Schritt 2.7 übernehmen.</p></div>`}
   </section>`;
 }
 

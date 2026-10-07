@@ -48,6 +48,23 @@ export async function saveVehicle(vehicle) {
   emit();
 }
 
+/** Speichert einen Datensatz (neu oder geändert) in einer Liste des aktiven Fahrzeugs. */
+export async function saveItem(name, item) {
+  const row = { ...item, id: item.id || db.newId(), vehicleId: state.vehicle.id };
+  await db.put(name, row);
+  const list = state[name];
+  const i = list.findIndex((x) => x.id === row.id);
+  if (i >= 0) list[i] = row; else list.push(row);
+  emit();
+  return row;
+}
+
+export async function deleteItem(name, id) {
+  await db.remove(name, id);
+  state[name] = state[name].filter((x) => x.id !== id);
+  emit();
+}
+
 /** Aktueller Kilometerstand: der höchste bekannte Wert aus allen Einträgen. */
 export function currentKm() {
   return Math.max(
