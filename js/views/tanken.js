@@ -3,6 +3,7 @@ import { de, eur, esc, fmtDate, todayIso } from '../format.js';
 import { fuelStats, consumptionByMonth, withConsumption, completeFill, parseNumber } from '../logic/fuel.js';
 import { lineChart, barChart, MONTHS } from './charts.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
+import { runningTour } from '../logic/costs.js';
 
 let sub = 'auswertung';
 export const setSub = (s) => { sub = s; };
@@ -69,9 +70,10 @@ function tankbuch(state) {
 /** Formular für eine neue oder bestehende Tankung. */
 export function fuelSheet(state, fuel, { save, remove, currentKm }) {
   const edit = !!fuel;
-  const f = fuel || { date: todayIso(), km: '', liters: '', pricePerLiter: '', full: true, tourId: null, note: '' };
+  const running = runningTour(state.tours, todayIso());
+  const f = fuel || { date: todayIso(), km: '', liters: '', pricePerLiter: '', full: true, tourId: running ? running.id : null, note: '' };
   const num = (n, d) => (n === '' || n == null ? '' : n.toLocaleString('de-DE', { maximumFractionDigits: d, useGrouping: false }));
-  const tours = state.tours.filter((t) => !t.endKm || (edit ? true : t.endKm >= currentKm));
+  const tours = [...state.tours].sort((a, b) => b.from.localeCompare(a.from));
   const tourSelect = state.tours.length
     ? `<div class="field"><label for="f-tour">Zu Tour</label><select id="f-tour" name="tour"><option value="">Keine Tour</option>${tours.map((t) => `<option value="${t.id}" ${t.id === f.tourId ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></div>`
     : '';

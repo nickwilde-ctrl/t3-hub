@@ -70,6 +70,17 @@ export async function saveItem(name, item) {
   return row;
 }
 
+/** Mehrere Datensätze auf einmal speichern (z. B. Tankungen einer Tour zuordnen). */
+export async function saveMany(name, items) {
+  const rows = items.map((item) => ({ ...item, id: item.id || db.newId(), vehicleId: state.vehicle.id }));
+  await db.putMany(name, rows);
+  for (const row of rows) {
+    const i = state[name].findIndex((x) => x.id === row.id);
+    if (i >= 0) state[name][i] = row; else state[name].push(row);
+  }
+  emit();
+}
+
 export async function deleteItem(name, id) {
   await db.remove(name, id);
   state[name] = state[name].filter((x) => x.id !== id);

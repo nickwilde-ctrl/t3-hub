@@ -1,5 +1,5 @@
 // Einstieg: Daten laden, Navigation, Bildschirme zeichnen.
-import { state, load, onChange, currentKm, saveVehicle, saveItem, deleteItem, services } from './store.js';
+import { state, load, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, services } from './store.js';
 import { requestPersistence } from './db.js';
 import { fuelStats } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
@@ -10,6 +10,7 @@ import { toast } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
 import { wartungView, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
+import { tourenView, tourSheet, costCard, setCostYear } from './views/touren.js';
 
 const TABS = [
   ['home', 'Home', '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'],
@@ -26,10 +27,10 @@ const VIEWS = {
   home: () => homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
   wartung: () => wartungView(services(), state.log, currentKm()),
   tanken: () => tankenView(state),
-  touren: () => comingSoon('Touren und Kosten', '2.6', 'Echte Reisen mit zugeordneten Tankungen und sonstigen Kosten.'),
-  mehr: () => vehicleCard(state.vehicle)
+  touren: () => tourenView(state, currentKm()),
+  mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle)
     + comingSoon('Backup und Import', '2.7', 'Daten als Datei sichern und deine Tankungen aus Road Trip übernehmen.')
-    + '<p class="foot">T3 Hub · Version 0.5 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.6 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -86,6 +87,17 @@ document.addEventListener('click', (e) => {
   if (action && action.dataset.action === 'add-log') { logSheet(null, wOps); return; }
   const editLog = e.target.closest('[data-edit-log]');
   if (editLog) { logSheet(state.log.find((x) => x.id === editLog.dataset.editLog), wOps); return; }
+  const tOps = {
+    km: currentKm(),
+    saveTour: (x) => saveItem('tours', x),
+    removeTour: (id) => deleteItem('tours', id),
+    saveFuels: (list) => saveMany('fuels', list),
+  };
+  if (action && action.dataset.action === 'add-tour') { tourSheet(state, null, tOps); return; }
+  const editTour = e.target.closest('[data-edit-tour]');
+  if (editTour) { tourSheet(state, state.tours.find((x) => x.id === editTour.dataset.editTour), tOps); return; }
+  const yearBtn = e.target.closest('[data-cost-year]');
+  if (yearBtn) { setCostYear(yearBtn.dataset.costYear); render(); return; }
   const subBtn = e.target.closest('[data-sub]');
   if (subBtn) {
     setSub(subBtn.dataset.sub);

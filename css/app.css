@@ -197,3 +197,11 @@ img{max-width:100%}
 .pane{display:grid;gap:14px}
 .check{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start;font-size:14px;color:var(--fg)}
 .check input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--amber)}
+.tour-card{width:100%;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer;display:grid}
+.tour-card .row{border-top:1px solid var(--hair)}
+.tour-card .row:first-child{border-top:0}
+.tour-name{font-family:var(--f-display);font-size:21px;font-weight:600}
+.tag.live{color:var(--amber);border-color:var(--amber)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip-btn{background:var(--panel);border:1px solid var(--hair);color:var(--muted);border-radius:999px;padding:6px 14px;font:600 13px var(--f-body);cursor:pointer;font-variant-numeric:tabular-nums}
+.chip-btn[aria-pressed="true"]{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
