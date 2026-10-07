@@ -35,4 +35,5 @@ Bei jeder Änderung an App-Dateien die `VERSION` in `sw.js` erhöhen, damit Ger�
 
 ## Stand
 
-Version 0.2 – Grundgerüst. Plan und Entscheidungen liegen im Claude-Projekt „Vw T3 App“.
+Version 0.8 – alle Bereiche von Version 1 sind gebaut, Test auf dem iPhone steht aus.
+Live: https://nickwilde-ctrl.github.io/t3-hub/ Plan und Entscheidungen liegen im Claude-Projekt „Vw T3 App“.

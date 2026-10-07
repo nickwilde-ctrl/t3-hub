@@ -12,6 +12,7 @@ import { tankenView, fuelSheet, setSub } from './views/tanken.js';
 import { wartungView, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
 import { tourenView, tourSheet, costCard, setCostYear } from './views/touren.js';
 import { dataCard, backupReminder, createBackup, restoreFromFile, roadTripFromFile } from './views/daten.js';
+import { installCard } from './views/install.js';
 
 const TABS = [
   ['home', 'Home', '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'],
@@ -31,7 +32,8 @@ const VIEWS = {
   touren: () => tourenView(state, currentKm()),
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle)
     + dataCard(state)
-    + '<p class="foot">T3 Hub · Version 0.7 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + installCard()
+    + '<p class="foot">T3 Hub · Version 0.8 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
