@@ -2,7 +2,7 @@
 // Eigene Dateien: erst aus dem Netz (damit Updates sofort ankommen), bei Funkloch aus dem Speicher.
 // Schriften von Google: einmal laden, dann aus dem Speicher.
 // Bei jeder Änderung an den App-Dateien VERSION erhöhen.
-const VERSION = 'v0.3.0';
+const VERSION = 'v0.3.1';
 const CACHE = 't3hub-' + VERSION;
 const CORE = [
   './',
@@ -25,7 +25,7 @@ const CORE = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE.map((u) => new Request(u, { cache: 'no-cache' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
@@ -52,8 +52,9 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   if (url.origin !== location.origin) return;
+  // cache: 'no-cache' fragt GitHub jedes Mal, ob es eine neuere Datei gibt (sonst hält das iPhone sie bis zu 10 Min.)
   e.respondWith(
-    fetch(req)
+    fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })
       .then((res) => {
         if (res.ok) {
           const copy = res.clone();
