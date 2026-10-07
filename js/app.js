@@ -1,16 +1,17 @@
 // Einstieg: Daten laden, Navigation, Bildschirme zeichnen.
-import { state, load, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, services } from './store.js';
+import { state, load, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
 import { requestPersistence } from './db.js';
 import { fuelStats } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
 import { cockpit } from './views/cockpit.js';
-import { homeView, comingSoon } from './views/home.js';
+import { homeView } from './views/home.js';
 import { vehicleCard, editVehicleSheet } from './views/vehicle.js';
 import { toast } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
 import { wartungView, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
 import { tourenView, tourSheet, costCard, setCostYear } from './views/touren.js';
+import { dataCard, backupReminder, createBackup, restoreFromFile, roadTripFromFile } from './views/daten.js';
 
 const TABS = [
   ['home', 'Home', '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'],
@@ -24,13 +25,13 @@ let tab = (location.hash || '#home').slice(1);
 if (!TABS.some(([id]) => id === tab)) tab = 'home';
 
 const VIEWS = {
-  home: () => homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
+  home: () => backupReminder(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
   wartung: () => wartungView(services(), state.log, currentKm()),
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle)
-    + comingSoon('Backup und Import', '2.7', 'Daten als Datei sichern und deine Tankungen aus Road Trip übernehmen.')
-    + '<p class="foot">T3 Hub · Version 0.6 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + dataCard(state)
+    + '<p class="foot">T3 Hub · Version 0.7 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -93,6 +94,7 @@ document.addEventListener('click', (e) => {
     removeTour: (id) => deleteItem('tours', id),
     saveFuels: (list) => saveMany('fuels', list),
   };
+  if (action && action.dataset.action === 'backup') { createBackup(exportAll, markBackup, state.vehicle.name); return; }
   if (action && action.dataset.action === 'add-tour') { tourSheet(state, null, tOps); return; }
   const editTour = e.target.closest('[data-edit-tour]');
   if (editTour) { tourSheet(state, state.tours.find((x) => x.id === editTour.dataset.editTour), tOps); return; }
@@ -113,6 +115,9 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('change', async (e) => {
+  const file0 = e.target.files && e.target.files[0];
+  if (e.target.id === 'restore-in' && file0) { await restoreFromFile(file0, restoreAll); e.target.value = ''; return; }
+  if (e.target.id === 'roadtrip-in' && file0) { await roadTripFromFile(file0, importRoadTrip); e.target.value = ''; return; }
   if (e.target.id !== 'photo-in') return;
   const file = e.target.files && e.target.files[0];
   if (!file) return;

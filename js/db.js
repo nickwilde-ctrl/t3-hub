@@ -66,6 +66,22 @@ export async function remove(name, id) {
   return req((await store(name, 'readwrite')).delete(id));
 }
 
+/** Ersetzt den kompletten Inhalt aller Listen in einem Schritt (für das Wiederherstellen eines Backups). */
+export async function replaceAll(data) {
+  const db = await openDb();
+  const tx = db.transaction(STORES, 'readwrite');
+  for (const name of STORES) {
+    const s = tx.objectStore(name);
+    s.clear();
+    (data[name] || []).forEach((row) => s.put(row));
+  }
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
 export async function getMeta(key) {
   const row = await req((await store('meta')).get(key));
   return row ? row.value : undefined;

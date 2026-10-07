@@ -205,3 +205,10 @@ img{max-width:100%}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip-btn{background:var(--panel);border:1px solid var(--hair);color:var(--muted);border-radius:999px;padding:6px 14px;font:600 13px var(--f-body);cursor:pointer;font-variant-numeric:tabular-nums}
 .chip-btn[aria-pressed="true"]{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
+.file-row{position:relative}
+.file-row input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.file-row:focus-within{outline:2px solid var(--amber);outline-offset:-2px}
+.reminder{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 16px;border-color:color-mix(in srgb,var(--amber) 45%,transparent)}
+.reminder .t{font-weight:600}.reminder .s{color:var(--muted);font-size:13px}
+.reminder .btn{padding:10px 16px}
+.tour-pick{display:grid;gap:10px}
