@@ -1,6 +1,6 @@
 // Lädt alle Daten des aktiven Fahrzeugs in den Speicher und stellt einfache Änderungsfunktionen bereit.
 import * as db from './db.js';
-import { DEFAULT_SERVICES } from './logic/services.js';
+import { DEFAULT_SERVICES, upgradeServices, withLastDone, serviceOrder } from './logic/services.js';
 
 export const state = {
   vehicle: null,
@@ -39,7 +39,18 @@ export async function load() {
   [state.fuels, state.services, state.log, state.tours] = await Promise.all(
     ['fuels', 'services', 'log', 'tours'].map((n) => db.getByVehicle(n, id)),
   );
+  // Wartungspunkte auf die aktuellen Startwerte heben (fehlende ergänzen, unveränderte Platzhalter aktualisieren)
+  const upgrades = upgradeServices(state.services).map((x) => ({ ...x, id: x.id || db.newId(), vehicleId: id }));
+  if (upgrades.length) {
+    await db.putMany('services', upgrades);
+    state.services = await db.getByVehicle('services', id);
+  }
   emit();
+}
+
+/** Wartungspunkte mit ihrem tatsächlichen letzten Stand (Serviceheft oder Handeingabe), sortiert. */
+export function services() {
+  return state.services.map((s) => withLastDone(s, state.log)).sort((a, b) => serviceOrder(a) - serviceOrder(b) || a.name.localeCompare(b.name));
 }
 
 export async function saveVehicle(vehicle) {

@@ -69,3 +69,26 @@ test('deutsche Zahleneingaben', () => {
   assert.equal(parseNumber('1.729'), 1.729);
   assert.ok(Number.isNaN(parseNumber('')));
 });
+
+import { upgradeServices, withLastDone, DEFAULT_SERVICES } from '../js/logic/services.js';
+
+test('Wartung: alte Platzhalter werden aktualisiert, eigene Werte bleiben', () => {
+  const services = [
+    { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 7500, intervalMonths: 12, lastKm: 100, lastDate: '2026-01-01' },
+    { key: 'plugs', name: 'Zündkerzen', intervalKm: 20000, intervalMonths: null },
+  ];
+  const changed = upgradeServices(services);
+  const oil = changed.find((c) => c.key === 'oil');
+  assert.equal(oil.intervalKm, 5500);
+  assert.equal(oil.lastKm, 100);
+  assert.equal(changed.find((c) => c.key === 'plugs'), undefined);
+  assert.equal(changed.filter((c) => !c.id && c.key !== 'oil').length, DEFAULT_SERVICES.length - 2);
+});
+
+test('Wartung: letzter Serviceheft-Eintrag zählt, sonst Handeingabe', () => {
+  const s = { key: 'oil', intervalKm: 5500, lastKm: 1000, lastDate: '2026-01-01' };
+  assert.equal(withLastDone(s, []).lastKm, 1000);
+  const log = [{ serviceKey: 'oil', date: '2026-05-01', km: 6000 }, { serviceKey: 'oil', date: '2026-03-01', km: 3000 }, { serviceKey: 'plugs', date: '2026-09-01', km: 9000 }];
+  assert.equal(withLastDone(s, log).lastKm, 6000);
+  assert.equal(withLastDone({ ...s, lastDate: '2026-06-01', lastKm: 7000 }, log).lastKm, 7000);
+});

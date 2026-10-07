@@ -27,13 +27,13 @@ export function homeView({ services, fuels, km }) {
     .map((s) => ({ s, st: serviceStatus(s, km) }))
     .sort((a, b) => a.st.rank - b.st.rank)
     .slice(0, 3)
-    .map(({ s, st }) => `<div class="row"><div class="t">${esc(s.name)}</div><div class="s">${statusText(st)}</div><div class="r">${pill(st.state)}</div></div>`)
+    .map(({ s, st }) => `<button type="button" class="row row-btn" data-edit-service="${s.id}"><div class="t">${esc(s.name)}</div><div class="s">${statusText(st)}</div><div class="r">${pill(st.state)}</div></button>`)
     .join('');
   const s = fuelStats(fuels);
   const last = s.rows[s.rows.length - 1];
   const recent = s.series.slice(-20).map((r) => ({ date: r.date, y: r.cons, tip: `<b>${de(r.cons, 1)} l/100 km</b><br>${fmtDate(r.date)}` }));
   return `
-  <section class="sec"><div class="sec-head"><h2>Als Nächstes fällig</h2></div>
+  <section class="sec"><div class="sec-head"><h2>Als Nächstes fällig</h2><button type="button" class="add" data-tab="wartung">Alle</button></div>
     <div class="card list">${rows}</div></section>
   <section class="sec"><div class="sec-head"><h2>Tanken</h2><button type="button" class="add" data-action="add-fuel">+ Tankung</button></div>
     ${last

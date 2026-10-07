@@ -1,5 +1,5 @@
 // Einstieg: Daten laden, Navigation, Bildschirme zeichnen.
-import { state, load, onChange, currentKm, saveVehicle, saveItem, deleteItem } from './store.js';
+import { state, load, onChange, currentKm, saveVehicle, saveItem, deleteItem, services } from './store.js';
 import { requestPersistence } from './db.js';
 import { fuelStats } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
@@ -9,6 +9,7 @@ import { vehicleCard, editVehicleSheet } from './views/vehicle.js';
 import { toast } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
+import { wartungView, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
 
 const TABS = [
   ['home', 'Home', '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'],
@@ -22,20 +23,20 @@ let tab = (location.hash || '#home').slice(1);
 if (!TABS.some(([id]) => id === tab)) tab = 'home';
 
 const VIEWS = {
-  home: () => homeView({ services: state.services, fuels: state.fuels, km: currentKm() }),
-  wartung: () => comingSoon('Wartung und Serviceheft', '2.5', 'Intervalle mit den richtigen Werten für deinen Motor, Serviceheft und Fälligkeits-Ampel.'),
+  home: () => homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
+  wartung: () => wartungView(services(), state.log, currentKm()),
   tanken: () => tankenView(state),
   touren: () => comingSoon('Touren und Kosten', '2.6', 'Echte Reisen mit zugeordneten Tankungen und sonstigen Kosten.'),
   mehr: () => vehicleCard(state.vehicle)
     + comingSoon('Backup und Import', '2.7', 'Daten als Datei sichern und deine Tankungen aus Road Trip übernehmen.')
-    + '<p class="foot">T3 Hub · Version 0.4 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.5 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
   if (!state.vehicle) return;
   const s = fuelStats(state.fuels);
   const km = currentKm();
-  const st = state.services.map((x) => serviceStatus(x, km));
+  const st = services().map((x) => serviceStatus(x, km));
   document.getElementById('cockpit').innerHTML = cockpit({
     vehicle: state.vehicle,
     km,
@@ -67,6 +68,24 @@ document.addEventListener('click', (e) => {
     fuelSheet(state, state.fuels.find((f) => f.id === editFuel.dataset.editFuel), fuelOps);
     return;
   }
+  const wOps = {
+    km: currentKm(),
+    services: services(),
+    saveService: (x) => saveItem('services', x),
+    removeService: (id) => deleteItem('services', id),
+    saveLog: (x) => saveItem('log', x),
+    removeLog: (id) => deleteItem('log', id),
+  };
+  const editService = e.target.closest('[data-edit-service]');
+  if (editService) {
+    const id = editService.dataset.editService;
+    serviceSheet(services().find((x) => x.id === id), state.services.find((x) => x.id === id), wOps);
+    return;
+  }
+  if (action && action.dataset.action === 'add-service') { newServiceSheet(wOps.saveService); return; }
+  if (action && action.dataset.action === 'add-log') { logSheet(null, wOps); return; }
+  const editLog = e.target.closest('[data-edit-log]');
+  if (editLog) { logSheet(state.log.find((x) => x.id === editLog.dataset.editLog), wOps); return; }
   const subBtn = e.target.closest('[data-sub]');
   if (subBtn) {
     setSub(subBtn.dataset.sub);
