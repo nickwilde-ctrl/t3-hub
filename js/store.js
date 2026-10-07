@@ -42,6 +42,12 @@ export async function load() {
   emit();
 }
 
+export async function saveVehicle(vehicle) {
+  await db.put('vehicles', vehicle);
+  state.vehicle = vehicle;
+  emit();
+}
+
 /** Aktueller Kilometerstand: der höchste bekannte Wert aus allen Einträgen. */
 export function currentKm() {
   return Math.max(

@@ -171,3 +171,9 @@ img{max-width:100%}
 .soon-card{padding:20px 16px;display:grid;gap:8px}
 .soon-card h3{font-size:22px}
 .soon-card p{margin:0;color:var(--muted)}
+.facts-edit{display:grid;gap:8px}
+.fact-row{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) 40px;gap:8px}
+.fact-row input{background:var(--bg);color:var(--fg);border:1px solid var(--hair);border-radius:10px;padding:10px 11px;font:16px var(--f-body);width:100%;min-width:0}
+.icon-btn{background:none;border:1px solid var(--hair);color:var(--muted);border-radius:10px;font-size:20px;line-height:1;cursor:pointer}
+.hero.empty .meta{justify-content:center;color:var(--muted)}
+.hero.empty .plate{margin-inline:auto}

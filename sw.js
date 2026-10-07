@@ -2,7 +2,7 @@
 // Eigene Dateien: erst aus dem Netz (damit Updates sofort ankommen), bei Funkloch aus dem Speicher.
 // Schriften von Google: einmal laden, dann aus dem Speicher.
 // Bei jeder Änderung an den App-Dateien VERSION erhöhen.
-const VERSION = 'v0.2.0';
+const VERSION = 'v0.3.0';
 const CACHE = 't3hub-' + VERSION;
 const CORE = [
   './',
@@ -17,6 +17,9 @@ const CORE = [
   './js/logic/services.js',
   './js/views/cockpit.js',
   './js/views/home.js',
+  './js/views/sheet.js',
+  './js/views/vehicle.js',
+  './js/photo.js',
   './icons/icon-192.png',
   './icons/apple-touch-icon.png',
 ];
