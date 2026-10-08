@@ -1,6 +1,7 @@
 // Fahrzeugakte: Anzeige im Reiter „Mehr“ und Bearbeiten-Formular.
-import { esc } from '../format.js';
-import { openSheet, toast } from './sheet.js';
+import { esc, fmtDate, todayIso } from '../format.js';
+import { openSheet, closeSheet, toast } from './sheet.js';
+import { newId } from '../db.js';
 
 /** Vorschläge für freie Felder, angelehnt an den Fahrzeugschein (Zulassungsbescheinigung Teil I). */
 export const FACT_SUGGESTIONS = [
@@ -111,3 +112,62 @@ export const photoStyleAttr = (p) => {
   const s = photoStyle(p);
   return `object-position:${s.objectPosition};transform-origin:${s.transformOrigin};${s.transform ? `transform:${s.transform};` : ''}`;
 };
+
+/* ---------- Anbauten & Eintragungen ---------- */
+
+export const MOD_KINDS = ['Anbau', 'Umbau', 'Ausstattung'];
+export const MOD_STATUS = [
+  ['eingetragen', 'Eingetragen'],
+  ['frei', 'Nicht nötig'],
+  ['offen', 'Eintragung offen'],
+  ['unklar', 'Unklar'],
+];
+const statusLabel = (k) => (MOD_STATUS.find(([key]) => key === k) || MOD_STATUS[3])[1];
+
+export function modsCard(v) {
+  const mods = v.mods || [];
+  const open = mods.filter((m) => m.status === 'offen').length;
+  return `<section class="sec"><div class="sec-head"><h2>Anbauten &amp; Eintragungen</h2><button type="button" class="add" data-action="add-mod">+ Anbau</button></div>
+    ${mods.length
+      ? `<div class="card list">${mods.map((m) => `<button type="button" class="row row-btn" data-edit-mod="${m.id}">
+          <div class="t">${esc(m.name)}<span class="tag">${esc(m.kind)}</span></div>
+          <div class="s">${[m.date ? fmtDate(m.date) : '', m.note ? esc(m.note) : ''].filter(Boolean).join(' · ') || '&nbsp;'}</div>
+          <div class="r"><span class="mod-st mod-${esc(m.status)}">${statusLabel(m.status)}</span></div></button>`).join('')}</div>
+        ${open ? `<p class="hint">${open === 1 ? 'Eine Eintragung ist' : open + ' Eintragungen sind'} noch offen – an den nächsten TÜV-Termin denken.</p>` : ''}`
+      : '<div class="card soon-card"><h3>Noch keine Anbauten</h3><p>Lichtleiste, Dachträger, Markise, Fahrwerk, Standheizung … Hier hältst du fest, was an deinem Bus verändert wurde und ob es eingetragen ist.</p></div>'}
+  </section>`;
+}
+
+export function modSheet(vehicle, mod, save) {
+  const edit = !!mod;
+  const m = mod || { name: '', kind: 'Anbau', status: 'unklar', date: '', note: '' };
+  openSheet({
+    title: edit ? 'Anbau bearbeiten' : 'Neuer Anbau',
+    body: `
+      <div class="field"><label for="m-name">Was?</label><input id="m-name" name="name" value="${esc(m.name)}" placeholder="z. B. LED-Lichtleiste auf dem Dach" autocomplete="off"></div>
+      <div class="two">
+        <div class="field"><label for="m-kind">Art</label><select id="m-kind" name="kind">${MOD_KINDS.map((k) => `<option ${k === m.kind ? 'selected' : ''}>${k}</option>`).join('')}</select></div>
+        <div class="field"><label for="m-date">Seit (optional)</label><input id="m-date" name="date" type="date" value="${esc(m.date)}" max="${todayIso()}"></div>
+      </div>
+      <div class="field"><label for="m-status">Eintragung</label><select id="m-status" name="status">${MOD_STATUS.map(([k, l]) => `<option value="${k}" ${k === m.status ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="field"><label for="m-note">Notiz (optional)</label><textarea id="m-note" name="note" rows="3" placeholder="z. B. Hersteller, ABE/Teilegutachten, Prüfer, Kosten">${esc(m.note)}</textarea></div>
+      ${edit ? '<button type="button" class="danger-link" id="m-del">Anbau löschen</button>' : ''}`,
+    onReady(form) {
+      const del = form.querySelector('#m-del');
+      if (del) del.onclick = async () => {
+        if (del.dataset.armed) { await save({ ...vehicle, mods: (vehicle.mods || []).filter((x) => x.id !== m.id) }); closeSheet(); toast('Anbau gelöscht'); return; }
+        del.dataset.armed = '1'; del.textContent = 'Wirklich löschen? Nochmal tippen';
+      };
+    },
+    async onSubmit(form) {
+      const el = form.elements;
+      const name = el.name.value.trim();
+      if (!name) return 'Bitte trag ein, was angebaut oder umgebaut wurde.';
+      const item = { id: m.id || newId(), name, kind: el.kind.value, status: el.status.value, date: el.date.value, note: el.note.value.trim() };
+      const list = vehicle.mods || [];
+      const mods = edit ? list.map((x) => (x.id === item.id ? item : x)) : [...list, item];
+      await save({ ...vehicle, mods });
+      toast(edit ? 'Anbau gespeichert' : 'Anbau hinzugefügt');
+    },
+  });
+}

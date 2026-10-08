@@ -5,7 +5,7 @@ import { fuelStats, consumptionCheck } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
 import { cockpit } from './views/cockpit.js';
 import { homeView } from './views/home.js';
-import { vehicleCard, editVehicleSheet, photoFrameSheet } from './views/vehicle.js';
+import { vehicleCard, editVehicleSheet, photoFrameSheet, modsCard, modSheet } from './views/vehicle.js';
 import { toast } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
@@ -33,10 +33,10 @@ const VIEWS = {
   wartung: () => wartungView(services(), state.log, currentKm()),
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
-  mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle)
+  mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + modsCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.14.1 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.15 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -67,6 +67,15 @@ document.addEventListener('click', (e) => {
   if (action && action.dataset.action === 'photo-frame') {
     if (menu) menu.open = false;
     photoFrameSheet(state.vehicle, saveVehicle);
+    return;
+  }
+  if (action && action.dataset.action === 'add-mod') {
+    modSheet(state.vehicle, null, saveVehicle);
+    return;
+  }
+  const editMod = e.target.closest('[data-edit-mod]');
+  if (editMod) {
+    modSheet(state.vehicle, (state.vehicle.mods || []).find((m) => m.id === editMod.dataset.editMod), saveVehicle);
     return;
   }
   if (action && action.dataset.action === 'edit-vehicle') {

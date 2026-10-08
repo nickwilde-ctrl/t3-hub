@@ -285,3 +285,7 @@ a.add{text-decoration:none;display:inline-block}
 .pm-list button:active,.pm-list label:active{background:rgba(255,255,255,.06)}
 .pm-list input{position:absolute;width:1px;height:1px;opacity:0}
 .cons-check{display:flex;gap:8px;align-items:baseline;margin:12px 0 0}.cons-check .lamp{flex:none;transform:translateY(-1px)}
+.mod-st{font-size:12px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.mod-eingetragen{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent)}
+.mod-offen{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 55%,transparent)}
+.sec-head .add{white-space:nowrap;flex:none}
