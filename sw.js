@@ -2,7 +2,7 @@
 // Eigene Dateien: erst aus dem Netz (damit Updates sofort ankommen), bei Funkloch aus dem Speicher.
 // Schriften von Google: einmal laden, dann aus dem Speicher.
 // Bei jeder Änderung an den App-Dateien VERSION erhöhen.
-const VERSION = 'v0.12.0';
+const VERSION = 'v0.13.0';
 const CACHE = 't3hub-' + VERSION;
 const CORE = [
   './',

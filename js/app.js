@@ -36,7 +36,7 @@ const VIEWS = {
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.12 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.13 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -60,8 +60,11 @@ function render() {
 }
 
 document.addEventListener('click', (e) => {
+  const menu = document.querySelector('details.photo-menu[open]');
+  if (menu && !menu.contains(e.target)) menu.open = false;
   const action = e.target.closest('[data-action]');
   if (action && action.dataset.action === 'photo-frame') {
+    if (menu) menu.open = false;
     photoFrameSheet(state.vehicle, saveVehicle);
     return;
   }

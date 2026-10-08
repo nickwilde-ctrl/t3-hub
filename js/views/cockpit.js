@@ -57,35 +57,19 @@ export function dial(val, avg) {
   </svg>`;
 }
 
-/** Deutsches Kennzeichen als Vektorgrafik. Ein H am Ende wird direkt an die Ziffern gesetzt. */
-export function plateSvg(plate) {
-  const parts = plate.trim().split(/\s+/);
-  const city = parts[0];
-  const rest = parts.slice(1).join(' ').replace(/\s+([HE])$/, '$1');
-  let stars = '';
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * 2 * Math.PI;
-    stars += `<circle cx="${(26 + Math.cos(a) * 14).toFixed(1)}" cy="${(36 + Math.sin(a) * 14).toFixed(1)}" r="2.6" fill="#ffcc00"/>`;
-  }
-  const cw = city.length * 44;
-  const F = 'font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="80" fill="#141414"';
-  return `<svg class="plate" viewBox="0 0 520 112" role="img" aria-label="Kennzeichen ${esc(plate)}">
-    <rect x="3" y="3" width="514" height="106" rx="10" fill="#f5f4ee" stroke="#141414" stroke-width="6"/>
-    <path d="M6,13a7,7 0 0 1 7,-7H52V106H13a7,7 0 0 1 -7,-7Z" fill="#1d4fa8"/>
-    ${stars}<text x="29" y="95" font-family="Barlow,Arial,sans-serif" font-weight="700" font-size="30" fill="#f5f4ee" text-anchor="middle">D</text>
-    <text x="68" y="86" ${F} textLength="${cw}" lengthAdjust="spacingAndGlyphs">${esc(city)}</text>
-    <circle cx="${70 + cw + 30}" cy="34" r="17" fill="#3a8f5c" stroke="#141414" stroke-width="1.5"/>
-    <circle cx="${70 + cw + 30}" cy="78" r="17" fill="#d9d6cc" stroke="#141414" stroke-width="1.5"/>
-    ${rest ? `<text x="${70 + cw + 60}" y="86" ${F} textLength="${438 - (cw + 60)}" lengthAdjust="spacingAndGlyphs">${esc(rest)}</text>` : ''}
-  </svg>`;
+/** Kennzeichen als dezentes Schild: nur Umriss und Schrift, ohne Farben. */
+export function plateTag(plate) {
+  return `<span class="plate" aria-label="Kennzeichen ${esc(plate)}">${esc(plate.trim().replace(/\s+/g, ' '))}</span>`;
 }
+
+const WRENCH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/></svg>';
 
 export function cockpit({ vehicle, km, avg, last, due, unknown }) {
   const v = vehicle;
-  const meta = `<div class="meta">${v.plate ? plateSvg(v.plate) : ''}${v.engine ? `<span>${esc(v.engine)}</span>` : ''}</div>`;
+  const meta = `<div class="meta">${v.plate ? plateTag(v.plate) : ''}${v.engine ? `<span>${esc(v.engine)}</span>` : ''}</div>`;
   const file = '<input type="file" id="photo-in" accept="image/*">';
   const hero = v.photo
-    ? `<div class="hero"><img src="${v.photo}" alt="Foto von ${esc(v.name)}" style="${photoStyleAttr(v.photoPos)}"><div class="photo-tools"><button type="button" class="photo-change" data-action="photo-frame">Ausschnitt</button><label class="photo-change">Foto ändern${file}</label></div><div class="cap"><div class="eyebrow">${esc(v.model)}</div><h1>${esc(v.name)}</h1>${meta}</div></div>`
+    ? `<div class="hero"><img src="${v.photo}" alt="Foto von ${esc(v.name)}" style="${photoStyleAttr(v.photoPos)}"><details class="photo-menu"><summary aria-label="Foto einstellen">${WRENCH}</summary><div class="pm-list"><button type="button" data-action="photo-frame">Ausschnitt anpassen</button><label>Foto ändern${file}</label></div></details><div class="cap"><div class="eyebrow">${esc(v.model)}</div><h1>${esc(v.name)}</h1>${meta}</div></div>`
     : `<div class="hero empty"><div><div class="eyebrow" style="color:var(--muted)">${esc(v.model)}</div><h1>${esc(v.name)}</h1>${meta}<label class="photo-btn">Foto von ${esc(v.name)} hinzufügen${file}</label></div></div>`;
   const digits = String(Math.round(km)).padStart(6, '0').split('').map((x) => `<span>${x}</span>`).join('');
   return `${hero}
