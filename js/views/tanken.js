@@ -4,6 +4,7 @@ import { fuelStats, consumptionByMonth, withConsumption, completeFill, parseNumb
 import { lineChart, barChart, MONTHS } from './charts.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
 import { runningTour } from '../logic/costs.js';
+import { fuelWarnings, DEFAULT_TANK_LITERS } from '../logic/checks.js';
 
 let sub = 'auswertung';
 export const setSub = (s) => { sub = s; };
@@ -123,7 +124,7 @@ export function fuelSheet(state, fuel, { save, remove, currentKm }) {
         del.textContent = 'Wirklich löschen? Nochmal tippen';
       };
     },
-    async onSubmit(form) {
+    async onSubmit(form, { confirmed }) {
       const km = parseNumber(form.elements.km.value, 'km');
       if (!(km >= 0) || form.elements.km.value.trim() === '') return 'Bitte den Kilometerstand eintragen.';
       const r = completeFill({
@@ -135,6 +136,11 @@ export function fuelSheet(state, fuel, { save, remove, currentKm }) {
       if (r.liters > 120) return 'Mehr als 120 Liter? Bitte die Menge prüfen.';
       if (r.pricePerLiter > 5 || r.pricePerLiter < 0.5) return 'Der Preis pro Liter wirkt ungewöhnlich. Bitte prüfen, z. B. 1,729.';
       const date = form.elements.date.value || todayIso();
+      if (!confirmed) {
+        const probe = { id: fuel ? fuel.id : undefined, date, km: Math.round(km), liters: r.liters, pricePerLiter: r.pricePerLiter, full };
+        const warnings = fuelWarnings(probe, state.fuels, { tankLiters: state.vehicle.tankLiters || DEFAULT_TANK_LITERS });
+        if (warnings.length) return { warnings: warnings.map((w) => w.text) };
+      }
       await save({
         ...(fuel || {}),
         date,

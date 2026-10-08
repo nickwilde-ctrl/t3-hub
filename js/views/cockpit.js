@@ -1,5 +1,8 @@
 // Kopfbereich: Foto, Name, Kennzeichen und das Kombiinstrument.
 import { de, esc } from '../format.js';
+import { photoStyleAttr } from './vehicle.js';
+
+let swept = false;
 
 /** Rundinstrument für den Verbrauch (0–25 l/100 km), Zeiger = letzter Wert, Marke = Durchschnitt. */
 export function dial(val, avg) {
@@ -23,9 +26,15 @@ export function dial(val, avg) {
   };
   let needle = '';
   if (val != null) {
-    const [n0x, n0y] = pt(0, r - 16), [t0x, t0y] = pt(12.5, 14);
+    // Spitze bei 0, Ende genau gegenüber (180°), damit der Zeiger durch die Mitte läuft
+    const [n0x, n0y] = pt(0, r - 16), t0x = 2 * cx - pt(0, 14)[0], t0y = 2 * cy - pt(0, 14)[1];
     const rot = ((Math.max(0, Math.min(max, val)) / max) * span).toFixed(1);
-    needle = `<g class="needle" style="transform:rotate(${rot}deg)"><line x1="${f(t0x)}" y1="${f(t0y)}" x2="${f(n0x)}" y2="${f(n0y)}" stroke="var(--needle)" stroke-width="3.5" stroke-linecap="round"/></g>`;
+    // Drehung als SVG-Attribut um den Mittelpunkt (100|100). Eine CSS-Drehung sitzt in Safari auf dem iPhone nicht mittig.
+    // Der Zeiger schwenkt nur beim ersten Öffnen der App hoch, nicht bei jedem Wechsel des Reiters.
+    const still = swept || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    swept = true;
+    const sweep = still ? '' : `<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="${rot} ${cx} ${cy}" dur="1.1s" begin="0.15s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.7 0.2 1"/>`;
+    needle = `<g class="needle" transform="rotate(${still ? rot : 0} ${cx} ${cy})">${sweep}<line x1="${f(t0x)}" y1="${f(t0y)}" x2="${f(n0x)}" y2="${f(n0y)}" stroke="var(--needle)" stroke-width="3.5" stroke-linecap="round"/></g>`;
   }
   let avgMark = '';
   if (avg != null) {
@@ -76,7 +85,7 @@ export function cockpit({ vehicle, km, avg, last, due, unknown }) {
   const meta = `<div class="meta">${v.plate ? plateSvg(v.plate) : ''}${v.engine ? `<span>${esc(v.engine)}</span>` : ''}</div>`;
   const file = '<input type="file" id="photo-in" accept="image/*">';
   const hero = v.photo
-    ? `<div class="hero"><img src="${v.photo}" alt="Foto von ${esc(v.name)}"><label class="photo-change">Foto ändern${file}</label><div class="cap"><div class="eyebrow">${esc(v.model)}</div><h1>${esc(v.name)}</h1>${meta}</div></div>`
+    ? `<div class="hero"><img src="${v.photo}" alt="Foto von ${esc(v.name)}" style="${photoStyleAttr(v.photoPos)}"><div class="photo-tools"><button type="button" class="photo-change" data-action="photo-frame">Ausschnitt</button><label class="photo-change">Foto ändern${file}</label></div><div class="cap"><div class="eyebrow">${esc(v.model)}</div><h1>${esc(v.name)}</h1>${meta}</div></div>`
     : `<div class="hero empty"><div><div class="eyebrow" style="color:var(--muted)">${esc(v.model)}</div><h1>${esc(v.name)}</h1>${meta}<label class="photo-btn">Foto von ${esc(v.name)} hinzufügen${file}</label></div></div>`;
   const digits = String(Math.round(km)).padStart(6, '0').split('').map((x) => `<span>${x}</span>`).join('');
   return `${hero}

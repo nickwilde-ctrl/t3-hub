@@ -41,6 +41,7 @@ export function editVehicleSheet(vehicle, save) {
         <div class="field"><label for="v-plate">Kennzeichen</label><input id="v-plate" name="plate" value="${esc(v.plate)}" placeholder="B AB 1234 H" autocapitalize="characters" autocomplete="off"></div>
         <div class="field"><label for="v-engine">Motor (kurz)</label><input id="v-engine" name="engine" value="${esc(v.engine)}" placeholder="2,1 l WBX · 70 kW"></div>
       </div>
+      <div class="field"><label for="v-tank">Tankinhalt in Litern</label><input id="v-tank" name="tankLiters" inputmode="numeric" value="${v.tankLiters ?? 60}" placeholder="60"></div>
       <p class="hint" style="margin:0">Kennzeichen mit Leerzeichen eingeben, so wie es auf dem Schild steht. Ein H für Oldtimer einfach ans Ende.</p>
       <div class="field"><label>Weitere Daten</label><div id="facts" class="facts-edit">${facts.map((f, i) => factRow(f.k, f.v, i)).join('')}</div>
         <button type="button" class="add" id="add-fact" style="justify-self:start">+ Feld hinzufügen</button></div>
@@ -67,9 +68,46 @@ export function editVehicleSheet(vehicle, save) {
         model: form.elements['model'].value.trim(),
         plate: form.elements['plate'].value.trim().toUpperCase().replace(/\s+/g, ' '),
         engine: form.elements['engine'].value.trim(),
+        tankLiters: Math.max(20, Math.min(200, parseInt(form.elements['tankLiters'].value, 10) || 60)),
         facts,
       });
       toast('Fahrzeugakte gespeichert');
     },
   });
 }
+
+/** Ausschnitt des Titelfotos einstellen: Position (links/rechts, oben/unten) und Zoom. */
+export function photoFrameSheet(vehicle, save) {
+  const pos = { x: 50, y: 50, zoom: 100, ...(vehicle.photoPos || {}) };
+  openSheet({
+    title: 'Foto-Ausschnitt',
+    body: `
+      <div class="frame-preview"><img id="fp-img" src="${vehicle.photo}" alt="Vorschau"></div>
+      <div class="field"><label for="fp-x">Links ↔ Rechts</label><input id="fp-x" name="x" type="range" min="0" max="100" value="${pos.x}"></div>
+      <div class="field"><label for="fp-y">Oben ↕ Unten</label><input id="fp-y" name="y" type="range" min="0" max="100" value="${pos.y}"></div>
+      <div class="field"><label for="fp-z">Zoom</label><input id="fp-z" name="zoom" type="range" min="100" max="250" step="5" value="${pos.zoom}"></div>
+      <button type="button" class="add" id="fp-reset" style="justify-self:start">Zurücksetzen</button>`,
+    onReady(form) {
+      const img = form.querySelector('#fp-img');
+      const apply = () => Object.assign(img.style, photoStyle({ x: +form.elements.x.value, y: +form.elements.y.value, zoom: +form.elements.zoom.value }));
+      form.addEventListener('input', apply);
+      form.querySelector('#fp-reset').onclick = () => { form.elements.x.value = 50; form.elements.y.value = 50; form.elements.zoom.value = 100; apply(); };
+      apply();
+    },
+    async onSubmit(form) {
+      await save({ ...vehicle, photoPos: { x: +form.elements.x.value, y: +form.elements.y.value, zoom: +form.elements.zoom.value } });
+      toast('Ausschnitt gespeichert');
+    },
+  });
+}
+
+/** CSS für Bildposition und Zoom. Zoom wirkt zur gewählten Stelle hin. */
+export function photoStyle(p = {}) {
+  const x = p.x ?? 50, y = p.y ?? 50, z = (p.zoom ?? 100) / 100;
+  return { objectPosition: `${x}% ${y}%`, transformOrigin: `${x}% ${y}%`, transform: z > 1 ? `scale(${z})` : '' };
+}
+
+export const photoStyleAttr = (p) => {
+  const s = photoStyle(p);
+  return `object-position:${s.objectPosition};transform-origin:${s.transformOrigin};${s.transform ? `transform:${s.transform};` : ''}`;
+};

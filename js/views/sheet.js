@@ -23,8 +23,11 @@ export function closeSheet() {
 }
 
 /**
- * Öffnet ein Formular. onSubmit(form) gibt entweder einen Fehlertext zurück (dann bleibt das Fenster offen)
- * oder nichts/undefined (dann schließt es). Darf async sein.
+ * Öffnet ein Formular. onSubmit(form, { confirmed }) gibt zurück:
+ * - nichts/undefined → speichern hat geklappt, Fenster schließt
+ * - einen Text → Fehler, Fenster bleibt offen
+ * - { warnings: [Text, …] } → Hinweise anzeigen; erst ein zweites Tippen auf „Trotzdem speichern“
+ *   ruft onSubmit mit confirmed = true auf. Jede Änderung im Formular setzt das zurück.
  */
 export function openSheet({ title, body, submitLabel = 'Speichern', onSubmit, onReady }) {
   closeSheet();
@@ -38,13 +41,33 @@ export function openSheet({ title, body, submitLabel = 'Speichern', onSubmit, on
   document.body.appendChild(root);
   document.body.style.overflow = 'hidden';
   const form = root.querySelector('#sheet');
+  const errEl = root.querySelector('#sheet-err');
+  const submitBtn = form.querySelector('button[type=submit]');
+  let confirmed = false;
+  const resetConfirm = () => {
+    if (!confirmed) return;
+    confirmed = false;
+    submitBtn.textContent = submitLabel;
+    errEl.innerHTML = '';
+    errEl.className = 'err';
+  };
+  form.addEventListener('input', resetConfirm);
+  form.addEventListener('click', (e) => { if (e.target.closest('[aria-pressed]')) resetConfirm(); });
   root.querySelector('#sheet-cancel').onclick = closeSheet;
   root.querySelector('#scrim').addEventListener('click', (e) => { if (e.target.id === 'scrim') closeSheet(); });
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const err = await onSubmit(form);
-    if (err) root.querySelector('#sheet-err').textContent = err;
-    else closeSheet();
+    const res = await onSubmit(form, { confirmed });
+    if (res && Array.isArray(res.warnings) && res.warnings.length) {
+      confirmed = true;
+      errEl.className = 'err warn';
+      errEl.innerHTML = `<b>Bitte kurz prüfen:</b><ul>${res.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>Passt alles? Dann nochmal tippen.`;
+      submitBtn.textContent = 'Trotzdem speichern';
+      errEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      return;
+    }
+    if (res) { errEl.className = 'err'; errEl.textContent = res; return; }
+    closeSheet();
   });
   if (onReady) onReady(form);
   return form;

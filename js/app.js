@@ -5,7 +5,7 @@ import { fuelStats } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
 import { cockpit } from './views/cockpit.js';
 import { homeView } from './views/home.js';
-import { vehicleCard, editVehicleSheet } from './views/vehicle.js';
+import { vehicleCard, editVehicleSheet, photoFrameSheet } from './views/vehicle.js';
 import { toast } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
@@ -33,7 +33,7 @@ const VIEWS = {
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.8 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.9 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -58,6 +58,10 @@ function render() {
 
 document.addEventListener('click', (e) => {
   const action = e.target.closest('[data-action]');
+  if (action && action.dataset.action === 'photo-frame') {
+    photoFrameSheet(state.vehicle, saveVehicle);
+    return;
+  }
   if (action && action.dataset.action === 'edit-vehicle') {
     editVehicleSheet(state.vehicle, saveVehicle);
     return;
