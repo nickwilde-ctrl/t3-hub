@@ -1,5 +1,5 @@
 // Reiter „Touren“ und Kostenübersicht im Reiter „Mehr“.
-import { de, eur, esc, fmtDate, todayIso } from '../format.js';
+import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
 import { parseNumber } from '../logic/fuel.js';
 import { tourStats, fuelsInTour, costsByCategory, costYears, COST_CATEGORIES, TRIP_CATEGORIES, compareTours } from '../logic/costs.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
@@ -85,14 +85,14 @@ function tourDetail(state, t, km) {
   <section class="sec"><div class="sec-head"><h2>Kosten nach Art</h2><button type="button" class="add" data-action="add-expense">+ Ausgabe</button></div>
     ${s.byCategory.length ? `<div class="card"><div class="bars">${s.byCategory.map(([k, v], i) => `<div class="bar-row"><span>${esc(k)}</span><div class="bar"><i style="width:${((v / max) * 100).toFixed(1)}%;${i === 0 ? 'background:var(--amber)' : ''}"></i></div><span class="num" style="font-size:17px">${eur(v)}</span></div>`).join('')}</div></div>`
       : '<div class="card soon-card"><p>Noch keine Kosten. Trag Ausgaben wie Camping, Fähre oder Maut ein.</p></div>'}
-    ${expenses.length ? `<div class="card list">${expenses.map((e) => `<button type="button" class="row row-btn" data-edit-expense="${e.id}"><div class="t">${esc(e.category)}</div><div class="s">${fmtDate(e.date)}${e.note ? ' · ' + esc(e.note) : ''}</div><div class="r num big">${eur(e.amount)}</div></button>`).join('')}</div>` : ''}
+    ${expenses.length ? `<div class="card list">${expenses.map((e) => `<button type="button" class="row row-btn" data-edit-expense="${e.id}"><div class="t">${esc(e.category)}</div><div class="s">${fmtDate(e.date)}${e.note ? ' · ' + esc(e.note) : ''}</div><div class="r num big">${eurExact(e.amount)}</div></button>`).join('')}</div>` : ''}
   </section>
   <section class="sec"><div class="sec-head"><h2>Reisetagebuch</h2><button type="button" class="add" data-action="add-journal">+ Eintrag</button></div>
     ${journal.length ? `<div class="card list journal">${journal.map((j) => `<button type="button" class="row row-btn" data-edit-journal="${j.id}"><div class="t">${fmtDate(j.date)}${j.place ? ' · ' + esc(j.place) : ''}</div><div class="s jtext">${esc(j.text)}</div></button>`).join('')}</div>`
       : '<div class="card soon-card"><p>Halte fest, wo ihr wart und was ihr erlebt habt. Ein Satz pro Tag reicht.</p></div>'}
   </section>
   <section class="sec"><div class="sec-head"><h2>Tankungen</h2><span class="hint">${s.fuels.length} · ${de(s.liters, 0)} l · ${eur(s.fuelCost)}</span></div>
-    ${fuels.length ? `<div class="card list">${fuels.map((f) => `<button type="button" class="row row-btn" data-edit-fuel="${f.id}"><div class="t num" style="font-size:17px">${de(f.km)} km<span class="tag">${f.full ? 'Voll' : 'Teil'}</span></div><div class="s">${fmtDate(f.date)} · ${de(f.liters, 1)} l · ${de(f.pricePerLiter, 3)} €/l${f.note ? ' · ' + esc(f.note) : ''}</div><div class="r num big">${eur(f.liters * f.pricePerLiter)}</div></button>`).join('')}</div>`
+    ${fuels.length ? `<div class="card list">${fuels.map((f) => `<button type="button" class="row row-btn" data-edit-fuel="${f.id}"><div class="t num" style="font-size:17px">${de(f.km)} km<span class="tag">${f.full ? 'Voll' : 'Teil'}</span></div><div class="s">${fmtDate(f.date)} · ${de(f.liters, 1)} l · ${de(f.pricePerLiter, 3)} €/l${f.note ? ' · ' + esc(f.note) : ''}</div><div class="r num big">${eurExact(f.liters * f.pricePerLiter)}</div></button>`).join('')}</div>`
       : '<div class="card soon-card"><p>Noch keine Tankungen auf dieser Tour.</p></div>'}
   </section>`;
 }

@@ -5,6 +5,9 @@ export const de = (n, digits = 0) =>
 
 export const eur = (n) => de(n, 0) + ' €';
 
+/** Einzelbetrag genau: volle Euro ohne Komma (120 €), sonst mit Cent (89,90 €). */
+export const eurExact = (n) => (n == null || Number.isNaN(n) ? '–' : de(n, Math.round(n * 100) % 100 === 0 ? 0 : 2) + ' €');
+
 export const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 

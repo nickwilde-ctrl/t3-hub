@@ -1,5 +1,5 @@
 // Reiter „Wartung“: Intervalle mit Ampel, Serviceheft, Formulare.
-import { de, eur, esc, fmtDate, todayIso } from '../format.js';
+import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
 import { serviceStatus } from '../logic/services.js';
 import { parseNumber } from '../logic/fuel.js';
 import { statusText, pill } from './home.js';
@@ -33,7 +33,7 @@ export function wartungView(services, log, km) {
     ${entries.length ? `<div class="card list">${entries.map((l) => `<button type="button" class="row row-btn" data-edit-log="${l.id}">
       <div class="t">${esc(l.title)}<span class="tag">${esc(l.category)}</span></div>
       <div class="s">${fmtDate(l.date)}${l.km != null ? ' · ' + de(l.km) + ' km' : ''}${l.note ? ' · ' + esc(l.note) : ''}</div>
-      <div class="r num big">${l.cost ? eur(l.cost) : ''}</div></button>`).join('')}</div>`
+      <div class="r num big">${l.cost ? eurExact(l.cost) : ''}</div></button>`).join('')}</div>`
       : '<div class="card soon-card"><h3>Noch keine Einträge</h3><p>Hier landen Wartungen, Reparaturen und Ausbauten mit Datum, Kilometerstand und Kosten.</p></div>'}
   </section>`;
 }

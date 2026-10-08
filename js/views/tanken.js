@@ -1,5 +1,5 @@
 // Reiter „Tanken“: Auswertung und Tankbuch, dazu das Formular für Tankungen.
-import { de, eur, esc, fmtDate, todayIso } from '../format.js';
+import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
 import { fuelStats, consumptionByMonth, withConsumption, completeFill, parseNumber, consumptionCheck } from '../logic/fuel.js';
 import { lineChart, barChart, MONTHS } from './charts.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
@@ -63,7 +63,7 @@ function tankbuch(state) {
   return `<section class="sec"><div class="sec-head"><h2>Tankbuch</h2><span class="label">${state.fuels.length} Einträge</span></div>
     <div class="card list">${rows.map((f) => `<button type="button" class="row row-btn" data-edit-fuel="${f.id}">
       <div class="t num" style="font-size:18px">${de(f.km)} km<span class="tag">${f.full ? 'Voll' : 'Teil'}</span>${f.tourId && tourName(f.tourId) ? `<span class="tag">${esc(tourName(f.tourId))}</span>` : ''}</div>
-      <div class="s">${fmtDate(f.date)} · ${de(f.liters, 2)} l · ${de(f.pricePerLiter, 3)} €/l · ${eur(f.liters * f.pricePerLiter)}${f.note ? ' · ' + esc(f.note) : ''}</div>
+      <div class="s">${fmtDate(f.date)} · ${de(f.liters, 2)} l · ${de(f.pricePerLiter, 3)} €/l · ${eurExact(f.liters * f.pricePerLiter)}${f.note ? ' · ' + esc(f.note) : ''}</div>
       <div class="r">${f.cons != null ? `<span class="num big">${de(f.cons, 1)}</span><div class="label">l/100 km</div>` : `<span class="hint">${f.full ? 'Startwert' : 'zählt zur nächsten<br>Volltankung'}</span>`}</div>
     </button>`).join('')}</div>
     <p class="hint">Antippen zum Bearbeiten oder Löschen. Verbrauch wird zwischen zwei Volltankungen berechnet, Teiltankungen dazwischen zählen mit.</p></section>`;
