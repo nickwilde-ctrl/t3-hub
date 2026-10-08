@@ -274,7 +274,7 @@ a.add{text-decoration:none;display:inline-block}
 .leaflet-bottom{padding-bottom:env(safe-area-inset-bottom,0px)}
 
 /* Foto-Menü (Schraubenschlüssel) – 0.13 */
-.photo-menu{position:absolute;z-index:3;top:calc(4px + env(safe-area-inset-top,0px));right:8px}
+.photo-menu{position:absolute;z-index:3;top:8px;right:8px}
 .photo-menu summary{list-style:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(10,10,8,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer;opacity:.75}
 .photo-menu summary::-webkit-details-marker{display:none}
 .photo-menu[open] summary{opacity:1}
