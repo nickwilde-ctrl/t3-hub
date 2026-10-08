@@ -289,3 +289,14 @@ a.add{text-decoration:none;display:inline-block}
 .mod-eingetragen{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent)}
 .mod-offen{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 55%,transparent)}
 .sec-head .add{white-space:nowrap;flex:none}
+/* Verbaute Teile – 0.16 */
+.part-edit{border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin-bottom:10px;display:grid;gap:6px;background:color-mix(in srgb,var(--bg) 60%,transparent)}
+.part-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pf{display:grid;gap:3px;min-width:0}.pf.full{grid-column:1/-1}
+.pf span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.pf input{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:9px 10px;font:16px var(--f-body);width:100%;min-width:0}
+.part-edit .danger-link{padding:2px 0;font-size:14px}
+.part-actions{display:flex;flex-wrap:wrap;gap:8px}
+.parts{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px;font-size:14px}
+.parts a{color:var(--amber)}
+.last-parts{border-left:2px solid var(--amber);padding:2px 0 2px 10px}

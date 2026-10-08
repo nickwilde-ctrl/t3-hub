@@ -36,7 +36,7 @@ const VIEWS = {
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + modsCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.15 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.16 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -99,6 +99,7 @@ document.addEventListener('click', (e) => {
     removeService: (id) => deleteItem('services', id),
     saveLog: (x) => saveItem('log', x),
     removeLog: (id) => deleteItem('log', id),
+    log: state.log,
   };
   const editService = e.target.closest('[data-edit-service]');
   if (editService) {
