@@ -10,7 +10,7 @@ import { toast } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
 import { wartungView, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
-import { tourenView, tourSheet, costCard, setCostYear } from './views/touren.js';
+import { tourenView, tourSheet, costCard, setCostYear, setOpenTour, getOpenTour, expenseSheet, journalSheet } from './views/touren.js';
 import { dataCard, backupReminder, createBackup, restoreFromFile, roadTripFromFile } from './views/daten.js';
 import { installCard } from './views/install.js';
 
@@ -21,6 +21,8 @@ const TABS = [
   ['touren', 'Touren', '<path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/>'],
   ['mehr', 'Mehr', '<circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/>'],
 ];
+
+const currentTour = () => state.tours.find((x) => x.id === getOpenTour());
 
 let tab = (location.hash || '#home').slice(1);
 if (!TABS.some(([id]) => id === tab)) tab = 'home';
@@ -33,7 +35,7 @@ const VIEWS = {
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.9 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.10 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -102,6 +104,22 @@ document.addEventListener('click', (e) => {
   };
   if (action && action.dataset.action === 'backup') { createBackup(exportAll, markBackup, state.vehicle.name); return; }
   if (action && action.dataset.action === 'add-tour') { tourSheet(state, null, tOps); return; }
+  const openTour = e.target.closest('[data-open-tour]');
+  if (openTour) {
+    setOpenTour(openTour.dataset.openTour);
+    tab = 'touren';
+    history.replaceState(null, '', '#touren');
+    render();
+    window.scrollTo(0, 0);
+    return;
+  }
+  if (action && action.dataset.action === 'close-tour') { setOpenTour(null); render(); window.scrollTo(0, 0); return; }
+  if (action && action.dataset.action === 'add-expense') { expenseSheet(currentTour(), null, tOps.saveTour); return; }
+  if (action && action.dataset.action === 'add-journal') { journalSheet(currentTour(), null, tOps.saveTour); return; }
+  const editExpense = e.target.closest('[data-edit-expense]');
+  if (editExpense) { const t = currentTour(); expenseSheet(t, t.expenses.find((x) => x.id === editExpense.dataset.editExpense), tOps.saveTour); return; }
+  const editJournal = e.target.closest('[data-edit-journal]');
+  if (editJournal) { const t = currentTour(); journalSheet(t, t.journal.find((x) => x.id === editJournal.dataset.editJournal), tOps.saveTour); return; }
   const editTour = e.target.closest('[data-edit-tour]');
   if (editTour) { tourSheet(state, state.tours.find((x) => x.id === editTour.dataset.editTour), tOps); return; }
   const yearBtn = e.target.closest('[data-cost-year]');
@@ -114,6 +132,7 @@ document.addEventListener('click', (e) => {
   }
   const b = e.target.closest('[data-tab]');
   if (!b) return;
+  if (b.dataset.tab === 'touren' && b.closest('nav')) setOpenTour(null);
   tab = b.dataset.tab;
   history.replaceState(null, '', '#' + tab);
   render();

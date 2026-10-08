@@ -223,3 +223,17 @@ input[type=range]{width:100%;accent-color:var(--amber);padding:0;border:0;backgr
 .err.warn{color:var(--fg);background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);border-radius:10px;padding:10px 12px;font-size:14px}
 .err.warn b{color:var(--warn)}
 .err.warn ul{margin:6px 0;padding-left:18px;display:grid;gap:4px}
+/* Tour-Detailseite */
+.detail-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:-8px}
+.tour-title{font-size:30px;line-height:1.1}
+.journal .t{font-size:14px;color:var(--muted);font-weight:600}
+.journal .jtext{color:var(--fg);font-size:15px;white-space:pre-line;grid-column:1 / -1}
+.field textarea{background:var(--bg);color:var(--fg);border:1px solid var(--hair);border-radius:10px;padding:11px 12px;font:16px/1.45 var(--f-body);width:100%;resize:vertical}
+.table-wrap{overflow-x:auto}
+table.cmp{width:100%;border-collapse:collapse;font-size:14px}
+.cmp th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;text-align:right;padding:12px 12px 8px;white-space:nowrap}
+.cmp th:first-child,.cmp td:first-child{text-align:left}
+.cmp td{padding:10px 12px;border-top:1px solid var(--hair);text-align:right;vertical-align:top}
+.cmp td.num{font-family:var(--f-display);font-size:17px;font-variant-numeric:tabular-nums}
+.cmp td.best{color:var(--amber);font-weight:700}
+.cmp tbody tr{cursor:pointer}
