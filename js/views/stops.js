@@ -17,8 +17,9 @@ export function stopsMap(stops) {
     `<img class="tile" alt="" loading="lazy" onerror="this.style.visibility='hidden'" referrerpolicy="strict-origin-when-cross-origin" src="https://tile.openstreetmap.org/${t.z}/${t.x}/${t.y}.png" style="left:${pct(t.left, W)};top:${pct(t.top, H)};width:${pct(256, W)};height:${pct(256, H)}">`).join('');
   const pts = list.map((s) => ({ s, ...toScreen(s, view, W, H) }));
   const line = pts.length > 1 ? `<polyline points="${pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')}" fill="none" stroke="#1c1d1b" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" opacity=".55"/><polyline points="${pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')}" fill="none" stroke="#f0a43a" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round" stroke-linecap="round"/>` : '';
-  const pins = pts.map((p, i) => `<g data-edit-stop="${p.s.id}" class="pin"><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="11" fill="#f0a43a" stroke="#1c1d1b" stroke-width="2.5"/><text x="${p.x.toFixed(1)}" y="${(p.y + 4).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#1c1d1b" font-family="Barlow,system-ui,sans-serif">${i + 1}</text></g>`).join('');
-  return `<div class="map" role="img" aria-label="Karte mit ${list.length} Stellplätzen">
+  const pins = pts.map((p, i) => `<g class="pin"><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="11" fill="#f0a43a" stroke="#1c1d1b" stroke-width="2.5"/><text x="${p.x.toFixed(1)}" y="${(p.y + 4).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#1c1d1b" font-family="Barlow,system-ui,sans-serif">${i + 1}</text></g>`).join('');
+  return `<div class="map" role="button" tabindex="0" data-action="open-map" aria-label="Karte mit ${list.length} Stellplätzen vergrößern">
+    <span class="map-zoom-hint">Vergrößern</span>
     <div class="tiles">${tiles}</div>
     <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${line}${pins}</svg>
     <div class="map-attr">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende</div>
@@ -135,4 +136,73 @@ export function stopSheet(tour, stop, saveTour) {
       toast(edit ? 'Stellplatz geändert' : 'Stellplatz gespeichert');
     },
   });
+}
+
+/* ---------- Große Karte zum Zoomen und Verschieben (Leaflet, im Projekt mitgeliefert) ---------- */
+
+let leafletReady = null;
+function loadLeaflet() {
+  if (window.L) return Promise.resolve(window.L);
+  if (leafletReady) return leafletReady;
+  leafletReady = new Promise((resolve, reject) => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = './vendor/leaflet/leaflet.css';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src = './vendor/leaflet/leaflet.js';
+    js.onload = () => resolve(window.L);
+    js.onerror = () => { leafletReady = null; reject(new Error('Karte konnte nicht geladen werden')); };
+    document.head.appendChild(js);
+  });
+  return leafletReady;
+}
+
+export function closeMapView() {
+  document.getElementById('map-full')?.remove();
+  document.body.style.overflow = '';
+}
+
+/** Vollbild-Karte einer Tour. onEdit(stopId) öffnet das Bearbeiten-Formular. */
+export async function openMapView(tour, onEdit) {
+  const list = sortStops(tour.stops);
+  if (!list.length) return;
+  closeMapView();
+  const root = document.createElement('div');
+  root.id = 'map-full';
+  root.className = 'map-full';
+  root.innerHTML = `<div class="map-bar"><div><div class="label">Stellplätze</div><div class="map-title">${esc(tour.name)}</div></div><button type="button" class="btn" id="map-close">Fertig</button></div>
+    <div id="lmap" class="lmap"><p class="hint" style="padding:16px">Karte wird geladen …</p></div>`;
+  document.body.appendChild(root);
+  document.body.style.overflow = 'hidden';
+  root.querySelector('#map-close').onclick = closeMapView;
+  let L;
+  try { L = await loadLeaflet(); } catch {
+    root.querySelector('#lmap').innerHTML = '<p class="hint" style="padding:16px">Die Karte konnte nicht geladen werden. Prüf die Internetverbindung.</p>';
+    return;
+  }
+  const el = root.querySelector('#lmap');
+  el.innerHTML = '';
+  const map = L.map(el, { zoomControl: true, attributionControl: true, tap: true });
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende',
+  }).addTo(map);
+  const latlngs = list.map((s) => [s.lat, s.lon]);
+  if (latlngs.length > 1) {
+    L.polyline(latlngs, { color: '#1c1d1b', weight: 6, opacity: 0.45 }).addTo(map);
+    L.polyline(latlngs, { color: '#f0a43a', weight: 3, dashArray: '7 6' }).addTo(map);
+  }
+  list.forEach((s, i) => {
+    const icon = L.divIcon({ className: 'lpin', html: `<span>${i + 1}</span>`, iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] });
+    const popup = document.createElement('div');
+    popup.className = 'lpop';
+    popup.innerHTML = `<b>${i + 1}. ${esc(s.name || 'Stellplatz')}</b><br><span>${fmtDate(s.date)}</span>${s.note ? `<br><span>${esc(s.note)}</span>` : ''}
+      <div class="lpop-actions"><button type="button" class="add" data-pop-edit>Bearbeiten</button><a class="add" href="${appleMaps(s)}" target="_blank" rel="noopener">Apple Karten</a></div>`;
+    popup.querySelector('[data-pop-edit]').onclick = () => { closeMapView(); onEdit(s.id); };
+    L.marker([s.lat, s.lon], { icon, title: s.name || 'Stellplatz' }).addTo(map).bindPopup(popup);
+  });
+  if (latlngs.length === 1) map.setView(latlngs[0], 12);
+  else map.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
+  setTimeout(() => map.invalidateSize(), 50);
 }

@@ -11,7 +11,7 @@ import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
 import { wartungView, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
 import { tourenView, tourSheet, costCard, setCostYear, setOpenTour, getOpenTour, expenseSheet, journalSheet, runningCard } from './views/touren.js';
-import { stopSheet } from './views/stops.js';
+import { stopSheet, openMapView } from './views/stops.js';
 import { dataCard, backupReminder, createBackup, restoreFromFile, roadTripFromFile } from './views/daten.js';
 import { installCard } from './views/install.js';
 
@@ -36,7 +36,7 @@ const VIEWS = {
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.11 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.12 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -120,6 +120,11 @@ document.addEventListener('click', (e) => {
   if (action && action.dataset.action === 'add-stop') {
     const t = state.tours.find((x) => x.id === (action.dataset.tour || getOpenTour()));
     if (t) stopSheet(t, null, tOps.saveTour);
+    return;
+  }
+  if (action && action.dataset.action === 'open-map') {
+    const t = currentTour();
+    if (t) openMapView(t, (id) => stopSheet(t, (t.stops || []).find((x) => x.id === id), tOps.saveTour));
     return;
   }
   const editStop = e.target.closest('[data-edit-stop]');
