@@ -10,7 +10,8 @@ import { toast } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
 import { wartungView, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
-import { tourenView, tourSheet, costCard, setCostYear, setOpenTour, getOpenTour, expenseSheet, journalSheet } from './views/touren.js';
+import { tourenView, tourSheet, costCard, setCostYear, setOpenTour, getOpenTour, expenseSheet, journalSheet, runningCard } from './views/touren.js';
+import { stopSheet } from './views/stops.js';
 import { dataCard, backupReminder, createBackup, restoreFromFile, roadTripFromFile } from './views/daten.js';
 import { installCard } from './views/install.js';
 
@@ -28,14 +29,14 @@ let tab = (location.hash || '#home').slice(1);
 if (!TABS.some(([id]) => id === tab)) tab = 'home';
 
 const VIEWS = {
-  home: () => backupReminder(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
+  home: () => backupReminder(state) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
   wartung: () => wartungView(services(), state.log, currentKm()),
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.10 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.11 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -116,6 +117,13 @@ document.addEventListener('click', (e) => {
   if (action && action.dataset.action === 'close-tour') { setOpenTour(null); render(); window.scrollTo(0, 0); return; }
   if (action && action.dataset.action === 'add-expense') { expenseSheet(currentTour(), null, tOps.saveTour); return; }
   if (action && action.dataset.action === 'add-journal') { journalSheet(currentTour(), null, tOps.saveTour); return; }
+  if (action && action.dataset.action === 'add-stop') {
+    const t = state.tours.find((x) => x.id === (action.dataset.tour || getOpenTour()));
+    if (t) stopSheet(t, null, tOps.saveTour);
+    return;
+  }
+  const editStop = e.target.closest('[data-edit-stop]');
+  if (editStop) { const t = currentTour(); if (t) stopSheet(t, (t.stops || []).find((x) => x.id === editStop.dataset.editStop), tOps.saveTour); return; }
   const editExpense = e.target.closest('[data-edit-expense]');
   if (editExpense) { const t = currentTour(); expenseSheet(t, t.expenses.find((x) => x.id === editExpense.dataset.editExpense), tOps.saveTour); return; }
   const editJournal = e.target.closest('[data-edit-journal]');

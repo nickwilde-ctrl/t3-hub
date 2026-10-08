@@ -237,3 +237,22 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
 .cmp td.num{font-family:var(--f-display);font-size:17px;font-variant-numeric:tabular-nums}
 .cmp td.best{color:var(--amber);font-weight:700}
 .cmp tbody tr{cursor:pointer}
+/* Stellplatz-Karte */
+.map-card{padding:0;overflow:hidden}
+.map{position:relative;aspect-ratio:3/2;overflow:hidden;background:#cfc9b8}
+.map .tiles{position:absolute;inset:0;filter:saturate(.8) brightness(.95)}
+.map .tile{position:absolute;max-width:none;display:block;user-select:none;-webkit-user-drag:none}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.map .pin{cursor:pointer}
+.map-attr{position:absolute;right:0;bottom:0;background:rgba(255,255,255,.75);color:#333;font-size:10px;padding:1px 5px;border-top-left-radius:4px}
+.map-attr a{color:#333}
+.stop-row{grid-template-columns:minmax(0,1fr) auto}
+.stop-main{display:flex;gap:12px;align-items:flex-start;background:none;border:0;color:inherit;font:inherit;text-align:left;padding:0;cursor:pointer;min-width:0}
+.stop-main .t{font-weight:600}.stop-main .s{color:var(--muted);font-size:13px}
+.stop-no{flex:none;width:24px;height:24px;border-radius:50%;background:var(--amber);color:var(--amber-ink);font:700 12px/24px var(--f-body);text-align:center;margin-top:1px}
+a.add{text-decoration:none;display:inline-block}
+.pos-box{background:var(--bg);border:1px dashed var(--hair);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--muted)}
+.pos-box.ok-box{border-style:solid;border-color:color-mix(in srgb,var(--ok) 50%,transparent);color:var(--fg)}
+.search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.results{display:grid;gap:6px;margin-top:4px}
+.result{background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;color:var(--fg);font:14px var(--f-body);text-align:left;cursor:pointer}

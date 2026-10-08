@@ -3,6 +3,8 @@ import { de, eur, esc, fmtDate, todayIso } from '../format.js';
 import { parseNumber } from '../logic/fuel.js';
 import { tourStats, fuelsInTour, costsByCategory, costYears, COST_CATEGORIES, TRIP_CATEGORIES, compareTours } from '../logic/costs.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
+import { stopsSection } from './stops.js';
+import { runningTour } from '../logic/costs.js';
 
 let openTourId = null;
 export const setOpenTour = (id) => { openTourId = id; };
@@ -31,7 +33,17 @@ export function tourenView(state, km) {
       ${(t.journal || []).length ? `<div class="row"><div class="s">${t.journal.length} Tagebuch-Einträge</div></div>` : ''}
     </button>`;
   }).join('');
-  return `<section class="sec">${head}${cards}<p class="hint">Antippen für Details, Ausgaben und Tagebuch.</p></section>${compareCard(state, km)}`;
+  return `${runningCard(state)}<section class="sec">${head}${cards}<p class="hint">Antippen für Details, Stellplätze, Ausgaben und Tagebuch.</p></section>${compareCard(state, km)}`;
+}
+
+/** Schnellzugriff, solange eine Tour läuft: Stellplatz für heute setzen. */
+export function runningCard(state) {
+  const t = runningTour(state.tours, todayIso());
+  if (!t) return '';
+  const today = (t.stops || []).some((x) => x.date === todayIso());
+  return `<section class="sec"><div class="card reminder"><div><div class="t">Unterwegs: ${esc(t.name)}</div>
+    <div class="s">${today ? 'Stellplatz für heute ist gespeichert.' : 'Wo steht ihr heute Nacht?'}</div></div>
+    <button type="button" class="btn" data-action="add-stop" data-tour="${t.id}">${today ? 'Noch einer' : 'Hier stehen wir'}</button></div></section>`;
 }
 
 /** Vergleich der abgeschlossenen Touren. Bester Wert je Spalte hervorgehoben. */
@@ -69,6 +81,7 @@ function tourDetail(state, t, km) {
       ${stat('Pro Tag', s.perDay != null ? de(s.perDay, 0) : '–', '€')}
       ${stat('Pro 100 km', s.per100 != null ? de(s.per100, 0) : '–', '€')}
     </div></section>
+  ${stopsSection(t)}
   <section class="sec"><div class="sec-head"><h2>Kosten nach Art</h2><button type="button" class="add" data-action="add-expense">+ Ausgabe</button></div>
     ${s.byCategory.length ? `<div class="card"><div class="bars">${s.byCategory.map(([k, v], i) => `<div class="bar-row"><span>${esc(k)}</span><div class="bar"><i style="width:${((v / max) * 100).toFixed(1)}%;${i === 0 ? 'background:var(--amber)' : ''}"></i></div><span class="num" style="font-size:17px">${eur(v)}</span></div>`).join('')}</div></div>`
       : '<div class="card soon-card"><p>Noch keine Kosten. Trag Ausgaben wie Camping, Fähre oder Maut ein.</p></div>'}
