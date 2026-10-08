@@ -1,7 +1,7 @@
 // Einstieg: Daten laden, Navigation, Bildschirme zeichnen.
 import { state, load, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
 import { requestPersistence } from './db.js';
-import { fuelStats } from './logic/fuel.js';
+import { fuelStats, consumptionCheck } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
 import { cockpit } from './views/cockpit.js';
 import { homeView } from './views/home.js';
@@ -36,7 +36,7 @@ const VIEWS = {
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.13.3 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.14 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -49,6 +49,7 @@ function render() {
     km,
     avg: s.avgConsumption,
     last: s.lastConsumption,
+    check: consumptionCheck(state.fuels),
     due: st.filter((x) => x.state === 'over' || x.state === 'soon').length,
     unknown: st.filter((x) => x.state === 'unknown').length,
   });

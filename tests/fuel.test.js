@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { withConsumption, fuelStats, consumptionByMonth } from '../js/logic/fuel.js';
+import { withConsumption, fuelStats, consumptionByMonth, consumptionCheck } from '../js/logic/fuel.js';
 import { serviceStatus } from '../js/logic/services.js';
 
 const f = (date, km, liters, pricePerLiter, full = true) => ({ date, km, liters, pricePerLiter, full });
@@ -91,4 +91,26 @@ test('Wartung: letzter Serviceheft-Eintrag zählt, sonst Handeingabe', () => {
   const log = [{ serviceKey: 'oil', date: '2026-05-01', km: 6000 }, { serviceKey: 'oil', date: '2026-03-01', km: 3000 }, { serviceKey: 'plugs', date: '2026-09-01', km: 9000 }];
   assert.equal(withLastDone(s, log).lastKm, 6000);
   assert.equal(withLastDone({ ...s, lastDate: '2026-06-01', lastKm: 7000 }, log).lastKm, 7000);
+});
+
+const tank = (km, liters, full = true) => ({ date: '2026-01-01', km, liters, pricePerLiter: 2, full });
+// Abschnitte à 400 km mit 52 l = 13 l/100 km
+const normal = [tank(1000, 40), tank(1400, 52), tank(1800, 52), tank(2200, 52)];
+
+test('Verbrauchs-Lampe: zu wenig Daten → keine Bewertung', () => {
+  assert.equal(consumptionCheck(normal).state, 'none');
+});
+
+test('Verbrauchs-Lampe: letzte Tankung im üblichen Bereich → ok', () => {
+  const r = consumptionCheck([...normal, tank(2600, 58)]); // 14,5 → +11,5 %
+  assert.equal(r.state, 'ok');
+  assert.ok(Math.abs(r.base - 13) < 1e-9);
+});
+
+test('Verbrauchs-Lampe: deutlich über dem eigenen Schnitt → hoch', () => {
+  assert.equal(consumptionCheck([...normal, tank(2600, 64)]).state, 'high'); // 16 → +23 %
+});
+
+test('Verbrauchs-Lampe: sparsamer als sonst ist ok', () => {
+  assert.equal(consumptionCheck([...normal, tank(2600, 40)]).state, 'ok');
 });

@@ -117,3 +117,21 @@ export function parseNumber(text, kind = 'decimal') {
   if (kind === 'km') return Number(s.replace(/\./g, '').replace(',', '.'));
   return Number(s.includes(',') ? s.replace(/\./g, '').replace(',', '.') : s);
 }
+
+/** Ab wie viel Prozent über dem eigenen Durchschnitt die letzte Tankung als „hoch“ gilt. */
+export const HIGH_CONSUMPTION = 0.15;
+
+/**
+ * Bewertet die letzte Volltankung gegen den bisherigen Durchschnitt desselben Busses.
+ * Grundlage sind alle Abschnitte vor der letzten Volltankung (mindestens 3).
+ * @returns {{ state: 'ok'|'high'|'none', last, base, diff }} diff = Abweichung in Prozent
+ */
+export function consumptionCheck(fuels) {
+  const series = withConsumption(fuels).filter((r) => r.cons != null);
+  if (series.length < 4) return { state: 'none', last: null, base: null, diff: null };
+  const last = series[series.length - 1];
+  const before = series.slice(0, -1);
+  const base = (before.reduce((a, r) => a + r.segLiters, 0) / before.reduce((a, r) => a + r.segKm, 0)) * 100;
+  const diff = (last.cons / base - 1) * 100;
+  return { state: diff > HIGH_CONSUMPTION * 100 ? 'high' : 'ok', last: last.cons, base, diff };
+}

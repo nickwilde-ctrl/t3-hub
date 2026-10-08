@@ -64,7 +64,12 @@ export function plateTag(plate) {
 
 const WRENCH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/></svg>';
 
-export function cockpit({ vehicle, km, avg, last, due, unknown }) {
+export function cockpit({ vehicle, km, avg, last, due, unknown, check = { state: 'none' } }) {
+  const lamp = {
+    ok: ['var(--ok)', `Letzte Tankung im üblichen Bereich (${check.diff != null ? (check.diff > 0 ? '+' : '−') + de(Math.abs(check.diff), 0) : ''} % zum bisherigen Schnitt)`],
+    high: ['var(--amber)', `Letzte Tankung ${check.diff != null ? de(check.diff, 0) : ''} % über dem bisherigen Schnitt`],
+    none: ['var(--muted)', 'Noch zu wenige Volltankungen für eine Bewertung'],
+  }[check.state];
   const v = vehicle;
   const meta = `<div class="meta">${v.plate ? plateTag(v.plate) : ''}${v.engine ? `<span>${esc(v.engine)}</span>` : ''}</div>`;
   const file = '<input type="file" id="photo-in" accept="image/*">';
@@ -77,7 +82,7 @@ export function cockpit({ vehicle, km, avg, last, due, unknown }) {
       <div class="dial">${dial(last, avg)}</div>
       <div class="readouts">
         <div class="ro"><div class="k">Tachostand</div><div class="odo" aria-label="${de(km)} km">${digits}</div></div>
-        <div class="ro"><div class="k">Ø Verbrauch</div><div class="v"><span class="lamp" style="background:var(--amber)"></span>${avg != null ? de(avg, 1) : '–'} <small>l/100 km</small></div></div>
+        <div class="ro"><div class="k">Ø Verbrauch</div><div class="v"><span class="lamp" style="background:${lamp[0]}" title="${esc(lamp[1])}" role="img" aria-label="${esc(lamp[1])}"></span>${avg != null ? de(avg, 1) : '–'} <small>l/100 km</small></div></div>
         <div class="ro"><div class="k">Wartung</div><div class="v"><span class="lamp" style="background:${due ? 'var(--bad)' : 'var(--ok)'}"></span>${due} <small>fällig</small> · ${unknown} <small>offen</small></div></div>
       </div>
     </div>`;

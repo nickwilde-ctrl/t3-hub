@@ -284,3 +284,4 @@ a.add{text-decoration:none;display:inline-block}
 .pm-list label{border-top:1px solid #2c2d29}
 .pm-list button:active,.pm-list label:active{background:rgba(255,255,255,.06)}
 .pm-list input{position:absolute;width:1px;height:1px;opacity:0}
+.cons-check{display:flex;gap:8px;align-items:baseline;margin:12px 0 0}.cons-check .lamp{flex:none;transform:translateY(-1px)}

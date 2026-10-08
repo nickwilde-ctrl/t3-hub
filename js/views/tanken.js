@@ -1,6 +1,6 @@
 // Reiter „Tanken“: Auswertung und Tankbuch, dazu das Formular für Tankungen.
 import { de, eur, esc, fmtDate, todayIso } from '../format.js';
-import { fuelStats, consumptionByMonth, withConsumption, completeFill, parseNumber } from '../logic/fuel.js';
+import { fuelStats, consumptionByMonth, withConsumption, completeFill, parseNumber, consumptionCheck } from '../logic/fuel.js';
 import { lineChart, barChart, MONTHS } from './charts.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
 import { runningTour } from '../logic/costs.js';
@@ -46,7 +46,8 @@ function auswertung(state) {
     </div></section>
   <section class="sec"><div class="sec-head"><h2>Verbrauch</h2><span class="label">l/100 km je Volltankung</span></div>
     <div class="card pad">${lineChart('cons', consPts, { label: 'Verbrauch je Volltankung', step: 2, dec: 0, avg: s.avgConsumption, avgDec: 1 })}
-    ${s.best ? minmax(val(de(s.best.cons, 1), 'l', s.best.date), 'Bester Wert', val(de(s.worst.cons, 1), 'l', s.worst.date), 'Höchster Wert') : ''}</div></section>
+    ${s.best ? minmax(val(de(s.best.cons, 1), 'l', s.best.date), 'Bester Wert', val(de(s.worst.cons, 1), 'l', s.worst.date), 'Höchster Wert') : ''}
+    ${checkLine(consumptionCheck(state.fuels))}</div></section>
   <section class="sec"><div class="sec-head"><h2>Verbrauch je Monat</h2><span class="label">l/100 km</span></div>
     <div class="card pad">${barChart('mon', months, { label: 'Verbrauch je Monat', step: 5, dec: 1 })}
     <p class="hint">Jede Volltankung zählt zu dem Monat, in dem sie war. Monate ohne Volltankung fehlen.</p></div></section>
@@ -154,4 +155,13 @@ export function fuelSheet(state, fuel, { save, remove, currentKm }) {
       toast(edit ? 'Tankung geändert' : 'Tankung gespeichert');
     },
   });
+}
+
+/** Erklärt die Verbrauchs-Lampe im Cockpit. */
+function checkLine(c) {
+  if (c.state === 'none') return '<p class="hint cons-check"><span class="lamp" style="background:var(--muted)"></span>Ab vier Volltankungen bewertet die App die letzte Tankung gegen den Schnitt deines Busses.</p>';
+  const d = `${c.diff > 0 ? '+' : '−'}${de(Math.abs(c.diff), 0)}\u00a0%`;
+  return c.state === 'high'
+    ? `<p class="hint cons-check"><span class="lamp" style="background:var(--amber)"></span>Letzte Tankung ${de(c.last, 1)} l/100 km – deutlich über deinem bisherigen Schnitt von ${de(c.base, 1)} (${d}). Einmal ist kein Grund zur Sorge (Dachlast, Autobahn, Stau). Bleibt es mehrmals so, lohnt ein Blick auf Reifendruck, Luftfilter und Lambdasonde.</p>`
+    : `<p class="hint cons-check"><span class="lamp" style="background:var(--ok)"></span>Letzte Tankung ${de(c.last, 1)} l/100 km – im üblichen Bereich deines Busses (Schnitt bisher ${de(c.base, 1)}, ${d}). Die Lampe im Cockpit wird orange, wenn eine Tankung mehr als 15 % darüber liegt.</p>`;
 }
