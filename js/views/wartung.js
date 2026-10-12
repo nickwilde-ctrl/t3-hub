@@ -2,6 +2,8 @@
 import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
 import { serviceStatus } from '../logic/services.js';
 import { parseNumber } from '../logic/fuel.js';
+import { GUIDES } from '../data/guides.js';
+import { guideForService } from '../logic/guides.js';
 import { partsEditor, wireParts, partsList, partsTotal } from './parts.js';
 import { statusText, pill } from './home.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
@@ -14,6 +16,11 @@ const intervalText = (s) => {
   if (s.intervalMonths) p.push(s.intervalMonths % 12 === 0 ? `alle ${s.intervalMonths / 12 === 1 ? '12 Monate' : s.intervalMonths / 12 + ' Jahre'}` : `alle ${s.intervalMonths} Monate`);
   return p.join(' oder ') || 'ohne Intervall';
 };
+
+/** Umschalter oben im Reiter Wartung. */
+export const wartungTabs = (sub) => `<div class="seg sub wsub" role="tablist">
+    <button type="button" data-wsub="intervalle" aria-pressed="${sub !== 'anleitungen'}">Wartung</button>
+    <button type="button" data-wsub="anleitungen" aria-pressed="${sub === 'anleitungen'}">Anleitungen</button></div>`;
 
 export function wartungView(services, log, km) {
   const rows = services.map((s) => {
@@ -47,12 +54,14 @@ export function serviceSheet(service, raw, { km, saveService, saveLog, removeSer
   const lastWithParts = log.filter((l) => l.serviceKey === s.key && l.parts?.length).sort((a, b) => b.date.localeCompare(a.date))[0];
   const lastParts = lastWithParts ? lastWithParts.parts : [];
   let readParts = () => [];
+  const guide = guideForService(GUIDES, s.key);
   let mode = 'done';
   openSheet({
     title: s.name,
     submitLabel: 'Speichern',
     body: `
       ${s.hint ? `<p class="hint" style="margin:0">${esc(s.hint)}</p>` : ''}
+      ${guide ? `<button type="button" class="add guide-link" data-open-guide="${esc(guide.id)}">Anleitung öffnen: ${esc(guide.title)}</button>` : ''}
       <div class="seg" role="group" aria-label="Was möchtest du tun?">
         <button type="button" data-mode="done" aria-pressed="true">Erledigt eintragen</button>
         <button type="button" data-mode="interval" aria-pressed="false">Intervall ändern</button></div>

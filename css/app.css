@@ -300,3 +300,38 @@ a.add{text-decoration:none;display:inline-block}
 .parts{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px;font-size:14px}
 .parts a{color:var(--amber)}
 .last-parts{border-left:2px solid var(--amber);padding:2px 0 2px 10px}
+/* Reparaturleitfäden – 0.17 */
+.wsub{margin-bottom:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
+.chips button{background:var(--panel);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 13px;font:600 14px var(--f-body);cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
+.amber{color:var(--amber)}
+.wr{display:inline-flex;gap:1px}.wr svg{width:15px;height:15px;fill:none;stroke:var(--amber);stroke-width:1.8;stroke-linejoin:round}
+.guide-link{justify-self:start;text-align:left}
+.guide-full{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}
+.guide-body{overflow:auto;-webkit-overflow-scrolling:touch;padding:18px 16px calc(40px + env(safe-area-inset-bottom,0px));max-width:640px;width:100%;margin:0 auto;display:grid;gap:14px;align-content:start}
+.guide-bar .btn[aria-pressed="true"]{background:var(--amber);color:var(--amber-ink)}
+.g-title{font-size:32px;line-height:1.05}
+.g-meta{margin:-6px 0 0;color:var(--muted);font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.g-box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.g-box h3{font-size:18px;margin:0 0 6px;display:inline}
+.g-box summary{cursor:pointer;list-style:none}.g-box summary::-webkit-details-marker{display:none}
+.g-box summary::after{content:" ▾";color:var(--muted)}.g-box:not([open]) summary::after{content:" ▸"}
+.g-danger{border-color:color-mix(in srgb,var(--bad) 55%,transparent)}.g-danger h3{color:var(--bad)}
+.g-list{margin:6px 0 0;padding-left:18px;display:grid;gap:4px;font-size:15px}
+.g-values{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:8px 12px;margin:8px 0 0;font-size:15px}
+.g-values dt{color:var(--muted)}.g-values dd{margin:0}
+.g-ok,.g-warn{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 7px;margin-left:4px;white-space:nowrap}
+.g-ok{color:var(--ok);border:1px solid var(--ok)}.g-warn{color:var(--amber);border:1px solid var(--amber)}
+.g-steps-head{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px}.g-steps-head h3{font-size:22px;margin:0}
+.g-steps{list-style:none;margin:0;padding:0;display:grid;gap:8px;counter-reset:st}
+.g-steps li{counter-increment:st;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.g-steps label{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:12px 14px;cursor:pointer;font-size:15px;line-height:1.45}
+.g-steps b::before{content:counter(st) ". ";color:var(--amber)}
+.g-steps input{width:24px;height:24px;margin-top:2px;accent-color:var(--amber)}
+.g-steps li.done{opacity:.55}.g-steps li.done b{text-decoration:line-through}
+.g-end{display:grid;gap:10px;margin-top:6px}.g-end .add{justify-self:start}
+.workshop .guide-body{font-size:19px}
+.workshop .g-steps label{font-size:20px;padding:18px 16px;gap:16px}
+.workshop .g-steps input{width:34px;height:34px}
+.workshop .g-list,.workshop .g-values{font-size:18px}

@@ -6,10 +6,11 @@ import { serviceStatus } from './logic/services.js';
 import { cockpit } from './views/cockpit.js';
 import { homeView } from './views/home.js';
 import { vehicleCard, editVehicleSheet, photoFrameSheet, modsCard, modSheet } from './views/vehicle.js';
-import { toast } from './views/sheet.js';
+import { toast, closeSheet } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
-import { wartungView, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
+import { wartungView, wartungTabs, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
+import { guidesView, filterGuides, setGuideGroup, openGuide } from './views/guides.js';
 import { tourenView, tourSheet, costCard, setCostYear, setOpenTour, getOpenTour, expenseSheet, journalSheet, runningCard } from './views/touren.js';
 import { stopSheet, openMapView } from './views/stops.js';
 import { dataCard, backupReminder, createBackup, restoreFromFile, roadTripFromFile } from './views/daten.js';
@@ -28,15 +29,17 @@ const currentTour = () => state.tours.find((x) => x.id === getOpenTour());
 let tab = (location.hash || '#home').slice(1);
 if (!TABS.some(([id]) => id === tab)) tab = 'home';
 
+let wsub = 'intervalle';
+
 const VIEWS = {
   home: () => backupReminder(state) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
-  wartung: () => wartungView(services(), state.log, currentKm()),
+  wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView() : wartungView(services(), state.log, currentKm())),
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + modsCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.16 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.17 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -101,6 +104,22 @@ document.addEventListener('click', (e) => {
     removeLog: (id) => deleteItem('log', id),
     log: state.log,
   };
+  const wsubBtn = e.target.closest('[data-wsub]');
+  if (wsubBtn) { wsub = wsubBtn.dataset.wsub; render(); return; }
+  const groupBtn = e.target.closest('[data-guide-group]');
+  if (groupBtn) { setGuideGroup(groupBtn); return; }
+  const guideBtn = e.target.closest('[data-open-guide]');
+  if (guideBtn) {
+    closeSheet();
+    openGuide(guideBtn.dataset.openGuide, {
+      onClose: render,
+      onDone: (g) => {
+        const s = services().find((x) => x.key === g.serviceKey);
+        if (s) serviceSheet(s, state.services.find((x) => x.id === s.id), { ...wOps, log: state.log });
+      },
+    });
+    return;
+  }
   const editService = e.target.closest('[data-edit-service]');
   if (editService) {
     const id = editService.dataset.editService;
@@ -165,6 +184,8 @@ document.addEventListener('click', (e) => {
   render();
   window.scrollTo(0, 0);
 });
+
+document.addEventListener('input', (e) => { if (e.target.id === 'guide-q') filterGuides(); });
 
 document.addEventListener('change', async (e) => {
   const file0 = e.target.files && e.target.files[0];
