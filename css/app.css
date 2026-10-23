@@ -335,3 +335,5 @@ a.add{text-decoration:none;display:inline-block}
 .workshop .g-steps label{font-size:20px;padding:18px 16px;gap:16px}
 .workshop .g-steps input{width:34px;height:34px}
 .workshop .g-list,.workshop .g-values{font-size:18px}
+/* Tanken: berechnetes Feld – 0.18 */
+.field input.auto{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 55%,transparent);font-style:italic}

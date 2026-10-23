@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { withConsumption, fuelStats, consumptionByMonth, consumptionCheck } from '../js/logic/fuel.js';
+import { withConsumption, fuelStats, consumptionByMonth, consumptionCheck, distanceSince } from '../js/logic/fuel.js';
 import { serviceStatus } from '../js/logic/services.js';
 
 const f = (date, km, liters, pricePerLiter, full = true) => ({ date, km, liters, pricePerLiter, full });
@@ -113,4 +113,18 @@ test('Verbrauchs-Lampe: deutlich über dem eigenen Schnitt → hoch', () => {
 
 test('Verbrauchs-Lampe: sparsamer als sonst ist ok', () => {
   assert.equal(consumptionCheck([...normal, tank(2600, 40)]).state, 'ok');
+});
+
+test('Strecke seit der letzten Tankung und Volltankung', () => {
+  const fuels = [
+    { id: 'a', date: '2026-09-01', km: 10000, liters: 50, pricePerLiter: 2, full: true },
+    { id: 'b', date: '2026-09-10', km: 10300, liters: 20, pricePerLiter: 2, full: false },
+  ];
+  const d = distanceSince(fuels, 10712);
+  assert.equal(d.sinceLast, 412);
+  assert.equal(d.last.id, 'b');
+  assert.equal(d.sinceFull, 712);
+  assert.equal(distanceSince(fuels, 9000), null, 'kein früherer Stand');
+  assert.equal(distanceSince(fuels, 10300, 'b').sinceLast, 300, 'beim Bearbeiten nicht gegen sich selbst');
+  assert.equal(distanceSince(fuels, NaN), null);
 });

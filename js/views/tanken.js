@@ -1,6 +1,6 @@
 // Reiter „Tanken“: Auswertung und Tankbuch, dazu das Formular für Tankungen.
 import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
-import { fuelStats, consumptionByMonth, withConsumption, completeFill, parseNumber, consumptionCheck } from '../logic/fuel.js';
+import { fuelStats, consumptionByMonth, withConsumption, completeFill, parseNumber, consumptionCheck, distanceSince } from '../logic/fuel.js';
 import { lineChart, barChart, MONTHS } from './charts.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
 import { runningTour } from '../logic/costs.js';
@@ -86,6 +86,7 @@ export function fuelSheet(state, fuel, { save, remove, currentKm }) {
       <div class="seg" role="group" aria-label="Tankart"><button type="button" id="f-full" aria-pressed="${full}">Volltankung</button><button type="button" id="f-part" aria-pressed="${!full}">Teiltankung</button></div>
       <div class="two"><div class="field"><label for="f-date">Datum</label><input id="f-date" name="date" type="date" value="${esc(f.date)}"></div>
       <div class="field"><label for="f-km">Kilometerstand</label><input id="f-km" name="km" inputmode="numeric" value="${num(f.km, 0)}" placeholder="${currentKm ? de(currentKm + 300) : 'z. B. 14.600'}"></div></div>
+      <p class="hint" id="f-dist" style="margin:0" aria-live="polite"></p>
       <div class="three">
         <div class="field"><label for="f-l">Liter</label><input id="f-l" name="liters" inputmode="decimal" value="${num(f.liters, 2)}" placeholder="48,50"></div>
         <div class="field"><label for="f-p">€ pro Liter</label><input id="f-p" name="price" inputmode="decimal" value="${num(f.pricePerLiter, 3)}" placeholder="1,729"></div>
@@ -101,23 +102,46 @@ export function fuelSheet(state, fuel, { save, remove, currentKm }) {
       form.querySelector('#f-part').onclick = () => set(false);
       const calc = form.querySelector('#f-calc');
       const fields = ['liters', 'price', 'total'].map((n) => form.elements[n]);
-      const update = () => {
-        const [l, p, t] = fields.map((x) => parseNumber(x.value));
-        const filled = fields.filter((x) => x.value.trim());
-        if (filled.length === 2) {
-          const r = completeFill({ liters: l, pricePerLiter: p, total: t });
+      const fmt = [(r) => de(r.liters, 2), (r) => de(r.pricePerLiter, 3), (r) => de(r.total, 2)];
+      // Ein Feld ist „berechnet“, wenn die App es ausgefüllt hat. Tippt man selbst hinein, gehört es dem Nutzer.
+      let auto = edit ? 2 : -1;
+      const markAuto = () => fields.forEach((x, i) => x.classList.toggle('auto', i === auto));
+      const update = (changed) => {
+        if (changed === auto) auto = -1;
+        const own = fields.map((x, i) => i !== auto && x.value.trim() !== '');
+        const ownCount = own.filter(Boolean).length;
+        if (ownCount === 2) {
+          const target = own.indexOf(false);
+          const v = fields.map((x, i) => (own[i] ? parseNumber(x.value) : NaN));
+          const r = completeFill({ liters: v[0], pricePerLiter: v[1], total: v[2] });
           if (r) {
-            const empty = fields.find((x) => !x.value.trim());
-            calc.textContent = empty === fields[0] ? `Berechnet: ${de(r.liters, 2)} Liter` : empty === fields[1] ? `Berechnet: ${de(r.pricePerLiter, 3)} € pro Liter` : `Berechnet: ${de(r.total, 2)} €`;
-            return;
+            fields[target].value = fmt[target](r).replace(/\./g, '');
+            auto = target;
+            calc.textContent = `${['Liter', 'Preis pro Liter', 'Betrag'][target]} ausgerechnet. Du kannst den Wert überschreiben.`;
+          } else {
+            calc.textContent = 'Die Werte ergeben keine sinnvolle Rechnung – bitte prüfen.';
           }
+        } else {
+          if (auto >= 0 && ownCount < 2) { fields[auto].value = ''; auto = -1; }
+          calc.textContent = ownCount === 3 ? 'Alle drei Werte selbst eingetragen. Gespeichert werden Liter und Preis pro Liter.' : 'Zwei der drei Werte reichen, den dritten trägt die App ein.';
         }
-        calc.textContent = filled.length === 3 ? 'Alle drei Werte eingetragen. Gespeichert werden Liter und Preis pro Liter.' : 'Zwei der drei Werte reichen, den dritten rechnet die App aus.';
+        markAuto();
       };
-      fields.forEach((x) => x.addEventListener('input', update));
-      // Beim Bearbeiten sind alle drei gefüllt. Ändert man Liter oder Preis, wird der Betrag neu gerechnet.
-      if (edit) fields.slice(0, 2).forEach((x) => x.addEventListener('input', () => { fields[2].value = ''; update(); }));
+      fields.forEach((x, i) => x.addEventListener('input', () => update(i)));
       update();
+      const dist = form.querySelector('#f-dist');
+      const kmField = form.elements.km;
+      const shortDate = (iso) => fmtDate(iso).slice(0, 6);
+      const showDist = () => {
+        const km = parseNumber(kmField.value, 'km');
+        const d = kmField.value.trim() ? distanceSince(state.fuels, km, fuel ? fuel.id : undefined) : null;
+        if (!d) { dist.textContent = ''; dist.hidden = true; return; }
+        dist.hidden = false;
+        dist.innerHTML = `<b class="amber">${de(d.sinceLast)} km</b> seit der letzten Tankung (${shortDate(d.last.date)})`
+          + (d.lastFull && d.lastFull !== d.last ? ` · ${de(d.sinceFull)} km seit der letzten Volltankung` : '');
+      };
+      kmField.addEventListener('input', showDist);
+      showDist();
       const del = form.querySelector('#f-del');
       if (del) del.onclick = async () => {
         if (del.dataset.armed) { await remove(fuel.id); closeSheet(); toast('Tankung gelöscht'); return; }

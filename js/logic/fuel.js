@@ -135,3 +135,17 @@ export function consumptionCheck(fuels) {
   const diff = (last.cons / base - 1) * 100;
   return { state: diff > HIGH_CONSUMPTION * 100 ? 'high' : 'ok', last: last.cons, base, diff };
 }
+
+/**
+ * Strecke seit der letzten Tankung (und seit der letzten Volltankung) für einen neuen Kilometerstand.
+ * excludeId: beim Bearbeiten die Tankung selbst nicht mitzählen.
+ * @returns {{ last, sinceLast, lastFull, sinceFull } | null}  null, wenn es keine frühere Tankung gibt
+ */
+export function distanceSince(fuels, km, excludeId) {
+  if (!(km > 0)) return null;
+  const before = sortFuels(fuels.filter((f) => f.id !== excludeId && f.km < km));
+  if (!before.length) return null;
+  const last = before[before.length - 1];
+  const lastFull = [...before].reverse().find((f) => f.full) || null;
+  return { last, sinceLast: km - last.km, lastFull, sinceFull: lastFull ? km - lastFull.km : null };
+}
