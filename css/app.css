@@ -354,3 +354,19 @@ a.add{text-decoration:none;display:inline-block}
 .f-warn h3{color:var(--bad)}
 .f-values summary h3{font-size:16px}
 .workshop .guide-body{display:none}
+/* Minispiel – 0.22 */
+.game-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 16px}
+.game-full{position:fixed;inset:0;z-index:50;background:#1c1d1b;touch-action:none;user-select:none;-webkit-user-select:none;outline:none}
+.game-full canvas{display:block}
+.game-hud{position:absolute;left:0;right:0;top:0;padding:calc(10px + env(safe-area-inset-top,0px)) 56px 10px 14px;display:flex;gap:14px;align-items:center;font:500 13px var(--f-body);color:#cfc8b6;background:linear-gradient(rgba(10,10,8,.75),transparent);pointer-events:none}
+.game-hud b{font:700 20px var(--f-display);color:#f6efdc}
+.game-hud .tank{display:flex;align-items:center;gap:6px;margin-left:auto}
+.game-hud .tank i{display:block;width:64px;height:8px;border-radius:4px;background:#3a3b36;overflow:hidden}.game-hud .tank em{display:block;height:100%;background:var(--amber)}
+.game-hud .tank.low em{background:var(--bad)}.game-hud .tank.low{color:var(--bad)}
+.game-x{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:10px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(10,10,8,.6);color:#f6efdc;font-size:16px;cursor:pointer}
+.game-panel{position:absolute;left:20px;right:20px;top:50%;transform:translateY(-50%);background:rgba(28,29,27,.94);border:1px solid #3a3b36;border-radius:16px;padding:22px 20px;text-align:center;color:var(--fg);box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.game-panel p{margin:10px 0 0;color:#cfc8b6;line-height:1.5}
+.gp-title{font:700 34px/1.05 var(--f-display);color:var(--amber)}
+.gp-score{font:700 44px var(--f-display)!important;color:#f6efdc!important}
+.gp-best{font-weight:600;color:var(--amber)!important}
+.gp-go{margin-top:16px;width:100%;font-size:18px;padding:15px}

@@ -15,6 +15,7 @@ import { tourenView, tourSheet, costCard, setCostYear, setOpenTour, getOpenTour,
 import { stopSheet, openMapView } from './views/stops.js';
 import { dataCard, backupReminder, createBackup, restoreFromFile, roadTripFromFile } from './views/daten.js';
 import { installCard } from './views/install.js';
+import { gameCard, openGame } from './views/game.js';
 
 const TABS = [
   ['home', 'Home', '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'],
@@ -39,7 +40,8 @@ const VIEWS = {
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + modsCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.21 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + gameCard()
+    + '<p class="foot">T3 Hub · Version 0.22 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -72,6 +74,7 @@ document.addEventListener('click', (e) => {
     photoFrameSheet(state.vehicle, saveVehicle);
     return;
   }
+  if (action && action.dataset.action === 'open-game') { openGame(); return; }
   if (action && action.dataset.action === 'add-mod') {
     modSheet(state.vehicle, null, saveVehicle);
     return;
