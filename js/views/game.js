@@ -14,7 +14,7 @@ export function closeGame() {
 }
 
 export function gameCard() {
-  return `<section class="sec"><div class="card game-card"><div><h3>Pause machen?</h3><p class="hint" style="margin:4px 0 0">Schlaglochslalom: Weich mit dem T3 Schlaglöchern, Pylonen und Schafen aus – und behalte den Tank im Blick.</p></div>
+  return `<section class="sec"><div class="card game-card"><div><h3>Pause machen?</h3><p class="hint" style="margin:4px 0 0">Schlaglochslalom: Weich mit dem T3 Schlaglöchern, Pylonen und Strohballen aus – und behalte den Tank im Blick.</p></div>
     <button type="button" class="btn" data-action="open-game">Spielen</button></div></section>`;
 }
 
@@ -49,7 +49,7 @@ export function openGame(seed) {
   const showPanel = (html) => { panel.innerHTML = html; panel.hidden = false; };
   const start = () => { g = createGame(W, H, seed, PAD); panel.hidden = true; running = true; last = performance.now(); loop(last); };
   const startPanel = () => showPanel(`<div class="gp-title">Schlagloch&shy;slalom</div>
-    <p>Finger auf den Bildschirm und nach links oder rechts ziehen.<br>Weich Schlaglöchern, Pylonen und Schafen aus. Sammel Benzinkanister ein – der T3 säuft.</p>
+    <p>Finger auf den Bildschirm und nach links oder rechts ziehen.<br>Weich Schlaglöchern, Pylonen und Strohballen aus. Sammel Benzinkanister ein – der T3 säuft.</p>
     ${best.get() ? `<p class="gp-best">Rekord: ${de(best.get(), 1)} km</p>` : ''}
     <button type="button" class="btn gp-go" id="gp-go">Losfahren</button>`);
   const overPanel = () => {
@@ -97,10 +97,12 @@ export function openGame(seed) {
       ctx.fillStyle = '#1b1c19'; ctx.fillRect(t.x, t.y + 3, t.w, t.w);
       ctx.fillStyle = '#ee7d2b'; ctx.beginPath(); ctx.arc(cx, t.y + 3 + t.w / 2, t.w / 2 - 2, 0, 7); ctx.fill();
       ctx.strokeStyle = '#f6efdc'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(cx, t.y + 3 + t.w / 2, t.w / 4, 0, 7); ctx.stroke();
-    } else if (t.kind === 'schaf') {
-      ctx.fillStyle = '#f2eee2';
-      for (const [dx, dy] of [[-8, -4], [0, -6], [8, -4], [-9, 4], [0, 5], [9, 4]]) { ctx.beginPath(); ctx.arc(cx + dx, cy + dy, 7, 0, 7); ctx.fill(); }
-      ctx.fillStyle = '#26241f'; ctx.beginPath(); ctx.ellipse(cx, t.y - 2, 5, 6, 0, 0, 7); ctx.fill();
+    } else if (t.kind === 'ballen') {
+      // Rundballen von oben: Strohscheibe mit Wickelringen
+      ctx.fillStyle = '#c9a24a'; ctx.beginPath(); ctx.arc(cx, cy, t.w / 2, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#a5822f'; ctx.lineWidth = 2;
+      for (const r of [t.w / 2 - 4, t.w / 2 - 9]) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke(); }
+      ctx.fillStyle = '#e3c46e'; ctx.beginPath(); ctx.arc(cx - 3, cy - 3, 3, 0, 7); ctx.fill();
     } else if (t.kind === 'kanister') {
       ctx.fillStyle = '#c8392b'; rr(t.x, t.y + 4, t.w, t.h - 4, 3); ctx.fill();
       ctx.fillStyle = '#8f2318'; ctx.fillRect(t.x + 4, t.y, t.w - 10, 6);

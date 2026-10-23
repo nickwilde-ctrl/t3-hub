@@ -5,7 +5,7 @@ export const CAR = { w: 34, h: 58 };
 export const KINDS = {
   loch: { w: 34, h: 22 },   // Schlagloch
   pylone: { w: 22, h: 26 },
-  schaf: { w: 30, h: 26 },
+  ballen: { w: 30, h: 30 },  // Strohballen
   kanister: { w: 20, h: 26, pickup: true },
 };
 export const VMAX = 141;           // km/h – Peanuts Höchstgeschwindigkeit laut Fahrzeugschein
@@ -56,7 +56,7 @@ export function spawnRow(g) {
   const row = [];
   const n = 1 + Math.floor(r() * (g.speed > 100 ? 3 : 2));
   for (let i = 0; i < n; i++) {
-    const kind = ['loch', 'pylone', 'schaf', 'loch'][Math.floor(r() * 4)];
+    const kind = ['loch', 'pylone', 'ballen', 'loch'][Math.floor(r() * 4)];
     const k = KINDS[kind];
     let x = left + r() * (right - left - k.w);
     // nicht in die Lücke legen
@@ -112,6 +112,6 @@ export function step(g, dt, targetX) {
 export const reasonText = (r) => ({
   loch: 'Ins Schlagloch – Achse hin.',
   pylone: 'Pylone mitgenommen.',
-  schaf: 'Schaf erwischt! (Ihm geht es gut, es ist nur beleidigt.)',
+  ballen: 'Strohballen geknutscht – jetzt riecht der Bus nach Bauernhof.',
   leer: 'Tank leer – der T3 säuft halt.',
 }[r] || 'Aus.');

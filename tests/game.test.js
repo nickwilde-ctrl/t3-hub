@@ -46,9 +46,9 @@ test('Kanister füllt nach, Hindernis beendet das Spiel', () => {
   g.things = [{ kind: 'kanister', pickup: true, x: g.car.x, y: g.car.y, w: 20, h: 26 }];
   assert.deepEqual(step(g, 0.001, g.car.x), ['tank']);
   assert.ok(g.fuel > 20);
-  g.things = [{ kind: 'schaf', x: g.car.x, y: g.car.y, w: 30, h: 26 }];
+  g.things = [{ kind: 'ballen', x: g.car.x, y: g.car.y, w: 30, h: 30 }];
   assert.deepEqual(step(g, 0.001, g.car.x), ['crash']);
-  assert.equal(g.reason, 'schaf');
+  assert.equal(g.reason, 'ballen');
 });
 
 test('Zufall ist mit Startwert reproduzierbar', () => {
