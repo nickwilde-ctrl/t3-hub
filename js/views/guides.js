@@ -11,11 +11,19 @@ const store = {
 const WR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/></svg>';
 const wrenches = (l) => `<span class="wr" title="Schwierigkeit ${l} von 3">${WR.repeat(l)}</span>`;
 
+function valueState(g) {
+  if (g.verified) return '';
+  const v = g.values || [];
+  if (v.some((x) => x.missing)) return ' · <span class="faint">Werte teils offen</span>';
+  if (v.length && v.every((x) => x.check || x.src)) return ' · <span class="faint">Werte laut T3-Pedia</span>';
+  return ' · <span class="faint">Werte ungeprüft</span>';
+}
+
 function row(g) {
   const p = progress(g, store.get(g.id));
   return `<button type="button" class="row row-btn" data-open-guide="${esc(g.id)}">
     <div class="t">${esc(g.title)}<span class="tag">${esc(g.group)}</span></div>
-    <div class="s">${levelText(g.level)} · ca. ${g.minutes} Min. · ${g.steps.length} Schritte${p.done && !p.complete ? ` · <b class="amber">begonnen (${p.done}/${p.total})</b>` : ''}${g.verified ? '' : ' · <span class="faint">Werte ungeprüft</span>'}</div>
+    <div class="s">${levelText(g.level)} · ca. ${g.minutes} Min. · ${g.steps.length} Schritte${p.done && !p.complete ? ` · <b class="amber">begonnen (${p.done}/${p.total})</b>` : ''}${valueState(g)}</div>
     <div class="r" aria-hidden="true">${wrenches(g.level)}</div></button>`;
 }
 
@@ -63,7 +71,7 @@ export function closeGuide() {
 }
 
 /**
- * Vollbild-Anleitung. onDone(guide) wird bei „Fertig – ins Serviceheft“ aufgerufen (nur mit serviceKey).
+ * Vollbild-Anleitung. onDone(guide) wird bei „Fertig“ aufgerufen (mit serviceKey → Wartungspunkt, sonst freier Serviceheft-Eintrag).
  */
 export function openGuide(id, { onDone, onClose } = {}) {
   const g = GUIDES.find((x) => x.id === id);
@@ -89,7 +97,7 @@ export function openGuide(id, { onDone, onClose } = {}) {
       <ol class="g-steps">${g.steps.map((s, i) => `<li><label><input type="checkbox" data-step="${i}" ${done.includes(i) ? 'checked' : ''}><span><b>${esc(s.t)}</b><br>${esc(s.d)}</span></label></li>`).join('')}</ol>
       ${g.hint ? `<p class="hint g-hint">Tipp: ${esc(g.hint)}</p>` : ''}
       <div class="g-end">
-        ${g.serviceKey ? '<button type="button" class="btn" id="g-done">Fertig – ins Serviceheft eintragen</button>' : ''}
+        <button type="button" class="btn" id="g-done">${g.serviceKey ? 'Fertig – ins Serviceheft eintragen' : 'Fertig – im Serviceheft notieren'}</button>
         <button type="button" class="add" id="g-reset">Häkchen zurücksetzen</button>
       </div>
       <p class="hint">${esc(g.source)}</p>

@@ -145,9 +145,9 @@ export function newServiceSheet(saveService) {
 }
 
 /** Serviceheft-Eintrag anlegen oder bearbeiten. */
-export function logSheet(entry, { km, saveLog, removeLog, services }) {
+export function logSheet(entry, { km, saveLog, removeLog, services, prefill }) {
   const edit = !!entry;
-  const e = entry || { date: todayIso(), km, title: '', category: 'Reparatur', cost: '', note: '' };
+  const e = entry || { date: todayIso(), km, title: '', category: 'Reparatur', cost: '', note: '', ...(prefill || {}) };
   const linked = edit && e.serviceKey ? services.find((s) => s.key === e.serviceKey) : null;
   let readParts = () => [];
   openSheet({

@@ -9,7 +9,8 @@ test('Suche findet über Titel, Material und Schritte, ohne Groß/Klein und Umla
   assert.equal(searchGuides(GUIDES, 'OELFILTER')[0].id, 'oelwechsel'); // oe = ö
   assert.equal(searchGuides(GUIDES, 'kerze fühlerlehre')[0].id, 'zuendkerzen');
   assert.equal(searchGuides(GUIDES, '').length, GUIDES.length);
-  assert.equal(searchGuides(GUIDES, '', 'Zündung').length, 1);
+  assert.equal(searchGuides(GUIDES, '', 'Zündung').length, 2);
+  assert.equal(searchGuides(GUIDES, 'entlüften')[0].id, 'kuehlsystem');
 });
 
 test('jede Anleitung ist vollständig und gehört zu einem echten Wartungspunkt', () => {
@@ -36,5 +37,5 @@ test('Fortschritt', () => {
 });
 
 test('verwendete Baugruppen in fester Reihenfolge', () => {
-  assert.deepEqual(usedGroups(GUIDES, GUIDE_GROUPS), ['Motor', 'Zündung']);
+  assert.deepEqual(usedGroups(GUIDES, GUIDE_GROUPS), ['Motor', 'Zündung', 'Kühlung', 'Bremsen', 'Fahrwerk']);
 });

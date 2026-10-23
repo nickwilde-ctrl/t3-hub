@@ -39,7 +39,7 @@ const VIEWS = {
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + modsCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.18.2 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.19 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -114,8 +114,9 @@ document.addEventListener('click', (e) => {
     openGuide(guideBtn.dataset.openGuide, {
       onClose: render,
       onDone: (g) => {
-        const s = services().find((x) => x.key === g.serviceKey);
+        const s = g.serviceKey ? services().find((x) => x.key === g.serviceKey) : null;
         if (s) serviceSheet(s, state.services.find((x) => x.id === s.id), { ...wOps, log: state.log });
+        else logSheet(null, { ...wOps, prefill: { title: g.title, category: 'Wartung' } });
       },
     });
     return;
