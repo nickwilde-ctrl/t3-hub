@@ -340,3 +340,17 @@ a.add{text-decoration:none;display:inline-block}
 .dist{font-family:var(--f-body);font-size:13px;font-weight:600;color:var(--amber);margin-left:8px;vertical-align:2px}
 .tag{white-space:nowrap;display:inline-block}
 .g-src{font-size:11px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:4px;white-space:nowrap}
+/* Werkstatt-Modus Schritt für Schritt – 0.20 */
+.g-focus{overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(28px + env(safe-area-inset-bottom,0px));max-width:640px;width:100%;margin:0 auto;display:grid;gap:16px;align-content:start;flex:1}
+.f-bar{height:6px;border-radius:999px;background:var(--panel-2);overflow:hidden}.f-bar i{display:block;height:100%;background:var(--amber);transition:width .25s ease}
+.f-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px 18px;min-height:38vh;display:grid;align-content:start;gap:12px}
+.f-count{font:600 13px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--amber)}
+.f-title{font:600 34px/1.05 var(--f-display);margin:0}
+.f-text{font-size:21px;line-height:1.5;margin:0;color:var(--fg)}
+.f-actions{display:grid;gap:10px}
+.f-next{font-size:20px;padding:20px 16px;border-radius:14px}
+.f-actions .ghost{padding:14px}
+.f-done .f-title{color:var(--ok)}
+.f-warn h3{color:var(--bad)}
+.f-values summary h3{font-size:16px}
+.workshop .guide-body{display:none}

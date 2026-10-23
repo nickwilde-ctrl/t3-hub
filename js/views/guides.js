@@ -1,7 +1,7 @@
 // Reparaturleitfäden: Liste (im Reiter Wartung) und Vollbild-Ansicht mit Werkstatt-Modus.
 import { esc } from '../format.js';
 import { GUIDES, GUIDE_GROUPS } from '../data/guides.js';
-import { searchGuides, progress, levelText, usedGroups } from '../logic/guides.js';
+import { searchGuides, progress, levelText, usedGroups, nextStep } from '../logic/guides.js';
 
 const store = {
   get(id) { try { return JSON.parse(localStorage.getItem('t3hub-guide-' + id)) || []; } catch { return []; } },
@@ -83,7 +83,7 @@ export function openGuide(id, { onDone, onClose } = {}) {
   root.className = 'guide-full';
   const list = (items) => `<ul class="g-list">${items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`;
   root.innerHTML = `
-    <div class="map-bar guide-bar"><button type="button" class="btn ghost" id="g-close">Zurück</button>
+    <div class="map-bar guide-bar"><button type="button" class="btn ghost" id="g-close">Schließen</button>
       <button type="button" class="btn ghost" id="g-shop" aria-pressed="false">Werkstatt-Modus</button></div>
     <div class="guide-body">
       <div class="eyebrow">${esc(g.group)} · ${esc(g.engine || 'T3')}</div>
@@ -101,15 +101,56 @@ export function openGuide(id, { onDone, onClose } = {}) {
         <button type="button" class="add" id="g-reset">Häkchen zurücksetzen</button>
       </div>
       <p class="hint">${esc(g.source)}</p>
-    </div>`;
+    </div>
+    <div class="g-focus" id="g-focus" hidden></div>`;
   document.body.appendChild(root);
   document.body.style.overflow = 'hidden';
   const prog = root.querySelector('#g-prog');
+  const focus = root.querySelector('#g-focus');
+  let cur = 0;
   const update = () => {
     const p = progress(g, done);
     prog.textContent = `${p.done} von ${p.total} erledigt`;
-    root.querySelectorAll('[data-step]').forEach((c) => c.closest('li').classList.toggle('done', c.checked));
+    root.querySelectorAll('[data-step]').forEach((c) => { c.checked = done.includes(+c.dataset.step); c.closest('li').classList.toggle('done', c.checked); });
   };
+  const valuesBox = g.values?.length ? `<details class="g-box f-values"><summary><h3>Wichtige Werte</h3></summary><dl class="g-values">${g.values.map((v) => `<dt>${esc(v.k)}</dt><dd>${esc(v.v)}</dd>`).join('')}</dl></details>` : '';
+  // Werkstatt-Modus: immer nur ein Schritt, groß, mit „Erledigt – weiter“.
+  const renderFocus = () => {
+    const total = g.steps.length;
+    const pct = Math.round((progress(g, done).done / total) * 100);
+    const bar = `<div class="f-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>`;
+    if (cur < 0) {
+      focus.innerHTML = `${bar}<div class="f-card f-done"><div class="f-count">Alle ${total} Schritte erledigt</div><h2 class="f-title">Geschafft!</h2>
+        <p class="f-text">${g.serviceKey ? 'Trag die Arbeit jetzt ins Serviceheft ein – mit Kilometerstand und Teilen.' : 'Notier die Arbeit im Serviceheft, dann weißt du später, wann es war.'}</p></div>
+        <div class="f-actions"><button type="button" class="btn f-next" id="f-finish">${g.serviceKey ? 'Ins Serviceheft eintragen' : 'Im Serviceheft notieren'}</button>
+        <button type="button" class="btn ghost" id="f-back">Letzten Schritt ansehen</button></div>`;
+      return;
+    }
+    const s = g.steps[cur];
+    focus.innerHTML = `${bar}
+      ${cur === 0 && g.warnings?.length ? `<div class="g-box g-danger f-warn"><h3>Vorher beachten</h3><ul class="g-list">${g.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div>` : ''}
+      <div class="f-card"><div class="f-count">Schritt ${cur + 1} von ${total}${done.includes(cur) ? ' · erledigt' : ''}</div>
+        <h2 class="f-title">${esc(s.t)}</h2><p class="f-text">${esc(s.d)}</p></div>
+      <div class="f-actions"><button type="button" class="btn f-next" id="f-next">${cur === total - 1 ? 'Erledigt – fertig' : 'Erledigt – weiter'}</button>
+        ${cur > 0 ? '<button type="button" class="btn ghost" id="f-back">← Vorheriger Schritt</button>' : ''}</div>
+      ${valuesBox}`;
+  };
+  focus.addEventListener('click', (e) => {
+    if (e.target.closest('#f-next')) {
+      done = [...new Set([...done, cur])];
+      store.set(g.id, done);
+      const n = nextStep(g, done);
+      cur = n === -1 ? -1 : (cur + 1 < g.steps.length && !done.includes(cur + 1) ? cur + 1 : n);
+      update(); renderFocus(); focus.scrollTop = 0;
+    } else if (e.target.closest('#f-back')) {
+      cur = cur < 0 ? g.steps.length - 1 : Math.max(0, cur - 1);
+      renderFocus(); focus.scrollTop = 0;
+    } else if (e.target.closest('#f-finish')) {
+      store.set(g.id, []);
+      closeGuide();
+      onDone?.(g);
+    }
+  });
   update();
   root.addEventListener('change', (e) => {
     const c = e.target.closest('[data-step]');
@@ -125,6 +166,10 @@ export function openGuide(id, { onDone, onClose } = {}) {
     const on = shop.getAttribute('aria-pressed') !== 'true';
     shop.setAttribute('aria-pressed', on);
     root.classList.toggle('workshop', on);
+    shop.textContent = on ? 'Alle Schritte zeigen' : 'Werkstatt-Modus';
+    root.querySelector('.guide-body').hidden = on;
+    focus.hidden = !on;
+    if (on) { cur = nextStep(g, done); renderFocus(); }
     keepAwake(on);
   };
   root.querySelector('#g-reset').onclick = () => {

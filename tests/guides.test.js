@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { searchGuides, guideForService, progress, usedGroups } from '../js/logic/guides.js';
+import { searchGuides, guideForService, progress, usedGroups, nextStep } from '../js/logic/guides.js';
 import { GUIDES, GUIDE_GROUPS } from '../js/data/guides.js';
 import { DEFAULT_SERVICES } from '../js/logic/services.js';
 
@@ -38,4 +38,11 @@ test('Fortschritt', () => {
 
 test('verwendete Baugruppen in fester Reihenfolge', () => {
   assert.deepEqual(usedGroups(GUIDES, GUIDE_GROUPS), ['Motor', 'Zündung', 'Kühlung', 'Bremsen', 'Fahrwerk']);
+});
+
+test('Werkstatt-Modus: nächster offener Schritt', () => {
+  const g = { steps: [{}, {}, {}] };
+  assert.equal(nextStep(g, []), 0);
+  assert.equal(nextStep(g, [0, 2]), 1);
+  assert.equal(nextStep(g, [0, 1, 2]), -1);
 });

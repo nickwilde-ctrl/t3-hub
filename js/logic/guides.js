@@ -28,3 +28,9 @@ export const levelText = (l) => ['', 'Einfach', 'Mittel', 'Anspruchsvoll'][l] ||
 
 /** Baugruppen, die in den Anleitungen vorkommen (in fester Reihenfolge). */
 export const usedGroups = (guides, order) => order.filter((g) => guides.some((x) => x.group === g));
+
+/** Erster noch nicht erledigter Schritt (für den Werkstatt-Modus), -1 wenn alles erledigt ist. */
+export function nextStep(guide, done = []) {
+  for (let i = 0; i < guide.steps.length; i++) if (!done.includes(i)) return i;
+  return -1;
+}
