@@ -2,7 +2,7 @@
 // Werte mit check: false sind ungeprüft und müssen gegen ein Reparaturhandbuch geprüft werden.
 // serviceKey verknüpft eine Anleitung mit einem Wartungspunkt (siehe js/logic/services.js).
 
-export const GUIDE_GROUPS = ['Motor', 'Zündung', 'Kühlung', 'Kraftstoff', 'Getriebe', 'Bremsen', 'Fahrwerk', 'Elektrik', 'Karosserie'];
+export const GUIDE_GROUPS = ['Check', 'Motor', 'Zündung', 'Kühlung', 'Kraftstoff', 'Getriebe', 'Bremsen', 'Fahrwerk', 'Elektrik', 'Karosserie'];
 
 export const GUIDES = [
   {
@@ -23,17 +23,18 @@ export const GUIDES = [
     ],
     material: [
       'Motoröl, ca. 4,5 l (Viskosität und Freigabe laut Handbuch, z. B. 15W-40 oder 10W-40)',
-      'Ölfilter',
-      'Neuer Dichtring für die Ölablassschraube',
+      'Ölfilter – VW 070 115 561 (auch für MV gelistet), Nachbau z. B. Mahle/Knecht OC 47',
+      'Neuer Dichtring für die Ölablassschraube (Metall, nicht Kunststoff)',
     ],
     values: [
-      { k: 'Ölmenge mit Filterwechsel', v: 'ca. 4,5 l – maßgeblich ist der Peilstab', check: false },
+      { k: 'Ölmenge', v: 'ca. 4,5 l mit Filterwechsel, ca. 4,0 l ohne – maßgeblich ist der Peilstab', check: false, src: 'Datenblätter/Foren, deckungsgleich' },
       { k: 'Ölablassschraube', v: '25 Nm', check: false, src: 'T3-Pedia (VW-Leitfaden)' },
       { k: 'Ölfilter', v: 'von Hand: anlegen, dann ca. ¾ Umdrehung weiter', check: false },
     ],
     warnings: [
       'Öl warm ablassen, nicht heiß – Verbrühungsgefahr.',
       'Nie unter dem Bus arbeiten, wenn er nur auf dem Wagenheber steht.',
+      'Öl- und Kühlmitteleinfüllung nicht verwechseln – beide sitzen hinter der Wartungsklappe. Vor dem Einfüllen zweimal hinsehen.',
       'Altöl gehört nicht in den Ausguss. Händler, die Motoröl verkaufen, nehmen Altöl zurück – Kassenbon aufheben.',
     ],
     steps: [
@@ -50,7 +51,7 @@ export const GUIDES = [
       { t: 'Ölstand nachmessen', d: 'Motor aus, 5 Minuten warten, Peilstab prüfen und bei Bedarf nachfüllen.' },
       { t: 'Aufräumen', d: 'Altöl und alten Filter zurückgeben (Händler oder Wertstoffhof). Teile und Öl gleich im Serviceheft eintragen.' },
     ],
-    hint: 'Beim Wasserboxer sitzt unten am Motor ein Ölsieb. Viele T3-Schrauber reinigen es bei jedem zweiten oder dritten Ölwechsel mit. Ablauf und Werte dafür stehen im Handbuch.',
+    hint: 'Der Wasserboxer hat Hydrostößel – ein Ventilspiel-Einstellen wie beim luftgekühlten Motor entfällt. Ölsorte: Freigabe VW 500 00 / 501 01 / 502 00, Viskosität nach Außentemperatur (z. B. 15W-40).',
     source: 'Eigene Zusammenstellung (T3 Hub). Werte teils aus T3-Pedia (t3-pedia.de, CC BY-SA 3.0), noch nicht gegen das Reparaturhandbuch geprüft.',
     verified: false,
   },
@@ -248,13 +249,13 @@ export const GUIDES = [
       { k: 'Sollwert MV/SS/SR', v: '5° ±1° vor OT bei 2000–2500 U/min', check: false, src: 'T3-Pedia' },
       { k: 'Bedingung', v: 'Öltemperatur mindestens 80 °C, blauer Stecker am Thermostatgehäuse abgezogen', check: false, src: 'T3-Pedia' },
       { k: 'Leerlauf (zur Kontrolle danach)', v: '880 ±50 U/min', check: false, src: 'T3-Pedia' },
-      { k: 'Lage der Zündmarke', v: 'Wo die Markierung sitzt, steht im Handbuch – noch nicht eingetragen', check: false, missing: true },
+      { k: 'Lage der Zündmarke', v: 'an der Kurbelwellen-Riemenscheibe hinten am Motor: U-förmige Mulde = OT, V-Kerbe = 5° vor OT (2,1 l); abgelesen gegen die Trennfuge des Motorgehäuses', check: false, src: 'Foren (TheSamba, Club 80-90)' },
       { k: 'DJ (82 kW) abweichend', v: '10° ±1° vor OT, Unterdruck- und DLS-Stecker-Vorgaben anders', check: false, src: 'T3-Pedia' },
     ],
     warnings: ['Bei laufendem Motor: Finger, Haare und Kabel weg von Keilriemen und Lüfter.', 'Zündanlage nicht anfassen, wenn der Motor läuft – Hochspannung.'],
     steps: [
       { t: 'Motor warmfahren', d: 'Bis das Öl mindestens 80 °C hat – eine richtige Runde fahren, nicht nur im Stand laufen lassen.' },
-      { t: 'Zündmarke sichtbar machen', d: 'Markierung (siehe Handbuch) mit Kreide nachziehen, damit man sie im Blitzlicht gut sieht.' },
+      { t: 'Zündmarke sichtbar machen', d: 'An der Kurbelwellen-Riemenscheibe die V-Kerbe (5° vor OT) mit Kreide nachziehen, damit man sie im Blitzlicht gut sieht. Die U-förmige Mulde daneben ist OT.' },
       { t: 'Zündlichtpistole anschließen', d: 'Nach Anleitung des Geräts, Zange an das Zündkabel von Zylinder 1.' },
       { t: 'Blauen Stecker abziehen', d: 'Den blauen Stecker am Thermostatgehäuse abziehen.' },
       { t: 'Drehzahl halten', d: 'Motor auf 2000–2500 U/min bringen und halten.' },
@@ -264,6 +265,70 @@ export const GUIDES = [
     ],
     hint: 'Ohne Zündlichtpistole lohnt sich das nicht – dann besser bei der nächsten AU in der Werkstatt mitprüfen lassen.',
     source: 'Eigene Zusammenstellung (T3 Hub) nach Fakten aus T3-Pedia (t3-pedia.de, CC BY-SA 3.0). Noch nicht gegen das Reparaturhandbuch geprüft.',
+    verified: false,
+  },
+
+  {
+    id: 'fruehjahrscheck',
+    title: 'Frühjahrscheck und Unterboden',
+    group: 'Check',
+    engine: 'T3 allgemein',
+    level: 1,
+    minutes: 60,
+    serviceKey: null,
+    tools: ['Taschenlampe', 'Auffahrrampen oder Wagenheber mit Unterstellböcken', 'Spiegel mit Stiel (hilfreich)', 'Notizzettel oder Handy für Fotos'],
+    material: [],
+    values: [
+      { k: 'Kühlmittelstand', v: 'kalt im Ausgleichsbehälter notieren – über Wochen vergleichen', check: false, src: 'Foren' },
+      { k: 'Kraftstoffschläuche', v: 'tauschen spätestens alle 5 Jahre oder sofort bei Rissen/Schwitzen', check: false, src: 'Foren (vanagon.org)' },
+      { k: 'Nach Zeit fällig (alle 2 Jahre)', v: 'Kühlmittel, Bremsflüssigkeit, Kupplungsflüssigkeit', check: false, src: 'GoWesty' },
+    ],
+    warnings: ['Nie unter dem Bus liegen, wenn er nur auf dem Wagenheber steht.', 'Riechst du Benzin oder siehst nasse Kraftstoffschläuche: nicht fahren, erst reparieren – Brandgefahr.'],
+    steps: [
+      { t: 'Kraftstoffschläuche', d: 'Im Motorraum und an der Durchführung zur Spritzwand: Risse, feuchte Stellen, Benzingeruch? Das ist beim T3 die häufigste Brandursache.' },
+      { t: 'Tank und Einfüllstutzen', d: 'Nach dem nächsten Volltanken unter den Bus schauen: Benzinspuren deuten auf ausgetrocknete Tüllen oder Entlüftungsschläuche.' },
+      { t: 'Kühlmittelrohre unter dem Bus', d: 'Die langen Rohre nach vorne zum Kühler: Rost, Nässe, lockere Schellen? Auch Schläuche und Verteilerstücke ansehen.' },
+      { t: 'Ausgleichsbehälter', d: 'Kunststoff gelb, spröde oder mit Haarrissen? Kühlmittelstand kalt notieren. Steht er unter dem Geber, zeigt die Anzeige „heiß“, obwohl der Motor es nicht ist.' },
+      { t: 'Zylinderköpfe von unten', d: 'Mit der Lampe die Kopf-Unterseiten neben den Zündkerzen ansehen: Weiße Kalk- oder Kühlmittelspuren sind ein Frühzeichen für undichte Wassermanteldichtungen.' },
+      { t: 'Wasserpumpe und Keilriemen', d: 'Feuchtigkeit oder Krusten an der Pumpe? Riemen rissig oder glänzend? Durchbiegung grob ca. 10–15 mm bei Daumendruck.' },
+      { t: 'Massebänder', d: 'Motor–Karosserie, Getriebe–Karosserie und an der Batterie: fest, blank, ohne grüne/weiße Oxidschicht? Schlechte Masse macht beim Digifant komische Fehler.' },
+      { t: 'Antriebswellen hinten', d: 'Manschetten auf Risse und herausgeschleudertes Fett prüfen. Sitzen die Gelenkschrauben fest?' },
+      { t: 'Vorderachse und Lenkung', d: 'Manschetten an Achs- und Lenkgelenken intakt? Rad oben und unten anfassen und rütteln: Spiel?' },
+      { t: 'Schaltgestänge', d: 'Faltenbalg am Getriebe ganz? Spiel an Kugel und Pfanne? Gänge schwammig = meist verschlissene Buchsen.' },
+      { t: 'Rost-Rundgang', d: 'Schweller, Wagenheberaufnahmen, Radläufe, Hinterachsschwingen, Schiebetürkante, Frontscheibenrahmen (nasser Fußraum?). Auffälliges fotografieren, dann siehst du nächstes Jahr, ob es wächst.' },
+      { t: 'Bremsen kurz ansehen', d: 'Schläuche auf Risse, Trommeln innen auf Feuchtigkeit. Für die gründliche Prüfung gibt es die Anleitung „Bremsen auf Verschleiß prüfen“.' },
+      { t: 'Feuerlöscher', d: 'Ist einer an Bord, ist er erreichbar und noch im Prüfzeitraum?' },
+      { t: 'Ergebnis festhalten', d: 'Was du gefunden hast, im Serviceheft notieren – auch „alles ok“. Offene Punkte als eigene Aufgabe merken.' },
+    ],
+    hint: 'Einmal im Jahr vor der Saison und vor jeder großen Reise. Die Punkte stammen aus dem, was T3-Fahrer in Foren am häufigsten als Schwachstelle nennen.',
+    source: 'Eigene Zusammenstellung (T3 Hub) nach Erfahrungen aus TheSamba, Club 80-90, GoWesty, Van Café und Fachartikeln.',
+    verified: false,
+  },
+  {
+    id: 'antriebswellen',
+    title: 'Antriebswellen hinten prüfen und nachziehen',
+    group: 'Getriebe',
+    engine: 'T3 2WD',
+    level: 2,
+    minutes: 45,
+    serviceKey: null,
+    tools: ['Vielzahn-Bit 8 mm (12-Kant) mit Ratsche', 'Drehmomentschlüssel', 'Bremsenreiniger und Lappen (Schraubenköpfe säubern)', 'Auffahrrampen oder Unterstellböcke', 'Taschenlampe'],
+    material: ['Bei Bedarf neue Gelenkschrauben und Sicherungsplatten', 'Bei gerissener Manschette: Manschettensatz mit Fett'],
+    values: [
+      { k: 'Gelenkschrauben (Vielzahn)', v: '45 Nm', check: false, src: 'Club 80-90 Wiki' },
+      { k: 'Fett je Gelenk (beim Neufetten)', v: '90 g bei 14"-Rädern, 120 g bei 16"', check: false, src: 'Club 80-90 Wiki (ETKA-Satz)' },
+    ],
+    warnings: ['Lockere Gelenkschrauben können zum Verlust des Antriebs führen – das ist sicherheitsrelevant.', 'Keine Edelstahlschrauben verwenden.'],
+    steps: [
+      { t: 'Bus sicher abstellen', d: 'Gang raus, Handbremse an, hinten so anheben bzw. auffahren, dass du gut an die Wellen kommst. Unterlegkeile vorne.' },
+      { t: 'Manschetten ansehen', d: 'Beide Seiten, an Getriebe- und Radseite: Risse, Fett rundherum verteilt? Eine gerissene Manschette lässt Dreck ins Gelenk – bald tauschen.' },
+      { t: 'Spiel fühlen', d: 'Welle mit der Hand drehen und hin- und herbewegen. Deutliches Klacken oder Spiel spricht für ein verschlissenes Gelenk.' },
+      { t: 'Schraubenköpfe säubern', d: 'Vielzahn-Köpfe mit Bremsenreiniger und Haken komplett sauber machen. Sonst rutscht das Bit und der Kopf dreht rund.' },
+      { t: 'Nachziehen', d: 'Jede Schraube mit dem Drehmomentschlüssel auf 45 Nm prüfen. Rad dafür von Hand weiterdrehen (Gang raus).' },
+      { t: 'Nach 80 km noch einmal', d: 'Wenn Schrauben gelöst oder getauscht wurden: nach ca. 80 km erneut nachziehen.' },
+    ],
+    hint: 'Gelenke reinigen und neu fetten ist ein größerer Job (Gelenk ab, Sicherungsring, waschen, fetten). Für den Anfang reicht die regelmäßige Sichtprüfung und das Nachziehen.',
+    source: 'Eigene Zusammenstellung (T3 Hub) nach Fakten aus dem Club-80-90-Wiki und Forenerfahrungen. Werte noch nicht gegen das Reparaturhandbuch geprüft.',
     verified: false,
   },
 ];

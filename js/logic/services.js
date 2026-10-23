@@ -18,7 +18,7 @@ export const DEFAULT_SERVICES = [
   { key: 'ignition', name: 'Verteilerkappe, Verteilerfinger, Zündkabel', intervalKm: 48000, intervalMonths: null, hint: 'Kabel nur, wenn nötig.' },
   { key: 'airfilter', name: 'Luftfilter', intervalKm: 48000, intervalMonths: null, hint: 'Alle 24.000 km prüfen.' },
   { key: 'fuelfilter', name: 'Kraftstofffilter', intervalKm: 48000, intervalMonths: null, hint: '' },
-  { key: 'brakefluid', name: 'Bremsflüssigkeit', intervalKm: null, intervalMonths: 24, hint: 'Unabhängig von den Kilometern.' },
+  { key: 'brakefluid', name: 'Bremsflüssigkeit', intervalKm: null, intervalMonths: 24, hint: 'DOT 4, unabhängig von den Kilometern.' },
   { key: 'coolant', name: 'Kühlmittel spülen und erneuern', intervalKm: null, intervalMonths: 24, hint: 'Phosphatfreies Kühlmittel mit destilliertem Wasser.' },
   { key: 'gearoil', name: 'Getriebeöl', intervalKm: 48000, intervalMonths: null, hint: 'Schaltgetriebe: API GL4, SAE 75W-90.' },
 ];

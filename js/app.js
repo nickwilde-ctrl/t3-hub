@@ -39,7 +39,7 @@ const VIEWS = {
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + modsCard(state.vehicle)
     + dataCard(state)
     + installCard()
-    + '<p class="foot">T3 Hub · Version 0.20 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.21 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
