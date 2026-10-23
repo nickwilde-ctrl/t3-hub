@@ -81,7 +81,7 @@ export function openGuide(id, { onDone, onClose } = {}) {
       <div class="eyebrow">${esc(g.group)} · ${esc(g.engine || 'T3')}</div>
       <h2 class="g-title">${esc(g.title)}</h2>
       <p class="g-meta">${levelText(g.level)} ${wrenches(g.level)} · ca. ${g.minutes} Min. · ${g.steps.length} Schritte</p>
-      ${g.values?.length ? `<div class="g-box"><h3>Wichtige Werte</h3><dl class="g-values">${g.values.map((v) => `<dt>${esc(v.k)}</dt><dd>${esc(v.v)}${v.check ? ' <span class="g-ok">geprüft</span>' : ` <span class="g-warn">${v.missing ? 'fehlt' : 'ungeprüft'}</span>`}</dd>`).join('')}</dl></div>` : ''}
+      ${g.values?.length ? `<div class="g-box"><h3>Wichtige Werte</h3><dl class="g-values">${g.values.map((v) => `<dt>${esc(v.k)}</dt><dd>${esc(v.v)}${v.check ? ' <span class="g-ok">geprüft</span>' : v.src ? ` <span class="g-src">laut ${esc(v.src)}</span>` : ` <span class="g-warn">${v.missing ? 'fehlt' : 'ungeprüft'}</span>`}</dd>`).join('')}</dl></div>` : ''}
       ${g.warnings?.length ? `<div class="g-box g-danger"><h3>Achtung</h3>${list(g.warnings)}</div>` : ''}
       <details class="g-box" open><summary><h3>Werkzeug</h3></summary>${list(g.tools)}</details>
       <details class="g-box" open><summary><h3>Material</h3></summary>${list(g.material)}</details>
