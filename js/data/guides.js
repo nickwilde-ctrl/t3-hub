@@ -114,11 +114,12 @@ export const GUIDES = [
     ],
     material: [
       'Kühlerfrostschutz, ca. 7 l – eine Sorte, G11 und G12 nicht mischen',
-      'Wasser, ca. 10,5 l – T3-Pedia: Leitungswasser, kein destilliertes (mit Handbuch abgleichen)',
+      'Destilliertes Wasser, ca. 10,5 l',
     ],
     values: [
       { k: 'Füllmenge', v: 'ca. 17,5 l (mit Zusatzheizer hinten mehr)', check: false, src: 'T3-Pedia' },
       { k: 'Mischung', v: '7 l Frostschutz + 10,5 l Wasser = 40 %, schützt bis ca. −25 °C', check: false, src: 'T3-Pedia' },
+      { k: 'Wasser', v: 'destilliert (laut „Jetzt helfe ich mir selbst“)', check: true },
       { k: 'Entlüftungsschraube', v: 'rechts oben am Kühler, SW 13, ca. 2 Umdrehungen öffnen', check: false, src: 'T3-Pedia' },
       { k: 'Drehzahl beim Entlüften', v: 'ca. 2500 U/min halten', check: false, src: 'T3-Pedia' },
       { k: 'Wechselintervall', v: 'spätestens alle 4 Jahre (T3 Hub erinnert nach deinem Intervall)', check: false, src: 'T3-Pedia' },
