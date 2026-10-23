@@ -21,12 +21,13 @@ export function rng(seed = Date.now()) {
   return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
 }
 
-export function createGame(width, height, seed) {
+export function createGame(width, height, seed, bottom = 0) {
   const verge = Math.round(width * 0.08);
   return {
     width, height, verge,
     road: { left: verge, right: width - verge },
-    car: { x: width / 2 - CAR.w / 2, y: height - CAR.h - 28, ...CAR },
+    car: { x: width / 2 - CAR.w / 2, y: height - bottom - CAR.h - 28, ...CAR },
+    bottom,
     targetX: width / 2 - CAR.w / 2,
     things: [],
     speed: VSTART,

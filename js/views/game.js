@@ -34,18 +34,20 @@ export function openGame(seed) {
   const hud = root.querySelector('#game-hud');
   const panel = root.querySelector('#game-panel');
   const dpr = Math.min(3, window.devicePixelRatio || 1);
-  let W = 0, H = 0, g = null, running = false, last = 0, finger = null, flash = 0;
+  let W = 0, H = 0, PAD = 0, g = null, running = false, last = 0, finger = null, flash = 0;
 
   const size = () => {
     W = root.clientWidth; H = root.clientHeight;
     cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Lenkfeld unten: Platz für den Finger, damit er den Bus nicht verdeckt
+    PAD = Math.round(Math.max(120, H * 0.17));
   };
   size();
-  g = createGame(W, H, seed);
+  g = createGame(W, H, seed, PAD);
 
   const showPanel = (html) => { panel.innerHTML = html; panel.hidden = false; };
-  const start = () => { g = createGame(W, H, seed); panel.hidden = true; running = true; last = performance.now(); loop(last); };
+  const start = () => { g = createGame(W, H, seed, PAD); panel.hidden = true; running = true; last = performance.now(); loop(last); };
   const startPanel = () => showPanel(`<div class="gp-title">Schlagloch&shy;slalom</div>
     <p>Finger auf den Bildschirm und nach links oder rechts ziehen.<br>Weich Schlaglöchern, Pylonen und Schafen aus. Sammel Benzinkanister ein – der T3 säuft.</p>
     ${best.get() ? `<p class="gp-best">Rekord: ${de(best.get(), 1)} km</p>` : ''}
@@ -105,10 +107,21 @@ export function openGame(seed) {
       ctx.fillStyle = '#f6efdc'; ctx.font = '700 13px system-ui'; ctx.textAlign = 'center'; ctx.fillText('+', cx, cy + 6);
     }
   }
+  function drawPad() {
+    const y = H - PAD;
+    ctx.fillStyle = '#0f100e'; ctx.fillRect(0, y, W, PAD);
+    ctx.fillStyle = '#3a3b36'; ctx.fillRect(0, y, W, 1);
+    const cx = g.car.x + g.car.w / 2;
+    ctx.fillStyle = 'rgba(240,164,58,.18)'; rr(cx - 34, y + 18, 68, PAD - 48, 14); ctx.fill();
+    ctx.fillStyle = '#f0a43a'; ctx.fillRect(cx - 1, y + 10, 2, 8);
+    ctx.fillStyle = '#8b8576'; ctx.font = '600 12px system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('←  hier mit dem Finger lenken  →', W / 2, H - 16 - Math.max(0, PAD - 140) / 2);
+  }
   function draw() {
     drawRoad();
     for (const t of g.things) drawThing(t);
     drawCar(g.car);
+    drawPad();
     if (flash > 0) { ctx.fillStyle = `rgba(240,164,58,${flash})`; ctx.fillRect(0, 0, W, H); flash = Math.max(0, flash - 0.04); }
     const pct = g.fuel / TANK;
     hud.innerHTML = `<span><b>${de(g.km, 1)}</b> km</span><span><b>${Math.round(g.speed)}</b> km/h</span>
