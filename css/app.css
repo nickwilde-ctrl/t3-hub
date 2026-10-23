@@ -337,3 +337,5 @@ a.add{text-decoration:none;display:inline-block}
 .workshop .g-list,.workshop .g-values{font-size:18px}
 /* Tanken: berechnetes Feld – 0.18 */
 .field input.auto{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 55%,transparent);font-style:italic}
+.dist{font-family:var(--f-body);font-size:13px;font-weight:600;color:var(--amber);margin-left:8px;vertical-align:2px}
+.tag{white-space:nowrap;display:inline-block}

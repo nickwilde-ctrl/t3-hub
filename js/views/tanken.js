@@ -59,14 +59,15 @@ function auswertung(state) {
 
 function tankbuch(state) {
   const tourName = (id) => (state.tours.find((t) => t.id === id) || {}).name;
-  const rows = withConsumption(state.fuels).reverse();
+  const asc = withConsumption(state.fuels);
+  const rows = asc.map((f, i) => ({ ...f, dist: i > 0 ? f.km - asc[i - 1].km : null })).reverse();
   return `<section class="sec"><div class="sec-head"><h2>Tankbuch</h2><span class="label">${state.fuels.length} Einträge</span></div>
     <div class="card list">${rows.map((f) => `<button type="button" class="row row-btn" data-edit-fuel="${f.id}">
-      <div class="t num" style="font-size:18px">${de(f.km)} km<span class="tag">${f.full ? 'Voll' : 'Teil'}</span>${f.tourId && tourName(f.tourId) ? `<span class="tag">${esc(tourName(f.tourId))}</span>` : ''}</div>
+      <div class="t num" style="font-size:18px">${de(f.km)} km${f.dist != null ? `<span class="dist">+${de(f.dist)} km</span>` : ''}<span class="tag">${f.full ? 'Voll' : 'Teil'}</span>${f.tourId && tourName(f.tourId) ? `<span class="tag">${esc(tourName(f.tourId))}</span>` : ''}</div>
       <div class="s">${fmtDate(f.date)} · ${de(f.liters, 2)} l · ${de(f.pricePerLiter, 3)} €/l · ${eurExact(f.liters * f.pricePerLiter)}${f.note ? ' · ' + esc(f.note) : ''}</div>
       <div class="r">${f.cons != null ? `<span class="num big">${de(f.cons, 1)}</span><div class="label">l/100 km</div>` : `<span class="hint">${f.full ? 'Startwert' : 'zählt zur nächsten<br>Volltankung'}</span>`}</div>
     </button>`).join('')}</div>
-    <p class="hint">Antippen zum Bearbeiten oder Löschen. Verbrauch wird zwischen zwei Volltankungen berechnet, Teiltankungen dazwischen zählen mit.</p></section>`;
+    <p class="hint">Antippen zum Bearbeiten oder Löschen. „+ km“ ist die Strecke seit der Tankung davor. Verbrauch wird zwischen zwei Volltankungen berechnet, Teiltankungen dazwischen zählen mit.</p></section>`;
 }
 
 /** Formular für eine neue oder bestehende Tankung. */
