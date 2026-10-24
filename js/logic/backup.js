@@ -2,7 +2,9 @@
 
 export const BACKUP_FORMAT = 't3hub-backup';
 export const BACKUP_VERSION = 1;
-export const STORE_NAMES = ['vehicles', 'fuels', 'services', 'log', 'tours'];
+export const STORE_NAMES = ['vehicles', 'fuels', 'services', 'log', 'tours', 'files'];
+/** Listen, die in älteren Backups noch fehlen dürfen. */
+const OPTIONAL = ['files'];
 
 export function buildBackup(data, now = new Date()) {
   return {
@@ -22,11 +24,12 @@ export function checkBackup(obj) {
     return { ok: false, error: 'Diese Backup-Datei stammt aus einer neueren Version der App. Bitte die App aktualisieren.' };
   }
   for (const n of STORE_NAMES) {
+    if (OPTIONAL.includes(n) && obj[n] === undefined) continue;
     if (!Array.isArray(obj[n])) return { ok: false, error: `Die Backup-Datei ist unvollständig (${n} fehlt).` };
     if (obj[n].some((x) => !x || typeof x.id !== 'string')) return { ok: false, error: 'Die Backup-Datei ist beschädigt.' };
   }
   if (!obj.vehicles.length) return { ok: false, error: 'In der Backup-Datei ist kein Fahrzeug enthalten.' };
-  return { ok: true, counts: Object.fromEntries(STORE_NAMES.map((n) => [n, obj[n].length])) };
+  return { ok: true, counts: Object.fromEntries(STORE_NAMES.map((n) => [n, (obj[n] || []).length])) };
 }
 
 /** Tage seit dem letzten Backup (null = noch nie). */

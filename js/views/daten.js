@@ -73,7 +73,7 @@ export async function restoreFromFile(file, restoreAll) {
     title: 'Backup wiederherstellen?',
     submitLabel: 'Ersetzen',
     body: `<p style="margin:0">Backup von <b>${esc(v.name)}</b> vom ${fmtDate(obj.exportedAt.slice(0, 10))}:</p>
-      <p class="hint" style="margin:0">${de(c.fuels)} Tankungen · ${de(c.log)} Serviceheft-Einträge · ${de(c.tours)} Touren · ${de(c.services)} Wartungspunkte</p>
+      <p class="hint" style="margin:0">${de(c.fuels)} Tankungen · ${de(c.log)} Serviceheft-Einträge · ${de(c.tours)} Touren · ${de(c.services)} Wartungspunkte${c.files ? ` · ${de(c.files)} Fotos/Rechnungen` : ''}</p>
       <p style="margin:0;color:var(--bad)">Alle Daten, die jetzt auf diesem Gerät sind, werden dabei ersetzt.</p>`,
     async onSubmit() {
       await restoreAll(obj);

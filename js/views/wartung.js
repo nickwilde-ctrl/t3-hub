@@ -5,6 +5,7 @@ import { parseNumber } from '../logic/fuel.js';
 import { GUIDES } from '../data/guides.js';
 import { guideForService } from '../logic/guides.js';
 import { partsEditor, wireParts, partsList, partsTotal } from './parts.js';
+import { attachEditor, wireAttachments, attachmentSummary } from './attachments.js';
 import { statusText, pill } from './home.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
 
@@ -40,20 +41,21 @@ export function wartungView(services, log, km) {
   <section class="sec"><div class="sec-head"><h2>Serviceheft</h2><button type="button" class="add" data-action="add-log">+ Eintrag</button></div>
     ${entries.length ? `<div class="card list">${entries.map((l) => `<button type="button" class="row row-btn" data-edit-log="${l.id}">
       <div class="t">${esc(l.title)}<span class="tag">${esc(l.category)}</span></div>
-      <div class="s">${fmtDate(l.date)}${l.km != null ? ' · ' + de(l.km) + ' km' : ''}${l.parts?.length ? ' · ' + (l.parts.length === 1 ? '1 Teil' : l.parts.length + ' Teile') : ''}${l.note ? ' · ' + esc(l.note) : ''}</div>
+      <div class="s">${fmtDate(l.date)}${l.km != null ? ' · ' + de(l.km) + ' km' : ''}${l.parts?.length ? ' · ' + (l.parts.length === 1 ? '1 Teil' : l.parts.length + ' Teile') : ''}${l.attachments?.length ? ' · 📎 ' + attachmentSummary(l.attachments) : ''}${l.note ? ' · ' + esc(l.note) : ''}</div>
       <div class="r num big">${l.cost ? eurExact(l.cost) : ''}</div></button>`).join('')}</div>`
       : '<div class="card soon-card"><h3>Noch keine Einträge</h3><p>Hier landen Wartungen, Reparaturen und Ausbauten mit Datum, Kilometerstand und Kosten.</p></div>'}
   </section>`;
 }
 
 /** Wartungspunkt: als erledigt eintragen, Stand setzen oder Intervall ändern. */
-export function serviceSheet(service, raw, { km, saveService, saveLog, removeService, log = [] }) {
+export function serviceSheet(service, raw, { km, saveService, saveLog, removeService, log = [], filesForLog, syncFiles }) {
   // service = mit tatsächlichem letzten Stand (zum Anzeigen), raw = gespeicherter Datensatz (zum Speichern)
   const s = service;
   const custom = !s.key || s.key.startsWith('custom-');
   const lastWithParts = log.filter((l) => l.serviceKey === s.key && l.parts?.length).sort((a, b) => b.date.localeCompare(a.date))[0];
   const lastParts = lastWithParts ? lastWithParts.parts : [];
   let readParts = () => [];
+  let att = null;
   const guide = guideForService(GUIDES, s.key);
   let mode = 'done';
   openSheet({
@@ -70,6 +72,7 @@ export function serviceSheet(service, raw, { km, saveService, saveLog, removeSer
         <div class="field"><label for="s-km">Kilometerstand</label><input id="s-km" name="km" inputmode="numeric" value="${km || ''}"></div></div>
         ${lastParts.length ? `<div class="last-parts"><div class="label">Zuletzt verbaut (${fmtDate(lastWithParts.date)})</div>${partsList(lastParts)}</div>` : ''}
         ${partsEditor([], lastParts)}
+        ${attachEditor()}
         <div class="field"><label for="s-cost">Kosten in €</label><input id="s-cost" name="cost" inputmode="decimal" placeholder="leer = Summe der Teile"></div>
         <div class="field"><label for="s-note">Notiz</label><input id="s-note" name="note" placeholder="Werkstatt, Auffälligkeiten …"></div>
         <label class="check"><input type="checkbox" name="onlyState"><span>Nur den Stand merken, kein Eintrag ins Serviceheft<br><span class="faint">Zum Beispiel, wenn du nur ungefähr weißt, wann es zuletzt gemacht wurde.</span></span></label>
@@ -83,6 +86,7 @@ export function serviceSheet(service, raw, { km, saveService, saveLog, removeSer
       </div>`,
     onReady(form) {
       readParts = wireParts(form, lastParts);
+      att = wireAttachments(form, null, filesForLog);
       form.querySelectorAll('[data-mode]').forEach((b) => (b.onclick = () => {
         mode = b.dataset.mode;
         form.querySelectorAll('[data-mode]').forEach((x) => x.setAttribute('aria-pressed', x === b));
@@ -117,7 +121,8 @@ export function serviceSheet(service, raw, { km, saveService, saveLog, removeSer
       const parts = readParts();
       const cost = el.cost.value.trim() ? parseNumber(el.cost.value) : partsTotal(parts);
       if (!(cost >= 0)) return 'Die Kosten sind keine gültige Zahl.';
-      await saveLog({ date, km: kmVal != null ? Math.round(kmVal) : null, title: s.name, category: 'Wartung', cost, note: el.note.value.trim(), serviceKey: s.key, parts });
+      const row = await saveLog({ date, km: kmVal != null ? Math.round(kmVal) : null, title: s.name, category: 'Wartung', cost, note: el.note.value.trim(), serviceKey: s.key, parts });
+      if (att && syncFiles && att.ready() && att.added().length) await saveLog({ ...row, attachments: await syncFiles(row.id, att.keep(), att.added()) });
       toast('Im Serviceheft eingetragen');
     },
   });
@@ -145,11 +150,12 @@ export function newServiceSheet(saveService) {
 }
 
 /** Serviceheft-Eintrag anlegen oder bearbeiten. */
-export function logSheet(entry, { km, saveLog, removeLog, services, prefill }) {
+export function logSheet(entry, { km, saveLog, removeLog, services, prefill, filesForLog, syncFiles }) {
   const edit = !!entry;
   const e = entry || { date: todayIso(), km, title: '', category: 'Reparatur', cost: '', note: '', ...(prefill || {}) };
   const linked = edit && e.serviceKey ? services.find((s) => s.key === e.serviceKey) : null;
   let readParts = () => [];
+  let att = null;
   openSheet({
     title: edit ? 'Eintrag bearbeiten' : 'Neuer Eintrag',
     body: `
@@ -158,12 +164,14 @@ export function logSheet(entry, { km, saveLog, removeLog, services, prefill }) {
       <div class="two"><div class="field"><label for="l-date">Datum</label><input id="l-date" name="date" type="date" value="${esc(e.date)}"></div>
       <div class="field"><label for="l-km">Kilometerstand</label><input id="l-km" name="km" inputmode="numeric" value="${e.km ?? ''}"></div></div>
       ${partsEditor(e.parts || [])}
+      ${attachEditor()}
       <div class="field"><label for="l-cost">Kosten in €</label><input id="l-cost" name="cost" inputmode="decimal" value="${e.cost ? String(e.cost).replace('.', ',') : ''}" placeholder="leer = Summe der Teile"></div>
       <div class="field"><label for="l-note">Notiz</label><input id="l-note" name="note" value="${esc(e.note || '')}" placeholder="Werkstatt, Auffälligkeiten …"></div>
       ${linked ? `<p class="hint" style="margin:0">Gehört zum Wartungspunkt „${esc(linked.name)}“.</p>` : ''}
       ${edit ? '<button type="button" class="danger-link" id="l-del">Eintrag löschen</button>' : ''}`,
     onReady(form) {
       readParts = wireParts(form);
+      att = wireAttachments(form, edit ? entry.id : null, filesForLog);
       const del = form.querySelector('#l-del');
       if (del) del.onclick = async () => {
         if (del.dataset.armed) { await removeLog(entry.id); closeSheet(); toast('Eintrag gelöscht'); return; }
@@ -181,7 +189,8 @@ export function logSheet(entry, { km, saveLog, removeLog, services, prefill }) {
       const parts = readParts();
       const cost = el.cost.value.trim() ? parseNumber(el.cost.value) : partsTotal(parts);
       if (!(cost >= 0)) return 'Die Kosten sind keine gültige Zahl.';
-      await saveLog({ ...(entry || {}), title, category: el.category.value, date: el.date.value, km: kmVal != null ? Math.round(kmVal) : null, cost, note: el.note.value.trim(), parts });
+      const row = await saveLog({ ...(entry || {}), title, category: el.category.value, date: el.date.value, km: kmVal != null ? Math.round(kmVal) : null, cost, note: el.note.value.trim(), parts });
+      if (att && syncFiles && att.ready() && (att.added().length || edit)) await saveLog({ ...row, attachments: await syncFiles(row.id, att.keep(), att.added()) });
       toast(edit ? 'Eintrag geändert' : 'Eintrag gespeichert');
     },
   });

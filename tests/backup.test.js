@@ -23,3 +23,21 @@ test('Tage seit Backup und Dateiname', () => {
   assert.equal(daysSince('2026-09-07T12:00:00Z', new Date('2026-10-07T12:00:00Z')), 30);
   assert.equal(backupFileName('Peanut', new Date('2026-10-07T12:00:00Z')), 'T3-Hub-Backup_Peanut_2026-10-07.json');
 });
+
+import { attachmentSummary, dataUrlBytes } from '../js/logic/attachments.js';
+
+test('ältere Backups ohne Fotos/Rechnungen bleiben gültig', () => {
+  const old = { format: 't3hub-backup', version: 1, exportedAt: '2026-10-01T00:00:00Z', vehicles: [{ id: 'v' }], fuels: [], services: [], log: [], tours: [] };
+  const r = checkBackup(old);
+  assert.equal(r.ok, true);
+  assert.equal(r.counts.files, 0);
+  const neu = buildBackup({ ...old, files: [{ id: 'f1', logId: 'l1' }] });
+  assert.equal(neu.files.length, 1);
+  assert.equal(checkBackup(neu).counts.files, 1);
+});
+
+test('Kurztext für Anhänge', () => {
+  assert.equal(attachmentSummary([{ kind: 'photo' }, { kind: 'photo' }, { kind: 'receipt' }]), '2 Fotos · 1 Rechnung');
+  assert.equal(attachmentSummary([]), '');
+  assert.equal(dataUrlBytes('data:image/jpeg;base64,AAAA'), 3);
+});

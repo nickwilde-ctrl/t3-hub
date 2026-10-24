@@ -91,6 +91,25 @@ export async function deleteItem(name, id) {
   emit();
 }
 
+/** Fotos und Rechnungen eines Serviceheft-Eintrags (mit Bilddaten). */
+export const filesForLog = (logId) => db.getByIndex('files', 'logId', logId);
+
+/** Speichert neue Anhänge und löscht entfernte. Gibt die Kurzinfo für den Eintrag zurück. */
+export async function syncFiles(logId, keep, added) {
+  const old = await filesForLog(logId);
+  const keepIds = new Set(keep.map((f) => f.id));
+  for (const f of old) if (!keepIds.has(f.id)) await db.remove('files', f.id);
+  const rows = added.map((f) => ({ ...f, id: f.id || db.newId(), logId, vehicleId: state.vehicle.id, createdAt: new Date().toISOString() }));
+  if (rows.length) await db.putMany('files', rows);
+  return [...keep, ...rows].map(({ id, kind, name, mime }) => ({ id, kind, name, mime }));
+}
+
+/** Serviceheft-Eintrag samt seinen Fotos und Rechnungen löschen. */
+export async function deleteLog(id) {
+  for (const f of await filesForLog(id)) await db.remove('files', f.id);
+  await deleteItem('log', id);
+}
+
 /** Aktueller Kilometerstand: der höchste bekannte Wert aus allen Einträgen. */
 export function currentKm() {
   return Math.max(

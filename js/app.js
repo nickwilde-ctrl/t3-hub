@@ -1,5 +1,5 @@
 // Einstieg: Daten laden, Navigation, Bildschirme zeichnen.
-import { state, load, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
+import { state, load, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, filesForLog, syncFiles, deleteLog, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
 import { requestPersistence } from './db.js';
 import { fuelStats, consumptionCheck } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
@@ -41,7 +41,7 @@ const VIEWS = {
     + dataCard(state)
     + installCard()
     + gameCard()
-    + '<p class="foot">T3 Hub · Version 0.22.2 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.23 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -104,7 +104,9 @@ document.addEventListener('click', (e) => {
     saveService: (x) => saveItem('services', x),
     removeService: (id) => deleteItem('services', id),
     saveLog: (x) => saveItem('log', x),
-    removeLog: (id) => deleteItem('log', id),
+    removeLog: (id) => deleteLog(id),
+    filesForLog,
+    syncFiles,
     log: state.log,
   };
   const wsubBtn = e.target.closest('[data-wsub]');

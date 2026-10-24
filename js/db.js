@@ -2,8 +2,9 @@
 // Jeder Datensatz außer dem Fahrzeug selbst trägt eine vehicleId – so sind später mehrere Fahrzeuge möglich.
 
 const DB_NAME = 't3hub';
-const DB_VERSION = 1;
-export const STORES = ['vehicles', 'fuels', 'services', 'log', 'tours'];
+const DB_VERSION = 2;
+// files: Fotos und Rechnungen (große Daten getrennt, damit Listen schnell bleiben)
+export const STORES = ['vehicles', 'fuels', 'services', 'log', 'tours', 'files'];
 
 let dbPromise = null;
 
@@ -18,14 +19,21 @@ export function openDb() {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve, reject) => {
     const r = indexedDB.open(DB_NAME, DB_VERSION);
-    r.onupgradeneeded = () => {
+    r.onupgradeneeded = (e) => {
       const db = r.result;
-      db.createObjectStore('vehicles', { keyPath: 'id' });
-      for (const name of ['fuels', 'services', 'log', 'tours']) {
-        const s = db.createObjectStore(name, { keyPath: 'id' });
-        s.createIndex('vehicleId', 'vehicleId');
+      if (e.oldVersion < 1) {
+        db.createObjectStore('vehicles', { keyPath: 'id' });
+        for (const name of ['fuels', 'services', 'log', 'tours']) {
+          const s = db.createObjectStore(name, { keyPath: 'id' });
+          s.createIndex('vehicleId', 'vehicleId');
+        }
+        db.createObjectStore('meta', { keyPath: 'key' });
       }
-      db.createObjectStore('meta', { keyPath: 'key' });
+      if (e.oldVersion < 2) {
+        const f = db.createObjectStore('files', { keyPath: 'id' });
+        f.createIndex('vehicleId', 'vehicleId');
+        f.createIndex('logId', 'logId');
+      }
     };
     r.onsuccess = () => resolve(r.result);
     r.onerror = () => reject(r.error);
@@ -44,6 +52,10 @@ export async function getAll(name) {
 
 export async function getByVehicle(name, vehicleId) {
   return req((await store(name)).index('vehicleId').getAll(vehicleId));
+}
+
+export async function getByIndex(name, index, value) {
+  return req((await store(name)).index(index).getAll(value));
 }
 
 export async function put(name, value) {
