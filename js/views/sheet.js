@@ -29,7 +29,7 @@ export function closeSheet() {
  * - { warnings: [Text, …] } → Hinweise anzeigen; erst ein zweites Tippen auf „Trotzdem speichern“
  *   ruft onSubmit mit confirmed = true auf. Jede Änderung im Formular setzt das zurück.
  */
-export function openSheet({ title, body, submitLabel = 'Speichern', onSubmit, onReady }) {
+export function openSheet({ title, body, submitLabel = 'Speichern', onSubmit, onReady, sticky = false }) {
   closeSheet();
   const root = document.createElement('div');
   root.id = 'sheet-root';
@@ -54,7 +54,8 @@ export function openSheet({ title, body, submitLabel = 'Speichern', onSubmit, on
   form.addEventListener('input', resetConfirm);
   form.addEventListener('click', (e) => { if (e.target.closest('[aria-pressed]')) resetConfirm(); });
   root.querySelector('#sheet-cancel').onclick = closeSheet;
-  root.querySelector('#scrim').addEventListener('click', (e) => { if (e.target.id === 'scrim') closeSheet(); });
+  // sticky: lange Formulare schließen nicht beim Tippen daneben (sonst ist alles Geschriebene weg)
+  if (!sticky) root.querySelector('#scrim').addEventListener('click', (e) => { if (e.target.id === 'scrim') closeSheet(); });
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const res = await onSubmit(form, { confirmed });

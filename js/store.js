@@ -11,6 +11,7 @@ export const state = {
   services: [],
   log: [],
   tours: [],
+  guides: [], // eigene Anleitungen
 };
 
 const listeners = new Set();
@@ -39,8 +40,8 @@ async function ensureVehicle() {
 export async function load() {
   state.vehicle = await ensureVehicle();
   const id = state.vehicle.id;
-  [state.fuels, state.services, state.log, state.tours] = await Promise.all(
-    ['fuels', 'services', 'log', 'tours'].map((n) => db.getByVehicle(n, id)),
+  [state.fuels, state.services, state.log, state.tours, state.guides] = await Promise.all(
+    ['fuels', 'services', 'log', 'tours', 'guides'].map((n) => db.getByVehicle(n, id)),
   );
   state.lastBackup = (await db.getMeta('lastBackup')) || null;
   // Wartungspunkte auf die aktuellen Startwerte heben (fehlende ergänzen, unveränderte Platzhalter aktualisieren)

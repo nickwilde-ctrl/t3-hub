@@ -46,3 +46,35 @@ test('Werkstatt-Modus: nächster offener Schritt', () => {
   assert.equal(nextStep(g, [0, 2]), 1);
   assert.equal(nextStep(g, [0, 1, 2]), -1);
 });
+
+import { mergeGuides, copyGuide, lines, checkGuide } from '../js/logic/guides.js';
+
+test('eigene Anleitungen: Kopie ersetzt Original, neue stehen vorne', () => {
+  const built = [{ id: 'a', title: 'A' }, { id: 'b', title: 'B' }];
+  const own = [{ id: 'x', title: 'Meine', updatedAt: '2026-10-01' }, { id: 'y', title: 'B (meins)', basedOn: 'b' }];
+  const m = mergeGuides(built, own);
+  assert.deepEqual(m.map((g) => g.id), ['x', 'a', 'y']);
+  assert.equal(m[2].own, true);
+  assert.equal(m[1].own, undefined);
+  // Kopie einer Anleitung, die es nicht mehr gibt, bleibt sichtbar
+  assert.deepEqual(mergeGuides([], own).map((g) => g.id).sort(), ['x', 'y']);
+});
+
+test('Kopie übernimmt alles außer id und verweist aufs Original', () => {
+  const g = GUIDES.find((x) => x.id === 'oelwechsel');
+  const c = copyGuide(g);
+  assert.equal(c.id, undefined);
+  assert.equal(c.basedOn, 'oelwechsel');
+  assert.equal(c.steps.length, g.steps.length);
+  c.steps[0].t = 'geändert';
+  assert.notEqual(g.steps[0].t, 'geändert', 'Original bleibt unverändert');
+  assert.match(c.source, /Eigene Fassung/);
+});
+
+test('Zeilen und Prüfung', () => {
+  assert.deepEqual(lines('- Nuss 19\n\n • Lappen \n'), ['Nuss 19', 'Lappen']);
+  assert.match(checkGuide({ title: '', steps: [] }), /Titel/);
+  assert.match(checkGuide({ title: 'X', steps: [] }), /Schritt/);
+  assert.match(checkGuide({ title: 'X', steps: [{ t: '' }], minutes: 5 }), /Überschrift/);
+  assert.equal(checkGuide({ title: 'X', steps: [{ t: 'a', d: '' }], minutes: 5 }), '');
+});

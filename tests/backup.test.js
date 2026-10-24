@@ -31,6 +31,7 @@ test('ältere Backups ohne Fotos/Rechnungen bleiben gültig', () => {
   const r = checkBackup(old);
   assert.equal(r.ok, true);
   assert.equal(r.counts.files, 0);
+  assert.equal(r.counts.guides, 0, 'Backups ohne eigene Anleitungen bleiben gültig');
   const neu = buildBackup({ ...old, files: [{ id: 'f1', logId: 'l1' }] });
   assert.equal(neu.files.length, 1);
   assert.equal(checkBackup(neu).counts.files, 1);

@@ -10,7 +10,10 @@ import { toast, closeSheet } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
 import { wartungView, wartungTabs, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
-import { guidesView, filterGuides, setGuideGroup, openGuide } from './views/guides.js';
+import { guidesView, filterGuides, setGuideGroup, openGuide, forgetProgress } from './views/guides.js';
+import { guideSheet } from './views/guideEditor.js';
+import { GUIDES } from './data/guides.js';
+import { mergeGuides } from './logic/guides.js';
 import { tourenView, tourSheet, costCard, setCostYear, setOpenTour, getOpenTour, expenseSheet, journalSheet, runningCard } from './views/touren.js';
 import { stopSheet, openMapView } from './views/stops.js';
 import { dataCard, backupReminder, createBackup, restoreFromFile, roadTripFromFile } from './views/daten.js';
@@ -25,6 +28,9 @@ const TABS = [
   ['mehr', 'Mehr', '<circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/>'],
 ];
 
+/** Mitgelieferte und eigene Anleitungen. */
+const allGuides = () => mergeGuides(GUIDES, state.guides);
+
 const currentTour = () => state.tours.find((x) => x.id === getOpenTour());
 
 let tab = (location.hash || '#home').slice(1);
@@ -34,14 +40,14 @@ let wsub = 'intervalle';
 
 const VIEWS = {
   home: () => backupReminder(state) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
-  wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView() : wartungView(services(), state.log, currentKm())),
+  wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides()) : wartungView(services(), state.log, currentKm())),
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + modsCard(state.vehicle)
     + dataCard(state)
     + installCard()
     + gameCard()
-    + '<p class="foot">T3 Hub · Version 0.23 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.24 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
@@ -108,24 +114,37 @@ document.addEventListener('click', (e) => {
     filesForLog,
     syncFiles,
     log: state.log,
+    guides: allGuides(),
   };
   const wsubBtn = e.target.closest('[data-wsub]');
   if (wsubBtn) { wsub = wsubBtn.dataset.wsub; render(); return; }
   const groupBtn = e.target.closest('[data-guide-group]');
   if (groupBtn) { setGuideGroup(groupBtn); return; }
   const guideBtn = e.target.closest('[data-open-guide]');
+  // Anleitung öffnen; „Ändern“ führt in den Editor und danach zurück in die gespeicherte Anleitung
+  const showGuide = (id) => openGuide(id, {
+    guides: allGuides(),
+    onClose: render,
+    onEdit: (g) => editGuide(g),
+    onDone: (g) => {
+      const s = g.serviceKey ? services().find((x) => x.key === g.serviceKey) : null;
+      if (s) serviceSheet(s, state.services.find((x) => x.id === s.id), { ...wOps, log: state.log });
+      else logSheet(null, { ...wOps, prefill: { title: g.title, category: 'Wartung' } });
+    },
+  });
+  const editGuide = (g) => guideSheet(g, {
+    services: services(),
+    save: (row) => saveItem('guides', row),
+    remove: async (id) => { await deleteItem('guides', id); forgetProgress(id); },
+    onSaved: (row) => { render(); showGuide(row.id); },
+    onRemoved: render,
+  });
   if (guideBtn) {
     closeSheet();
-    openGuide(guideBtn.dataset.openGuide, {
-      onClose: render,
-      onDone: (g) => {
-        const s = g.serviceKey ? services().find((x) => x.key === g.serviceKey) : null;
-        if (s) serviceSheet(s, state.services.find((x) => x.id === s.id), { ...wOps, log: state.log });
-        else logSheet(null, { ...wOps, prefill: { title: g.title, category: 'Wartung' } });
-      },
-    });
+    showGuide(guideBtn.dataset.openGuide);
     return;
   }
+  if (action && action.dataset.action === 'add-guide') { editGuide(null); return; }
   const editService = e.target.closest('[data-edit-service]');
   if (editService) {
     const id = editService.dataset.editService;

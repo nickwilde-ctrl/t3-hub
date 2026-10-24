@@ -2,9 +2,10 @@
 // Jeder Datensatz außer dem Fahrzeug selbst trägt eine vehicleId – so sind später mehrere Fahrzeuge möglich.
 
 const DB_NAME = 't3hub';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 // files: Fotos und Rechnungen (große Daten getrennt, damit Listen schnell bleiben)
-export const STORES = ['vehicles', 'fuels', 'services', 'log', 'tours', 'files'];
+// guides: eigene Anleitungen
+export const STORES = ['vehicles', 'fuels', 'services', 'log', 'tours', 'files', 'guides'];
 
 let dbPromise = null;
 
@@ -33,6 +34,9 @@ export function openDb() {
         const f = db.createObjectStore('files', { keyPath: 'id' });
         f.createIndex('vehicleId', 'vehicleId');
         f.createIndex('logId', 'logId');
+      }
+      if (e.oldVersion < 3) {
+        db.createObjectStore('guides', { keyPath: 'id' }).createIndex('vehicleId', 'vehicleId');
       }
     };
     r.onsuccess = () => resolve(r.result);

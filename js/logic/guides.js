@@ -34,3 +34,35 @@ export function nextStep(guide, done = []) {
   for (let i = 0; i < guide.steps.length; i++) if (!done.includes(i)) return i;
   return -1;
 }
+
+// ---------- Eigene Anleitungen ----------
+
+/**
+ * Mitgelieferte und eigene Anleitungen zusammenführen.
+ * Eine eigene Kopie (basedOn) ersetzt das Original an dessen Platz; ganz neue eigene stehen vorne.
+ */
+export function mergeGuides(builtIn, own = []) {
+  const mine = own.map((g) => ({ ...g, own: true }));
+  const copies = new Map(mine.filter((g) => g.basedOn).map((g) => [g.basedOn, g]));
+  const fresh = mine.filter((g) => !g.basedOn || !builtIn.some((b) => b.id === g.basedOn));
+  fresh.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+  return [...fresh, ...builtIn.map((b) => copies.get(b.id) || b)];
+}
+
+/** Eigene Kopie einer mitgelieferten Anleitung (noch ohne id – die vergibt der Speicher). */
+export function copyGuide(g) {
+  const { id, own, verified, ...rest } = structuredClone(g);
+  return { ...rest, basedOn: id, source: `Eigene Fassung von „${g.title}“ (Vorlage: T3 Hub). ${g.source || ''}`.trim() };
+}
+
+/** Text mit einer Zeile pro Punkt → Liste ohne leere Zeilen. */
+export const lines = (text = '') => String(text).split('\n').map((x) => x.replace(/^\s*[-•*]\s*/, '').trim()).filter(Boolean);
+
+/** Prüft eine eigene Anleitung vor dem Speichern. Gibt einen Fehlertext oder '' zurück. */
+export function checkGuide(g) {
+  if (!g.title?.trim()) return 'Bitte einen Titel eintragen.';
+  if (!g.steps?.length) return 'Bitte mindestens einen Schritt eintragen.';
+  if (g.steps.some((s) => !s.t?.trim())) return 'Jeder Schritt braucht eine kurze Überschrift.';
+  if (!(g.minutes > 0)) return 'Bitte die ungefähre Dauer in Minuten eintragen.';
+  return '';
+}

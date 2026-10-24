@@ -48,7 +48,7 @@ export function wartungView(services, log, km) {
 }
 
 /** Wartungspunkt: als erledigt eintragen, Stand setzen oder Intervall ändern. */
-export function serviceSheet(service, raw, { km, saveService, saveLog, removeService, log = [], filesForLog, syncFiles }) {
+export function serviceSheet(service, raw, { km, saveService, saveLog, removeService, log = [], filesForLog, syncFiles, guides = GUIDES }) {
   // service = mit tatsächlichem letzten Stand (zum Anzeigen), raw = gespeicherter Datensatz (zum Speichern)
   const s = service;
   const custom = !s.key || s.key.startsWith('custom-');
@@ -56,7 +56,7 @@ export function serviceSheet(service, raw, { km, saveService, saveLog, removeSer
   const lastParts = lastWithParts ? lastWithParts.parts : [];
   let readParts = () => [];
   let att = null;
-  const guide = guideForService(GUIDES, s.key);
+  const guide = guideForService(guides, s.key);
   let mode = 'done';
   openSheet({
     title: s.name,
