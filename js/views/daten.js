@@ -2,6 +2,8 @@
 import { de, esc, fmtDate } from '../format.js';
 import { buildBackup, checkBackup, daysSince, backupFileName } from '../logic/backup.js';
 import { fromRoadTrip } from '../logic/roadtrip.js';
+import { WIRING_FORMAT } from '../logic/wiring.js';
+import { wiringFromObject } from './elektrik.js';
 import { openSheet, toast } from './sheet.js';
 
 export const REMIND_DAYS = 30;
@@ -62,9 +64,11 @@ export async function createBackup(exportAll, markBackup, vehicleName) {
   toast('Backup heruntergeladen');
 }
 
-export async function restoreFromFile(file, restoreAll) {
+export async function restoreFromFile(file, restoreAll, saveWiring) {
   let obj;
   try { obj = JSON.parse(await file.text()); } catch { toast('Die Datei konnte nicht gelesen werden'); return; }
+  // Plandaten-Datei: wird zusätzlich geladen, ersetzt nichts
+  if (obj && obj.format === WIRING_FORMAT && saveWiring) { wiringFromObject(obj, saveWiring); return; }
   const check = checkBackup(obj);
   if (!check.ok) { toast(check.error); return; }
   const c = check.counts;
@@ -73,7 +77,7 @@ export async function restoreFromFile(file, restoreAll) {
     title: 'Backup wiederherstellen?',
     submitLabel: 'Ersetzen',
     body: `<p style="margin:0">Backup von <b>${esc(v.name)}</b> vom ${fmtDate(obj.exportedAt.slice(0, 10))}:</p>
-      <p class="hint" style="margin:0">${de(c.fuels)} Tankungen · ${de(c.log)} Serviceheft-Einträge · ${de(c.tours)} Touren · ${de(c.services)} Wartungspunkte${c.files ? ` · ${de(c.files)} Fotos/Rechnungen` : ''}${c.guides ? ` · ${de(c.guides)} eigene Anleitungen` : ''}</p>
+      <p class="hint" style="margin:0">${de(c.fuels)} Tankungen · ${de(c.log)} Serviceheft-Einträge · ${de(c.tours)} Touren · ${de(c.services)} Wartungspunkte${c.files ? ` · ${de(c.files)} Fotos/Rechnungen` : ''}${c.guides ? ` · ${de(c.guides)} eigene Anleitungen` : ''}${c.wiring ? ' · Plandaten Elektrik' : ''}</p>
       <p style="margin:0;color:var(--bad)">Alle Daten, die jetzt auf diesem Gerät sind, werden dabei ersetzt.</p>`,
     async onSubmit() {
       await restoreAll(obj);

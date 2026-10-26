@@ -14,6 +14,7 @@ export const state = {
   needsSetup: false,
   tours: [],
   guides: [], // eigene Anleitungen
+  wiring: null, // eigene Plandaten (Elektrik), nur auf diesem Gerät
 };
 
 const listeners = new Set();
@@ -82,9 +83,11 @@ export async function load() {
   state.needsSetup = !state.vehicle;
   if (!state.vehicle) { emit(); return; }
   const id = state.vehicle.id;
-  [state.fuels, state.services, state.log, state.tours, state.guides] = await Promise.all(
-    ['fuels', 'services', 'log', 'tours', 'guides'].map((n) => db.getByVehicle(n, id)),
+  let wiring;
+  [state.fuels, state.services, state.log, state.tours, state.guides, wiring] = await Promise.all(
+    ['fuels', 'services', 'log', 'tours', 'guides', 'wiring'].map((n) => db.getByVehicle(n, id)),
   );
+  state.wiring = wiring[0] || null;
   state.lastBackup = (await db.getMeta('lastBackup')) || null;
   // Wartungspunkte auf die aktuellen Startwerte heben (fehlende ergänzen, unveränderte Platzhalter aktualisieren)
   const upgrades = upgradeServices(state.services, state.vehicle.engineFamily).map((x) => ({ ...x, id: x.id || db.newId(), vehicleId: id }));
@@ -131,6 +134,21 @@ export async function saveMany(name, items) {
 export async function deleteItem(name, id) {
   await db.remove(name, id);
   state[name] = state[name].filter((x) => x.id !== id);
+  emit();
+}
+
+/** Plandaten speichern (ersetzt vorhandene des aktiven Fahrzeugs). */
+export async function saveWiring(obj) {
+  const { format, version, title, source, createdAt, wires, fuses } = obj;
+  const row = { id: state.wiring?.id || db.newId(), vehicleId: state.vehicle.id, format, version, title: title || '', source: source || '', createdAt: createdAt || null, importedAt: new Date().toISOString(), wires, fuses: fuses || [] };
+  await db.put('wiring', row);
+  state.wiring = row;
+  emit();
+}
+
+export async function removeWiring() {
+  if (state.wiring) await db.remove('wiring', state.wiring.id);
+  state.wiring = null;
   emit();
 }
 

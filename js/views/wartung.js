@@ -19,9 +19,11 @@ const intervalText = (s) => {
 };
 
 /** Umschalter oben im Reiter Wartung. */
-export const wartungTabs = (sub) => `<div class="seg sub wsub" role="tablist">
-    <button type="button" data-wsub="intervalle" aria-pressed="${sub !== 'anleitungen'}">Wartung</button>
-    <button type="button" data-wsub="anleitungen" aria-pressed="${sub === 'anleitungen'}">Anleitungen</button></div>`;
+/** Unterreiter. „Elektrik“ erscheint nur, wenn auf diesem Gerät eigene Plandaten geladen sind. */
+export const wartungTabs = (sub, elektrik = false) => `<div class="seg sub wsub${elektrik ? ' three' : ''}" role="tablist">
+    <button type="button" data-wsub="intervalle" aria-pressed="${sub !== 'anleitungen' && sub !== 'elektrik'}">Wartung</button>
+    <button type="button" data-wsub="anleitungen" aria-pressed="${sub === 'anleitungen'}">Anleitungen</button>${elektrik ? `
+    <button type="button" data-wsub="elektrik" aria-pressed="${sub === 'elektrik'}">Elektrik</button>` : ''}</div>`;
 
 export function wartungView(services, log, km) {
   const rows = services.map((s) => {

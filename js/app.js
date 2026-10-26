@@ -1,5 +1,5 @@
 // Einstieg: Daten laden, Navigation, Bildschirme zeichnen.
-import { state, load, createVehicle, createDemo, resetAll, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, filesForLog, syncFiles, deleteLog, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
+import { state, load, createVehicle, createDemo, resetAll, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, saveWiring, removeWiring, filesForLog, syncFiles, deleteLog, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
 import { requestPersistence } from './db.js';
 import { fuelStats, consumptionCheck } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
@@ -21,8 +21,9 @@ import { installCard } from './views/install.js';
 import { gameCard, openGame } from './views/game.js';
 import { aboutCard } from './views/about.js';
 import { feedbackCard, feedbackSheet } from './views/feedback.js';
+import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.38';
+const APP_VERSION = '0.39';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -45,7 +46,11 @@ let wsub = 'intervalle';
 
 const VIEWS = {
   home: () => (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
-  wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides(), state.vehicle.engineFamily, state.vehicle.engineCode) : wartungView(services(), state.log, currentKm())),
+  wartung: () => {
+    if (wsub === 'elektrik' && !state.wiring) wsub = 'intervalle';
+    return wartungTabs(wsub, !!state.wiring) + (wsub === 'anleitungen' ? guidesView(allGuides(), state.vehicle.engineFamily, state.vehicle.engineCode)
+      : wsub === 'elektrik' ? elektrikView(state.wiring) : wartungView(services(), state.log, currentKm()));
+  },
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + specsCard(state.vehicle) + modsCard(state.vehicle)
@@ -132,6 +137,15 @@ document.addEventListener('click', (e) => {
   };
   const wsubBtn = e.target.closest('[data-wsub]');
   if (wsubBtn) { wsub = wsubBtn.dataset.wsub; render(); return; }
+  const elPart = e.target.closest('[data-el-part]');
+  if (elPart) { setElPart(elPart.dataset.elPart); render(); return; }
+  const elChip = e.target.closest('[data-el-chip]');
+  if (elChip) { setElQuery(elChip.dataset.elChip); render(); return; }
+  const elFault = e.target.closest('[data-el-fault]');
+  if (elFault) { startFault(elFault.dataset.elFault); return; }
+  const elWire = e.target.closest('[data-el-wire]');
+  if (elWire && !elWire.closest('#el-root')) { startWire(+elWire.dataset.elWire); return; }
+  if (action && action.dataset.action === 'remove-wiring') { removeWiringSheet(removeWiring); return; }
   const fuelBtn = e.target.closest('[data-guide-fuel]');
   if (fuelBtn) { setGuideFuel(fuelBtn); return; }
   const groupBtn = e.target.closest('[data-guide-group]');
@@ -238,11 +252,14 @@ document.addEventListener('click', (e) => {
   window.scrollTo(0, 0);
 });
 
-document.addEventListener('input', (e) => { if (e.target.id === 'guide-q') filterGuides(); });
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'guide-q') filterGuides();
+  if (e.target.id === 'el-q') refreshWireResults();
+});
 
 document.addEventListener('change', async (e) => {
   const file0 = e.target.files && e.target.files[0];
-  if (e.target.id === 'restore-in' && file0) { await restoreFromFile(file0, restoreAll); e.target.value = ''; return; }
+  if (e.target.id === 'restore-in' && file0) { await restoreFromFile(file0, restoreAll, saveWiring); e.target.value = ''; return; }
   if (e.target.id === 'roadtrip-in' && file0) { await roadTripFromFile(file0, importRoadTrip); e.target.value = ''; return; }
   if (e.target.id !== 'photo-in') return;
   const file = e.target.files && e.target.files[0];
