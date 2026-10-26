@@ -1,6 +1,6 @@
 // Lädt alle Daten des aktiven Fahrzeugs in den Speicher und stellt einfache Änderungsfunktionen bereit.
 import * as db from './db.js';
-import { DEFAULT_SERVICES, upgradeServices, withLastDone, serviceOrder } from './logic/services.js';
+import { servicesFor, upgradeServices, withLastDone, serviceOrder } from './logic/services.js';
 import { STORE_NAMES } from './logic/backup.js';
 import { matchTours, fuelKey } from './logic/roadtrip.js';
 
@@ -10,6 +10,7 @@ export const state = {
   fuels: [],
   services: [],
   log: [],
+  needsSetup: false,
   tours: [],
   guides: [], // eigene Anleitungen
 };
@@ -18,34 +19,53 @@ const listeners = new Set();
 export const onChange = (fn) => listeners.add(fn);
 const emit = () => listeners.forEach((fn) => fn(state));
 
-/** Legt beim allerersten Start ein Fahrzeug mit den Standard-Wartungspunkten an. */
-async function ensureVehicle() {
+/** Erstes Fahrzeug (ältestes) – oder null, wenn die App noch nicht eingerichtet ist. */
+async function firstVehicle() {
   const vehicles = await db.getAll('vehicles');
-  if (vehicles.length) return vehicles.sort((a, b) => a.createdAt.localeCompare(b.createdAt))[0];
+  return vehicles.length ? vehicles.sort((a, b) => a.createdAt.localeCompare(b.createdAt))[0] : null;
+}
+
+/**
+ * Fahrzeug aus der Einrichtung anlegen.
+ * setup: { name, photo, year, family, code, engine, km, oilKm, oilDate }
+ */
+export async function createVehicle(setup) {
+  const today = new Date().toISOString().slice(0, 10);
   const vehicle = {
     id: db.newId(),
-    name: 'Mein T3',
-    model: 'VW T3',
+    name: setup.name,
+    model: setup.year ? `VW T3 · Baujahr ${setup.year}` : 'VW T3',
+    year: setup.year || null,
     plate: '',
-    engine: '',
-    photo: null,
+    engine: setup.engine || '',
+    engineFamily: setup.family || null,
+    engineCode: setup.code || '',
+    photo: setup.photo || null,
     facts: [],
+    kmStart: setup.km != null ? { km: setup.km, date: today } : null,
     createdAt: new Date().toISOString(),
   };
   await db.put('vehicles', vehicle);
-  await db.putMany('services', DEFAULT_SERVICES.map((s) => ({ ...s, id: db.newId(), vehicleId: vehicle.id, lastKm: null, lastDate: null })));
+  await db.putMany('services', servicesFor(vehicle.engineFamily).map((s) => {
+    const row = { ...s, id: db.newId(), vehicleId: vehicle.id, lastKm: null, lastDate: null };
+    if (s.key === 'oil' && (setup.oilKm != null || setup.oilDate)) { row.lastKm = setup.oilKm ?? null; row.lastDate = setup.oilDate || null; }
+    return row;
+  }));
+  await load();
   return vehicle;
 }
 
 export async function load() {
-  state.vehicle = await ensureVehicle();
+  state.vehicle = await firstVehicle();
+  state.needsSetup = !state.vehicle;
+  if (!state.vehicle) { emit(); return; }
   const id = state.vehicle.id;
   [state.fuels, state.services, state.log, state.tours, state.guides] = await Promise.all(
     ['fuels', 'services', 'log', 'tours', 'guides'].map((n) => db.getByVehicle(n, id)),
   );
   state.lastBackup = (await db.getMeta('lastBackup')) || null;
   // Wartungspunkte auf die aktuellen Startwerte heben (fehlende ergänzen, unveränderte Platzhalter aktualisieren)
-  const upgrades = upgradeServices(state.services).map((x) => ({ ...x, id: x.id || db.newId(), vehicleId: id }));
+  const upgrades = upgradeServices(state.services, state.vehicle.engineFamily).map((x) => ({ ...x, id: x.id || db.newId(), vehicleId: id }));
   if (upgrades.length) {
     await db.putMany('services', upgrades);
     state.services = await db.getByVehicle('services', id);
@@ -115,6 +135,7 @@ export async function deleteLog(id) {
 export function currentKm() {
   return Math.max(
     0,
+    state.vehicle?.kmStart?.km || 0,
     ...state.fuels.map((f) => f.km),
     ...state.log.map((l) => l.km || 0),
     ...state.tours.map((t) => t.endKm || t.startKm || 0),

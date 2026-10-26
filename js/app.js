@@ -1,5 +1,5 @@
 // Einstieg: Daten laden, Navigation, Bildschirme zeichnen.
-import { state, load, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, filesForLog, syncFiles, deleteLog, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
+import { state, load, createVehicle, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, filesForLog, syncFiles, deleteLog, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
 import { requestPersistence } from './db.js';
 import { fuelStats, consumptionCheck } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
@@ -19,6 +19,7 @@ import { stopSheet, openMapView } from './views/stops.js';
 import { dataCard, backupReminder, createBackup, restoreFromFile, roadTripFromFile } from './views/daten.js';
 import { installCard } from './views/install.js';
 import { gameCard, openGame } from './views/game.js';
+import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
   ['home', 'Home', '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'],
@@ -47,10 +48,13 @@ const VIEWS = {
     + dataCard(state)
     + installCard()
     + gameCard()
-    + '<p class="foot">T3 Hub · Version 0.24.4 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.25 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
+  // Erster Start: Einrichtung statt leerer App. Ein wiederhergestelltes Backup schließt die Begrüßung.
+  if (state.needsSetup) { showSetup(createVehicle); return; }
+  if (setupAtWelcome()) closeSetup();
   if (!state.vehicle) return;
   const s = fuelStats(state.fuels);
   const km = currentKm();

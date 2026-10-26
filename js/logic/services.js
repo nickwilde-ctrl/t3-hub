@@ -34,14 +34,26 @@ export const OLD_HINTS = {
   coolant: ['Phosphatfreies Kühlmittel mit destilliertem Wasser.'],
 };
 
+/** Wartungspunkte, die es bei einer Motor-Bauart nicht gibt. */
+const NOT_FOR = {
+  diesel: ['plugs', 'ignition'],   // Diesel: keine Zündkerzen, keine Zündanlage
+  luft: ['coolant'],               // Luftgekühlt: kein Kühlmittel
+};
+
+/** Standard-Wartungspunkte passend zur Motor-Bauart (unbekannt = alle). */
+export const servicesFor = (family) => DEFAULT_SERVICES
+  .filter((d) => !(NOT_FOR[family] || []).includes(d.key))
+  // Ölmenge und Ölnorm im Hinweis gelten nur für den 2,1-l-Wasserboxer (gegen Handbuch geprüft)
+  .map((d) => (d.key === 'oil' && family && family !== 'wbx21' ? { ...d, hint: 'Ölmenge und Ölnorm stehen in deinem Handbuch.' } : d));
+
 /**
  * Hebt Wartungspunkte auf die aktuellen Startwerte: fehlende Standardpunkte werden ergänzt,
  * unveränderte alte Platzhalter-Intervalle aktualisiert. Vom Nutzer geänderte Intervalle bleiben.
  * Gibt die geänderten/neuen Einträge zurück (ohne id/vehicleId für neue).
  */
-export function upgradeServices(services) {
+export function upgradeServices(services, family) {
   const changed = [];
-  for (const def of DEFAULT_SERVICES) {
+  for (const def of servicesFor(family)) {
     const s = services.find((x) => x.key === def.key);
     if (!s) { changed.push({ ...def, lastKm: null, lastDate: null }); continue; }
     const old = OLD_DEFAULTS[def.key];
