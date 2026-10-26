@@ -394,3 +394,4 @@ a.add{text-decoration:none;display:inline-block}
 .ge-check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--fg);text-transform:none;letter-spacing:0}
 .ge-check input{width:20px;height:20px;accent-color:var(--amber)}
 .ge-step textarea{background:var(--bg);color:var(--fg);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;font:16px/1.45 var(--f-body);width:100%;resize:vertical}
+.ok-text{color:var(--ok)}

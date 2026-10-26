@@ -13,7 +13,7 @@ export const SOON_DAYS = 45;
 export const DEFAULTS_VERSION = 2;
 export const DEFAULT_SERVICES = [
   { key: 'hu', name: 'Hauptuntersuchung (HU)', intervalKm: null, intervalMonths: 24, hint: 'Fälligkeit steht auf der Plakette und im Fahrzeugschein.' },
-  { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: '4,5 l, Norm VW 500 00 / 501 01 / 502 00.' },
+  { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00).' },
   { key: 'plugs', name: 'Zündkerzen', intervalKm: 24000, intervalMonths: null, hint: '' },
   { key: 'ignition', name: 'Verteilerkappe, Verteilerfinger, Zündkabel', intervalKm: 48000, intervalMonths: null, hint: 'Kabel nur, wenn nötig.' },
   { key: 'airfilter', name: 'Luftfilter', intervalKm: 48000, intervalMonths: null, hint: 'Alle 24.000 km prüfen.' },
@@ -26,6 +26,11 @@ export const DEFAULT_SERVICES = [
 /** Bisherige Platzhalter (Version 1), damit unveränderte Einträge auf die neuen Werte gehoben werden können. */
 export const OLD_DEFAULTS = {
   oil: [7500, 12], plugs: [15000, 24], brakefluid: [null, 24], coolant: [null, 36], fuelfilter: [20000, null], hu: [null, 24],
+};
+
+/** Frühere Hinweistexte: werden auf den aktuellen Text gehoben (auch wenn das Intervall geändert wurde). */
+export const OLD_HINTS = {
+  oil: ['4,5 l, Norm VW 500 00 / 501 01 / 502 00.'],
 };
 
 /**
@@ -42,6 +47,8 @@ export function upgradeServices(services) {
     const untouched = old && s.intervalKm === old[0] && s.intervalMonths === old[1];
     if (untouched && (s.intervalKm !== def.intervalKm || s.intervalMonths !== def.intervalMonths || s.name !== def.name || s.hint !== def.hint)) {
       changed.push({ ...s, name: def.name, intervalKm: def.intervalKm, intervalMonths: def.intervalMonths, hint: def.hint });
+    } else if (OLD_HINTS[def.key]?.includes(s.hint)) {
+      changed.push({ ...s, hint: def.hint });
     }
   }
   return changed;

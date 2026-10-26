@@ -18,10 +18,11 @@ function valueState(g) {
   if (g.own) {
     const v = g.values || [];
     if (!v.length) return '';
-    return v.every((x) => x.check) ? ' · <span class="faint">Werte geprüft</span>' : ' · <span class="faint">Werte teils ungeprüft</span>';
+    return v.every((x) => x.check) ? ' · <span class="ok-text">Werte geprüft</span>' : ' · <span class="faint">Werte teils ungeprüft</span>';
   }
   const v = g.values || [];
   if (v.some((x) => x.missing)) return ' · <span class="faint">Werte teils offen</span>';
+  if (v.length && v.every((x) => x.check)) return ' · <span class="ok-text">Werte geprüft</span>';
   if (v.length && v.every((x) => x.check || x.src)) return ' · <span class="faint">Werte laut T3-Pedia</span>';
   return ' · <span class="faint">Werte ungeprüft</span>';
 }
