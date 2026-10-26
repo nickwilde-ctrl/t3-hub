@@ -38,7 +38,11 @@ function step1() {
     <div class="field"><label for="su-name">Name</label><input id="su-name" value="${esc(data.name)}" placeholder="z. B. Peanut" autocomplete="off" enterkeyhint="next"></div>
     <div class="field"><label>Foto (optional)</label>
       <div class="su-photo">${data.photo ? `<img src="${data.photo}" alt="">` : '<span>Noch kein Foto</span>'}</div>
-      <label class="add su-photo-btn">${data.photo ? 'Anderes Foto' : '+ Foto wählen'}<input type="file" id="su-photo" accept="image/*" hidden></label></div>`;
+      <label class="add su-photo-btn">${data.photo ? 'Anderes Foto' : '+ Foto wählen'}<input type="file" id="su-photo" accept="image/*" hidden></label></div>
+    <div class="field"><label>Wie gut kennst du den T3?</label>
+      <div class="su-opts" role="radiogroup" aria-label="Erfahrung">
+        <label class="su-opt"><input type="radio" name="su-exp" value="neu" ${data.experience !== 'erfahren' ? 'checked' : ''}><span><b>Mein erster T3 – ich lerne noch</b><small>Die App erklärt mehr und zeigt dir, womit du anfängst.</small></span></label>
+        <label class="su-opt"><input type="radio" name="su-exp" value="erfahren" ${data.experience === 'erfahren' ? 'checked' : ''}><span><b>Ich kenne mich aus</b><small>Kurze Hinweise, du trägst direkt ein.</small></span></label></div></div>`;
 }
 
 function step2() {
@@ -68,7 +72,10 @@ function done() {
     <ul class="su-feat">
       ${isStandalone() || isIos() ? '' : '<li><b>Als App installieren</b><span>Im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen. Dann startet T3 Hub wie eine normale App und funktioniert auch offline.</span></li>'}
       <li><b>Ab und zu ein Backup</b><span>Deine Daten liegen nur auf diesem Gerät. Unter „Mehr“ sicherst du sie mit einem Tipp – die App erinnert dich daran.</span></li>
-      <li><b>Erster Schritt</b><span>Beim nächsten Tanken gleich die Tankung eintragen. Ab der zweiten Volltankung siehst du deinen Verbrauch.</span></li>
+      ${data.experience === 'erfahren'
+        ? '<li><b>Erster Schritt</b><span>Unter Wartung eintragen, was du weißt – nach einem Service auch alles auf einmal. Die Intervalle kannst du anpassen.</span></li>'
+        : '<li><b>Erster Schritt</b><span>Auf der Startseite zeigt dir „So fängst du an“, was du als Erstes einträgst. Das dauert nur ein paar Minuten.</span></li>'}
+      <li><b>Tanken</b><span>Beim nächsten Tanken gleich die Tankung eintragen. Ab der zweiten Volltankung siehst du deinen Verbrauch.</span></li>
     </ul>
     <div class="su-actions"><button type="button" class="btn su-next" data-su="close">Los geht's</button></div>`;
 }
@@ -91,6 +98,7 @@ function read(root) {
   if (step === 1) {
     data.name = v('su-name');
     if (!data.name) return 'Bitte gib deinem Bus einen Namen.';
+    data.experience = root.querySelector('[name=su-exp]:checked')?.value || 'neu';
   }
   if (step === 2) {
     const y = v('su-year');
@@ -119,7 +127,7 @@ function read(root) {
  */
 export function showSetup(create, demo) {
   if (document.getElementById('setup-root')) return;
-  data = { name: '', photo: null, year: null, family: '', code: '', km: null, oilKm: null, oilDate: null };
+  data = { name: '', experience: 'neu', photo: null, year: null, family: '', code: '', km: null, oilKm: null, oilDate: null };
   step = 0;
   const root = document.createElement('div');
   root.id = 'setup-root';

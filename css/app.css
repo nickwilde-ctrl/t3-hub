@@ -519,3 +519,16 @@ body.in-setup{overflow:hidden}
 .odo-btn:active .odo span{filter:brightness(1.4)}
 .odo-btn:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:4px}
 .odo-edit{color:var(--amber);font-size:12px;letter-spacing:0;margin-left:2px}
+/* Einstieg „So fängst du an“ */
+.st-card{padding:16px;display:grid;gap:10px;border-color:var(--amber)}
+.st-card h3{font-size:24px}
+.st-card p{margin:0}
+.st-steps{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:12px}
+.st-steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start}
+.st-steps li p{margin:3px 0 6px;color:var(--muted);font-size:14px}
+.st-steps li.done b{color:var(--muted);text-decoration:line-through}
+.st-n{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font:700 13px var(--f-body);color:var(--muted)}
+.st-steps li.done .st-n{background:var(--ok);border-color:var(--ok);color:#1c1d1b}
+.st-btns{display:flex;flex-wrap:wrap;gap:8px}
+.st-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--hair);padding-top:10px}
+.st-pick label.check{text-transform:none;letter-spacing:0;font:500 15px var(--f-body);color:var(--fg)}

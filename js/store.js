@@ -43,6 +43,7 @@ export async function createVehicle(setup) {
     engineFamily: setup.family || null,
     engineCode: setup.code || '',
     photo: setup.photo || null,
+    experience: setup.experience === 'erfahren' ? 'erfahren' : 'neu',
     facts: [],
     kmStart: setup.km != null ? { km: setup.km, date: today } : null,
     createdAt: new Date().toISOString(),

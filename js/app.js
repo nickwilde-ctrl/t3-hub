@@ -23,9 +23,11 @@ import { aboutCard } from './views/about.js';
 import { feedbackCard, feedbackSheet } from './views/feedback.js';
 import { openStromkarte } from './views/stromkarte.js';
 import { kmSheet } from './views/km.js';
+import { startCard, bulkDoneSheet } from './views/start.js';
+import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.42';
+const APP_VERSION = '0.43';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -47,7 +49,7 @@ if (!TABS.some(([id]) => id === tab)) tab = 'home';
 let wsub = 'intervalle';
 
 const VIEWS = {
-  home: () => (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
+  home: () => (showStart(state.vehicle, services(), currentKm()) ? startCard(state.vehicle, services(), currentKm()) : '') + (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
   wartung: () => {
     if (wsub === 'elektrik' && !state.wiring) wsub = 'intervalle';
     return wartungTabs(wsub, !!state.wiring) + (wsub === 'anleitungen' ? guidesView(allGuides(), state.vehicle.engineFamily, state.vehicle.engineCode)
@@ -104,6 +106,9 @@ document.addEventListener('click', (e) => {
   }
   if (action && action.dataset.action === 'open-game') { openGame(); return; }
   if (action && action.dataset.action === 'set-km') { kmSheet(currentKm(), setKmNow); return; }
+  if (action && action.dataset.action === 'start-hide') { saveVehicle({ ...state.vehicle, startHidden: true }); toast('Ausgeblendet'); return; }
+  if (action && action.dataset.action === 'start-level') { saveVehicle({ ...state.vehicle, experience: state.vehicle.experience === 'erfahren' ? 'neu' : 'erfahren' }); return; }
+  if (action && action.dataset.action === 'bulk-done') { bulkDoneSheet({ raw: state.services, shown: services(), km: currentKm(), saveMany, saveLog: (x) => saveItem('log', x) }); return; }
   if (action && action.dataset.action === 'add-mod') {
     modSheet(state.vehicle, null, saveVehicle);
     return;
@@ -139,6 +144,12 @@ document.addEventListener('click', (e) => {
     log: state.log,
     guides: allGuides(),
   };
+  const startSvc = e.target.closest('[data-start-service]');
+  if (startSvc) {
+    const s = services().find((x) => x.key === startSvc.dataset.startService);
+    if (s) serviceSheet(s, state.services.find((x) => x.id === s.id), wOps);
+    return;
+  }
   const wsubBtn = e.target.closest('[data-wsub]');
   if (wsubBtn) { wsub = wsubBtn.dataset.wsub; render(); return; }
   const elPart = e.target.closest('[data-el-part]');
