@@ -4,6 +4,7 @@ import { ENGINE_FAMILIES, familyForCode, engineText } from '../data/engines.js';
 import { parseNumber } from '../logic/fuel.js';
 import { readPhoto } from '../photo.js';
 import { toast } from './sheet.js';
+import { isStandalone, isIos } from './install.js';
 
 let data = null; // Eingaben über die Schritte hinweg
 let step = 0;    // 0 = Begrüßung, 1–3 = Schritte, 4 = fertig
@@ -22,6 +23,8 @@ function welcome() {
       <li><b>Touren und Serviceheft</b><span>Reisen, Stellplätze, Reparaturen, Rechnungen und Anleitungen an einem Ort.</span></li>
     </ul>
     <p class="hint su-note">Alle Daten bleiben auf diesem Gerät. Kein Konto, keine Anmeldung.</p>
+    ${isIos() && !isStandalone() ? `<div class="su-box su-ios"><b>Erst auf den Home-Bildschirm!</b>
+      <span>Auf dem iPhone hat die App vom Home-Bildschirm einen eigenen Speicher – was du hier in Safari einträgst, ist dort nicht zu sehen. Deshalb zuerst: unten auf <b>Teilen</b> (Quadrat mit Pfeil) → <b>Zum Home-Bildschirm</b> → <b>Hinzufügen</b>. Dann T3 Hub vom Home-Bildschirm öffnen und dort einrichten.</span></div>` : ''}
     <div class="su-actions">
       <button type="button" class="btn su-next" data-su="start">Bus einrichten</button>
       <button type="button" class="btn ghost" data-su="demo">Erst mal ausprobieren</button>
@@ -63,7 +66,7 @@ function step3() {
 function done() {
   return `<div class="su-hero"><div class="eyebrow">Fertig</div><h1 class="su-title">${esc(data.name)} ist an Bord</h1></div>
     <ul class="su-feat">
-      <li><b>Zum Home-Bildschirm hinzufügen</b><span>In Safari unten auf „Teilen“ und dann „Zum Home-Bildschirm“. Dann startet T3 Hub wie eine normale App und funktioniert auch offline.</span></li>
+      ${isStandalone() || isIos() ? '' : '<li><b>Als App installieren</b><span>Im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen. Dann startet T3 Hub wie eine normale App und funktioniert auch offline.</span></li>'}
       <li><b>Ab und zu ein Backup</b><span>Deine Daten liegen nur auf diesem Gerät. Unter „Mehr“ sicherst du sie mit einem Tipp – die App erinnert dich daran.</span></li>
       <li><b>Erster Schritt</b><span>Beim nächsten Tanken gleich die Tankung eintragen. Ab der zweiten Volltankung siehst du deinen Verbrauch.</span></li>
     </ul>

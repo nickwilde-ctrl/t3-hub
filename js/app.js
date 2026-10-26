@@ -20,6 +20,9 @@ import { dataCard, backupReminder, createBackup, restoreFromFile, roadTripFromFi
 import { installCard } from './views/install.js';
 import { gameCard, openGame } from './views/game.js';
 import { aboutCard } from './views/about.js';
+import { feedbackCard, feedbackSheet } from './views/feedback.js';
+
+const APP_VERSION = '0.28';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -47,10 +50,11 @@ const VIEWS = {
   touren: () => tourenView(state, currentKm()),
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + modsCard(state.vehicle)
     + dataCard(state)
+    + feedbackCard()
     + installCard()
     + gameCard()
     + aboutCard()
-    + '<p class="foot">T3 Hub · Version 0.27 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + `<p class="foot">T3 Hub · Version ${APP_VERSION} · Deine Daten bleiben auf diesem Gerät.</p>`,
 };
 
 function render() {
@@ -156,6 +160,7 @@ document.addEventListener('click', (e) => {
     return;
   }
   if (action && action.dataset.action === 'add-guide') { editGuide(null); return; }
+  if (action && action.dataset.action === 'feedback') { feedbackSheet(APP_VERSION); return; }
   if (action && action.dataset.action === 'leave-demo') {
     openSheet({
       title: 'Eigenen Bus einrichten?',
