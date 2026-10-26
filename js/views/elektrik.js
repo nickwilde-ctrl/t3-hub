@@ -48,7 +48,8 @@ let current = {};
 export function elektrikView(wiring) {
   current = wiring || {};
   wires = current.wires || [];
-  const seg = `<div class="seg"><button type="button" data-el-part="fehler" aria-pressed="${part === 'fehler'}">Fehlersuche</button><button type="button" data-el-part="kabel" aria-pressed="${part === 'kabel'}">Kabel suchen</button></div>`;
+  const hasMap = !!current.map;
+  const seg = `<div class="seg${hasMap ? ' three' : ''}"><button type="button" data-el-part="fehler" aria-pressed="${part === 'fehler'}">Fehlersuche</button><button type="button" data-el-part="kabel" aria-pressed="${part === 'kabel'}">${hasMap ? 'Kabel' : 'Kabel suchen'}</button>${hasMap ? '<button type="button" data-action="open-stromkarte" aria-pressed="false">Karte</button>' : ''}</div>`;
   if (part === 'fehler') {
     return `<section class="sec">${seg}<div class="label">Was ist los?</div><div class="card list">${FAULTS.map((f) => `<button type="button" class="row row-btn el-row" data-el-fault="${f.id}">
         <span class="el-ico"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[f.icon] || ''}</svg></span><div class="t">${esc(f.title)}</div><div class="s">${esc(f.short)}</div></button>`).join('')}</div>
@@ -137,7 +138,7 @@ export function wiringFromObject(obj, saveWiring) {
     title: 'Plandaten laden?',
     submitLabel: 'Laden',
     body: `<p style="margin:0"><b>${esc(obj.title || 'Plandaten')}</b></p>
-      <p class="hint" style="margin:0">${de(check.counts.wires)} Kabel${check.counts.fuses ? ` · ${de(check.counts.fuses)} Sicherungen` : ''}${obj.createdAt ? ` · erstellt ${fmtDate(String(obj.createdAt).slice(0, 10))}` : ''}</p>
+      <p class="hint" style="margin:0">${de(check.counts.wires)} Kabel${check.counts.fuses ? ` · ${de(check.counts.fuses)} Sicherungen` : ''}${check.counts.map ? ' · mit Stromkarte' : ''}${obj.createdAt ? ` · erstellt ${fmtDate(String(obj.createdAt).slice(0, 10))}` : ''}</p>
       <p style="margin:0">Die Plandaten bleiben nur auf diesem Gerät. Danach findest du unter Wartung den Reiter „Elektrik“. Deine übrigen Daten bleiben unverändert.</p>`,
     async onSubmit() {
       await saveWiring(obj);

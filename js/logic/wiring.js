@@ -1,6 +1,8 @@
 // Plandaten (Kabel aus dem Stromlaufplan): Datei prüfen, Kabel suchen, Weg eines Kabels.
 // Die Plandaten selbst stehen NICHT im Repository. Jeder lädt seine eigene Datei, sie bleibt auf dem Gerät.
 
+import { checkMap } from './stromkarte.js';
+
 export const WIRING_FORMAT = 't3hub-wiring';
 export const WIRING_VERSION = 1;
 
@@ -17,7 +19,8 @@ export function checkWiring(obj) {
   if (typeof obj.version !== 'number' || obj.version > WIRING_VERSION) return { ok: false, error: 'Diese Plandaten stammen aus einer neueren Version der App. Bitte die App aktualisieren.' };
   if (!Array.isArray(obj.wires) || !obj.wires.length) return { ok: false, error: 'In der Datei sind keine Kabel enthalten.' };
   if (obj.wires.some((w) => !w || typeof w.c !== 'string' || typeof w.from !== 'string' || typeof w.to !== 'string')) return { ok: false, error: 'Die Plandaten-Datei ist beschädigt.' };
-  return { ok: true, counts: { wires: obj.wires.length, fuses: Array.isArray(obj.fuses) ? obj.fuses.length : 0 } };
+  if (obj.map !== undefined && !checkMap(obj.map)) return { ok: false, error: 'Die Stromkarte in der Datei ist beschädigt.' };
+  return { ok: true, counts: { wires: obj.wires.length, fuses: Array.isArray(obj.fuses) ? obj.fuses.length : 0, map: !!obj.map } };
 }
 
 const norm = (s) => String(s ?? '').toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss');

@@ -139,8 +139,8 @@ export async function deleteItem(name, id) {
 
 /** Plandaten speichern (ersetzt vorhandene des aktiven Fahrzeugs). */
 export async function saveWiring(obj) {
-  const { format, version, title, source, createdAt, wires, fuses } = obj;
-  const row = { id: state.wiring?.id || db.newId(), vehicleId: state.vehicle.id, format, version, title: title || '', source: source || '', createdAt: createdAt || null, importedAt: new Date().toISOString(), wires, fuses: fuses || [] };
+  const { format, version, title, source, createdAt, wires, fuses, map } = obj;
+  const row = { id: state.wiring?.id || db.newId(), vehicleId: state.vehicle.id, format, version, title: title || '', source: source || '', createdAt: createdAt || null, importedAt: new Date().toISOString(), wires, fuses: fuses || [], map: map || null };
   await db.put('wiring', row);
   state.wiring = row;
   emit();

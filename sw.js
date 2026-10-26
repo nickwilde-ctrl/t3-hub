@@ -2,7 +2,7 @@
 // Eigene Dateien: erst aus dem Netz (damit Updates sofort ankommen), bei Funkloch aus dem Speicher.
 // Schriften von Google: einmal laden, dann aus dem Speicher.
 // Bei jeder Änderung an den App-Dateien VERSION erhöhen.
-const VERSION = 'v0.39.0';
+const VERSION = 'v0.40.0';
 const CACHE = 't3hub-' + VERSION;
 const CORE = [
   './',
@@ -41,6 +41,8 @@ const CORE = [
   './js/data/faults.js',
   './js/logic/wiring.js',
   './js/views/elektrik.js',
+  './js/views/stromkarte.js',
+  './js/logic/stromkarte.js',
   './js/data/specs.js',
   './js/logic/demo.js',
   './js/views/game.js',

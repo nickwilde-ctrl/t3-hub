@@ -21,9 +21,10 @@ import { installCard } from './views/install.js';
 import { gameCard, openGame } from './views/game.js';
 import { aboutCard } from './views/about.js';
 import { feedbackCard, feedbackSheet } from './views/feedback.js';
+import { openStromkarte } from './views/stromkarte.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.39';
+const APP_VERSION = '0.40';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -145,6 +146,7 @@ document.addEventListener('click', (e) => {
   if (elFault) { startFault(elFault.dataset.elFault); return; }
   const elWire = e.target.closest('[data-el-wire]');
   if (elWire && !elWire.closest('#el-root')) { startWire(+elWire.dataset.elWire); return; }
+  if (action && action.dataset.action === 'open-stromkarte') { if (state.wiring?.map) openStromkarte(state.wiring.map); return; }
   if (action && action.dataset.action === 'remove-wiring') { removeWiringSheet(removeWiring); return; }
   const fuelBtn = e.target.closest('[data-guide-fuel]');
   if (fuelBtn) { setGuideFuel(fuelBtn); return; }
