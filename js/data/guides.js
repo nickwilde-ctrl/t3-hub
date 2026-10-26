@@ -172,6 +172,42 @@ export const GUIDES = [
     verified: false,
   },
   {
+    id: 'zahnriemen-diesel',
+    families: ['diesel'], // passende Motor-Bauarten (fehlt = alle)
+    title: 'Zahnriemen prüfen (Diesel)',
+    group: 'Motor',
+    engine: 'Diesel und Turbodiesel (CS, KY, JX)',
+    level: 2,
+    minutes: 45,
+    serviceKey: null,
+    tools: ['Werkzeug für die Zahnriemenabdeckung', 'Nuss und Ratsche für die Kurbelwellen-Riemenscheibe (zum Durchdrehen)', 'Gummihammer', 'Taschenlampe', 'Werkstatt: Spannungsmessgerät VW 210'],
+    material: [],
+    values: [
+      { k: 'Warum wichtig', v: 'Der Zahnriemen treibt Nockenwelle, Einspritzpumpe, Zwischenwelle und die Unterdruckpumpe für den Bremskraftverstärker. Reißt er oder springt er einen Zahn weiter, ist der Motor meist kaputt.', check: true },
+      { k: 'Zustand', v: 'nicht verölt, nicht rissig, Zahnflanken ohne Abnutzung – sonst unbedingt ersetzen', check: true },
+      { k: 'Spannung mit VW 210', v: 'Skalenwert 12–13, gemessen zwischen Nockenwellen- und Einspritzpumpenrad', check: true },
+      { k: 'Spannung behelfsmäßig', v: 'an derselben Stelle mit dem Daumen etwa 10 mm durchdrückbar', check: true },
+      { k: 'Nockenwellen-Zahnriemenrad', v: '45 Nm', check: true },
+      { k: 'Wechselintervall', v: 'noch nicht eingetragen – im Wartungsplan des Handbuchs nachsehen', check: false, missing: true },
+    ],
+    warnings: [
+      'Motor nur an der Kurbelwellen-Riemenscheibe durchdrehen, nie an der Nockenwelle oder der Einspritzpumpe.',
+      'Spannen oder Wechseln verstellt die Steuerzeiten: Danach muss der Förderbeginn der Einspritzpumpe mit Messuhr und Spezialadapter geprüft werden. Das ist Werkstattarbeit.',
+    ],
+    steps: [
+      { t: 'Abdeckung abnehmen', d: 'Die Zahnriemenabdeckung abbauen.' },
+      { t: 'Riemen ansehen', d: 'Ist er verölt oder rissig? Sind die Zähne an den Flanken abgenutzt? Mit der Lampe genau hinsehen.' },
+      { t: 'Ganz durchdrehen', d: 'Den Motor an der Kurbelwellen-Riemenscheibe (in Laufrichtung) weiterdrehen und den Riemen auf seiner ganzen Länge begutachten.' },
+      { t: 'Spannung fühlen', d: 'Mit dem Gummihammer kurz zwischen Nockenwellen- und Einspritzpumpenrad auf den Riemen klopfen. Dann an derselben Stelle mit dem Daumen drücken: etwa 10 mm Durchhang sind richtig.' },
+      { t: 'Wiederholen', d: 'Kurbelwelle ein Stück weiterdrehen und noch einmal prüfen. Im Zweifel in der Werkstatt mit VW 210 messen lassen (Soll 12–13).' },
+      { t: 'Ergebnis', d: 'Riemen schadhaft oder Spannung falsch: nicht weiterfahren, sondern in die Werkstatt – Wechsel und Spannen brauchen Spezialwerkzeug und danach eine Prüfung des Förderbeginns.' },
+      { t: 'Abdeckung montieren', d: 'Abdeckung wieder anbauen und das Ergebnis im Serviceheft notieren.' },
+    ],
+    hint: 'Das Handbuch beschreibt auch Wechsel und Spannen selbst, mit nachgebauten Werkzeugen (Einstelllineal VW 2065, Absteckdorn 2064 mit genau 15,45 mm). Den Förderbeginn muss aber eine Werkstatt mit Messuhr einstellen.',
+    source: 'Eigene Zusammenstellung (T3 Hub) nach Werten aus dem Reparaturhandbuch „Jetzt helfe ich mir selbst“ (Korp) (geprüft 26.10.2026).',
+    verified: false,
+  },
+  {
     id: 'blauer-deckel',
     families: ['wbx21', 'wbx19'], // passende Motor-Bauarten (fehlt = alle)
     title: 'Blauen Deckel (Druckventil) prüfen',
