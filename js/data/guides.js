@@ -286,6 +286,41 @@ export const GUIDES = [
     verified: false,
   },
   {
+    id: 'gluehkerzen-diesel',
+    families: ['diesel'], // passende Motor-Bauarten (fehlt = alle)
+    title: 'Glühkerzen prüfen und wechseln (Diesel)',
+    group: 'Elektrik',
+    engine: 'Diesel und Turbodiesel (CS, KY, JX)',
+    level: 2,
+    minutes: 45,
+    serviceKey: null,
+    tools: ['Prüflampe (12 V)', 'Gabel- oder flacher Ringschlüssel SW 12', 'Drehmomentschlüssel', 'Schraubendreher bzw. Nuss für die Stromschienen'],
+    material: ['Glühkerzen bei Bedarf: Beru 601 MJ, Bosch 0 250 201 021 oder VW N 019 100 5 (nur Schnellstart-Glühkerzen)'],
+    values: [
+      { k: 'Glühkerzen', v: 'Schnellstart-Glühkerzen: Beru 601 MJ · Bosch 0 250 201 021 · VW N 019 100 5', check: true },
+      { k: 'Anzugsmoment', v: '30 Nm (SW 12)', check: true },
+      { k: 'Lebensdauer', v: 'ausgelegt auf etwa 15.000 Starts, oft weniger', check: true },
+      { k: 'Anzeichen', v: 'kalter Motor läuft anfangs nicht rund, ein Zylinder setzt später ein, blaue Wolken', check: true },
+      { k: 'Verbrannte Spitzen', v: 'meist Folge defekter Einspritzdüsen (oder verstelltem Förderbeginn) – Düsen prüfen', check: true },
+      { k: 'Keine Spannung?', v: '50-A-Streifensicherung, Vorglührelais, Zündschloss oder Zuleitung prüfen', check: true },
+    ],
+    warnings: [
+      'Beim Prüfen der Stromzufuhr den Zündschlüssel höchstens 15 Sekunden auf „Vorglühen“ halten.',
+      'Hinter der Einspritzpumpe ist es sehr eng – Kerzen und Gewinde nicht verkanten.',
+    ],
+    steps: [
+      { t: 'Kerzen freilegen', d: 'An der in Fahrtrichtung vorderen Kerze das Zuleitungskabel abschrauben, an allen Kerzen die Stromschienen abschrauben.' },
+      { t: 'Kerzen einzeln prüfen', d: 'Prüflampe mit ihrem Kabel an den Pluspol der Batterie klemmen. Mit der Spitze nacheinander die Anschlussgewinde der Kerzen berühren. Wo die Lampe nicht leuchtet, ist die Kerze defekt.' },
+      { t: 'Stromzufuhr prüfen', d: 'Schienen und Kabel wieder anbauen. Prüflampe zwischen Masse und den Anschluss des Zuleitungskabels an der vorderen Kerze. Kabel am Temperaturgeber der Vorglühanlage abziehen (Diesel: Schlauchstutzen rechts am Motor; Turbodiesel: vorn neben dem Geber der Temperaturanzeige) und frei hängen lassen. Zündschlüssel kurz auf „Vorglühen“ – die Lampe muss leuchten.' },
+      { t: 'Defekte Kerze ausbauen', d: 'Stromschienen bzw. Kabel abschrauben, Kerze mit SW 12 herausdrehen. Spitze ansehen: Ist sie angefressen, die Einspritzdüse dieses Zylinders prüfen lassen.' },
+      { t: 'Neue Kerze einbauen', d: 'Von Hand eindrehen und mit 30 Nm festziehen. Stromschienen und Zuleitung wieder anschrauben, Kabel am Temperaturgeber aufstecken.' },
+      { t: 'Probestart', d: 'Kalten Motor starten: Er sollte gleich auf allen Zylindern laufen. Im Serviceheft notieren, welche Kerze getauscht wurde.' },
+    ],
+    hint: 'Nicht verwechseln: Der Temperaturgeber für die Vorglühanlage ist ein anderer als der für die Temperaturanzeige im Cockpit.',
+    source: 'Eigene Zusammenstellung (T3 Hub) nach Werten aus dem Reparaturhandbuch „Jetzt helfe ich mir selbst“ (Korp) (geprüft 26.10.2026).',
+    verified: false,
+  },
+  {
     id: 'blauer-deckel',
     families: ['wbx21', 'wbx19'], // passende Motor-Bauarten (fehlt = alle)
     title: 'Blauen Deckel (Druckventil) prüfen',
