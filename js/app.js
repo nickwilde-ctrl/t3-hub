@@ -10,7 +10,7 @@ import { toast, closeSheet, openSheet } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
 import { wartungView, wartungTabs, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
-import { guidesView, filterGuides, setGuideGroup, openGuide, forgetProgress } from './views/guides.js';
+import { guidesView, filterGuides, setGuideGroup, setGuideFuel, openGuide, forgetProgress } from './views/guides.js';
 import { guideSheet } from './views/guideEditor.js';
 import { GUIDES } from './data/guides.js';
 import { mergeGuides } from './logic/guides.js';
@@ -22,7 +22,7 @@ import { gameCard, openGame } from './views/game.js';
 import { aboutCard } from './views/about.js';
 import { feedbackCard, feedbackSheet } from './views/feedback.js';
 
-const APP_VERSION = '0.37';
+const APP_VERSION = '0.38';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -132,6 +132,8 @@ document.addEventListener('click', (e) => {
   };
   const wsubBtn = e.target.closest('[data-wsub]');
   if (wsubBtn) { wsub = wsubBtn.dataset.wsub; render(); return; }
+  const fuelBtn = e.target.closest('[data-guide-fuel]');
+  if (fuelBtn) { setGuideFuel(fuelBtn); return; }
   const groupBtn = e.target.closest('[data-guide-group]');
   if (groupBtn) { setGuideGroup(groupBtn); return; }
   const guideBtn = e.target.closest('[data-open-guide]');

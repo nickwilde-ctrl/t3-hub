@@ -1,4 +1,5 @@
 // Reparaturleitfäden: Suche, Filter, Fortschritt. Reine Funktionen ohne Browser.
+import { ENGINE_FAMILIES } from '../data/engines.js';
 
 const norm = (s) => String(s || '').toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss');
 
@@ -91,3 +92,9 @@ export function valuesFor(guide, { code = '', familyCodes = null } = {}) {
   const missing = !!c && coded.length > 0 && !coded.some((v) => v.codes.includes(c));
   return { list, missing };
 }
+
+/** Kraftstoff einer Motor-Bauart: 'Benzin', 'Diesel' oder ''. */
+export const fuelOfFamily = (family) => ENGINE_FAMILIES.find((f) => f.id === family)?.fuel || '';
+
+/** Passt die Anleitung zum gewählten Kraftstoff? Ohne Auswahl oder ohne Motorangabe (gilt für alle) = ja. */
+export const matchesFuel = (guide, fuel) => !fuel || !guide.families?.length || guide.families.some((f) => fuelOfFamily(f) === fuel);

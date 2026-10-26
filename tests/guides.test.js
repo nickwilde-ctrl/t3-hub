@@ -124,3 +124,16 @@ test('Ölwechsel zeigt dem Diesel nur Diesel-Werte', () => {
   const mv = valuesFor(oil, { code: 'MV' }).list.map((v) => v.k);
   assert.ok(mv.includes('Ölmenge Wasserboxer') && !mv.includes('Ölmenge Diesel'));
 });
+
+import { matchesFuel, fuelOfFamily } from '../js/logic/guides.js';
+
+test('Filter Benziner / Diesel', () => {
+  const id = (fuel) => GUIDES.filter((g) => matchesFuel(g, fuel)).map((g) => g.id);
+  assert.equal(fuelOfFamily('wbx21'), 'Benzin');
+  assert.equal(fuelOfFamily('diesel'), 'Diesel');
+  assert.ok(id('Diesel').includes('gluehkerzen-diesel') && !id('Diesel').includes('zuendkerzen'));
+  assert.ok(id('Benzin').includes('zuendkerzen') && !id('Benzin').includes('gluehkerzen-diesel'));
+  assert.ok(id('Benzin').includes('oelwechsel') && id('Diesel').includes('oelwechsel'), 'gilt für beide');
+  assert.ok(id('Diesel').includes('radwechsel'), 'ohne Motorangabe: überall');
+  assert.equal(id('').length, GUIDES.length);
+});

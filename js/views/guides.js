@@ -3,11 +3,13 @@ import { esc } from '../format.js';
 import { GUIDES, GUIDE_GROUPS } from '../data/guides.js';
 
 let current = GUIDES; // zuletzt gezeigte Liste (mitgelieferte + eigene)
-import { searchGuides, progress, levelText, usedGroups, nextStep, fitsEngine, sortForEngine, valuesFor } from '../logic/guides.js';
+import { searchGuides, progress, levelText, usedGroups, nextStep, fitsEngine, sortForEngine, valuesFor, fuelOfFamily, matchesFuel } from '../logic/guides.js';
 import { familyById } from '../data/engines.js';
 
 let family = null; // Motor-Bauart des Fahrzeugs
 let engineCode = ''; // Motorkennbuchstaben des Fahrzeugs
+let fuelSel = null; // Filter Benzin/Diesel ('' = alle); startet mit dem Kraftstoff des eigenen Motors
+let fuelFor = undefined; // für welche Bauart fuelSel zuletzt gesetzt wurde
 
 const store = {
   get(id) { try { return JSON.parse(localStorage.getItem('t3hub-guide-' + id)) || []; } catch { return []; } },
@@ -27,6 +29,7 @@ function valueState(g) {
   const v = g.values || [];
   if (v.some((x) => x.missing)) return ' · <span class="faint">Werte teils offen</span>';
   if (v.length && v.every((x) => x.check)) return ' · <span class="ok-text">Werte geprüft</span>';
+  if (v.length && v.every((x) => x.check || x.src) && v.filter((x) => x.check).length * 2 >= v.length) return ' · <span class="ok-text">Werte größtenteils geprüft</span>';
   if (v.length && v.every((x) => x.check || x.src)) return ' · <span class="faint">Werte laut T3-Pedia</span>';
   return ' · <span class="faint">Werte ungeprüft</span>';
 }
@@ -34,7 +37,7 @@ function valueState(g) {
 function row(g) {
   const p = progress(g, store.get(g.id));
   const other = !fitsEngine(g, family);
-  return `<button type="button" class="row row-btn" data-open-guide="${esc(g.id)}">
+  return `<button type="button" class="row row-btn" data-open-guide="${esc(g.id)}"${matchesFuel(g, fuelSel) ? '' : ' hidden'}>
     <div class="t">${esc(g.title)}<span class="tag">${esc(g.group)}</span>${g.own ? `<span class="tag own">${g.basedOn ? 'Eigene Fassung' : 'Eigene'}</span>` : ''}${other ? '<span class="tag">anderer Motor</span>' : ''}</div>
     <div class="s">${levelText(g.level)} · ca. ${g.minutes} Min. · ${g.steps.length} Schritte${p.done && !p.complete ? ` · <b class="amber">begonnen (${p.done}/${p.total})</b>` : ''}${valueState(g)}</div>
     <div class="r" aria-hidden="true">${wrenches(g.level)}</div></button>`;
@@ -43,12 +46,14 @@ function row(g) {
 export function guidesView(list = GUIDES, fam = null, code = '') {
   family = fam;
   engineCode = code || '';
+  if (fuelFor !== fam) { fuelSel = fuelOfFamily(fam); fuelFor = fam; }
   list = sortForEngine(list, fam);
   current = list;
   const groups = usedGroups(list, GUIDE_GROUPS);
   return `<section class="sec">
     <div class="sec-head"><span class="label">${list.length} Anleitungen</span><button type="button" class="add" data-action="add-guide">+ Eigene Anleitung</button></div>
     <div class="field"><label for="guide-q">Anleitung suchen</label><input id="guide-q" type="search" placeholder="z. B. Ölfilter, Zündkerze" autocomplete="off"></div>
+    <div class="seg guide-fuel" role="group" aria-label="Motor">${[['', 'Alle Motoren'], ['Benzin', 'Benziner'], ['Diesel', 'Diesel']].map(([v, l]) => `<button type="button" data-guide-fuel="${v}" aria-pressed="${fuelSel === v}">${l}</button>`).join('')}</div>
     <div class="chips" role="group" aria-label="Baugruppe">
       <button type="button" data-guide-group="" aria-pressed="true">Alle</button>
       ${groups.map((g) => `<button type="button" data-guide-group="${esc(g)}" aria-pressed="false">${esc(g)}</button>`).join('')}
@@ -63,10 +68,16 @@ export function guidesView(list = GUIDES, fam = null, code = '') {
 export function filterGuides() {
   const q = document.getElementById('guide-q')?.value || '';
   const g = document.querySelector('[data-guide-group][aria-pressed="true"]')?.dataset.guideGroup || '';
-  const ids = new Set(searchGuides(current, q, g).map((x) => x.id));
+  const ids = new Set(searchGuides(current, q, g).filter((x) => matchesFuel(x, fuelSel)).map((x) => x.id));
   document.querySelectorAll('#guide-list [data-open-guide]').forEach((b) => (b.hidden = !ids.has(b.dataset.openGuide)));
   const empty = document.getElementById('guide-empty');
   if (empty) empty.hidden = ids.size > 0;
+}
+
+export function setGuideFuel(btn) {
+  fuelSel = btn.dataset.guideFuel;
+  btn.parentElement.querySelectorAll('[data-guide-fuel]').forEach((b) => b.setAttribute('aria-pressed', b === btn));
+  filterGuides();
 }
 
 export function setGuideGroup(btn) {
