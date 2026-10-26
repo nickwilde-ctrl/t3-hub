@@ -188,6 +188,7 @@ export const GUIDES = [
       { k: 'Spannung mit VW 210', v: 'Skalenwert 12–13, gemessen zwischen Nockenwellen- und Einspritzpumpenrad', check: true },
       { k: 'Spannung behelfsmäßig', v: 'an derselben Stelle mit dem Daumen etwa 10 mm durchdrückbar', check: true },
       { k: 'Nockenwellen-Zahnriemenrad', v: '45 Nm', check: true },
+      { k: 'Förderbeginn (Werkstatt)', v: 'zulässig 0,83–0,97 mm Hub, einstellen auf 0,90 ±0,02 mm – mit Adapter VW 2066 und Messuhr 0–3 mm · Verschlussschraube mit neuem Dichtring 15 Nm (undicht: 25 Nm)', check: true },
       { k: 'Wechselintervall', v: 'noch nicht eingetragen – im Wartungsplan des Handbuchs nachsehen', check: false, missing: true },
     ],
     warnings: [
