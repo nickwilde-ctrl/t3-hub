@@ -33,10 +33,11 @@ test('Motor-Bauart aus Kennbuchstaben', async () => {
   assert.equal(engineText(null, ''), '');
 });
 
-test('Öl-Hinweis mit Mengen nur beim 2,1-l-Wasserboxer', async () => {
+test('Öl-Hinweis mit Mengen nur bei Wasserboxern', async () => {
   const { servicesFor } = await import('../js/logic/services.js');
   const oil = (f) => servicesFor(f).find((x) => x.key === 'oil').hint;
   assert.match(oil('wbx21'), /4,5 l/);
   assert.match(oil(null), /4,5 l/);
+  assert.match(oil('wbx19'), /4,5 l/);
   assert.doesNotMatch(oil('diesel'), /4,5 l/);
 });

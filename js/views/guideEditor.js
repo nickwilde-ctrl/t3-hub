@@ -5,7 +5,7 @@ import { GUIDE_GROUPS } from '../data/guides.js';
 import { copyGuide, lines, checkGuide, levelText } from '../logic/guides.js';
 
 function valueRow(v = {}) {
-  return `<div class="part-edit ge-val" data-val data-src="${esc(v.src || '')}" data-orig="${esc(v.v || '')}">
+  return `<div class="part-edit ge-val" data-val data-src="${esc(v.src || '')}" data-orig="${esc(v.v || '')}" data-codes="${esc((v.codes || []).join(','))}">
     <div class="part-grid">
       <label class="pf"><span>Bezeichnung</span><input name="v-k" value="${esc(v.k || '')}" placeholder="z. B. Ölablassschraube" autocomplete="off"></label>
       <label class="pf"><span>Wert</span><input name="v-v" value="${esc(v.v || '')}" placeholder="z. B. 25 Nm" autocomplete="off"></label>
@@ -103,6 +103,7 @@ export function guideSheet(guide, { services = [], save, remove, onSaved, onRemo
         const out = { k, v, check: r.querySelector('[name=v-check]').checked };
         // Quelle nur behalten, solange der Wert unverändert ist
         if (r.dataset.src && v === r.dataset.orig) out.src = r.dataset.src;
+        if (r.dataset.codes) out.codes = r.dataset.codes.split(',');
         return out;
       }).filter((x) => x.k || x.v);
       if (values.some((x) => !x.k || !x.v)) return 'Bei einem Wert fehlt die Bezeichnung oder die Zahl.';

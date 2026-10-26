@@ -93,3 +93,24 @@ test('Anleitungen passend zum Motor', () => {
   assert.ok(sorted.slice(firstOther).every((g) => !fitsEngine(g, 'diesel')));
   assert.equal(sorted.length, GUIDES.length);
 });
+
+import { valuesFor } from '../js/logic/guides.js';
+
+test('Werte passend zum Kennbuchstaben', () => {
+  const z = GUIDES.find((g) => g.id === 'zuendzeitpunkt');
+  const mv = valuesFor(z, { code: 'mv' }).list.map((v) => v.k);
+  assert.ok(mv.includes('MV, SS: Sollwert'));
+  assert.ok(!mv.some((k) => k.startsWith('DF')));
+  assert.ok(mv.includes('Öltemperatur'), 'allgemeine Werte bleiben');
+  const df = valuesFor(z, { code: 'DF' }).list.map((v) => v.k);
+  assert.ok(df.includes('DF: Sollwert') && !df.includes('MV, SS: Sollwert'));
+  // nur Bauart bekannt: alle Werte dieser Bauart
+  const fam19 = valuesFor(z, { familyCodes: ['DF', 'DG', 'DH', 'GW', 'EY', 'SP'] }).list.map((v) => v.k);
+  assert.ok(fam19.includes('DF: Sollwert') && fam19.includes('GW: Sollwert') && !fam19.includes('MV, SS: Sollwert'));
+  assert.equal(valuesFor(z).list.length, z.values.length);
+  // Kennbuchstabe ohne eigene Werte → missing
+  assert.equal(valuesFor(z, { code: 'SP' }).missing, true);
+  assert.equal(valuesFor(z, { code: 'MV' }).missing, false);
+  // Anleitung ohne motorabhängige Werte → nie missing
+  assert.equal(valuesFor(GUIDES.find((g) => g.id === 'radwechsel'), { code: 'SP' }).missing, false);
+});

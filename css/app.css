@@ -433,3 +433,4 @@ body.in-setup{overflow:hidden}
 .about p,.about li{font-size:14px;line-height:1.5;color:var(--muted)}.about p{margin:8px 0 0}.about b{color:var(--fg)}
 .about ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px}
 .su-ios{border-color:color-mix(in srgb,var(--amber) 60%,transparent)}.su-ios b{color:var(--amber)}.su-ios span{color:var(--muted);font-size:14px;line-height:1.45}
+.g-note{margin:6px 0 0;font-size:14px;color:var(--amber)}

@@ -3,10 +3,11 @@ import { esc } from '../format.js';
 import { GUIDES, GUIDE_GROUPS } from '../data/guides.js';
 
 let current = GUIDES; // zuletzt gezeigte Liste (mitgelieferte + eigene)
-import { searchGuides, progress, levelText, usedGroups, nextStep, fitsEngine, sortForEngine } from '../logic/guides.js';
+import { searchGuides, progress, levelText, usedGroups, nextStep, fitsEngine, sortForEngine, valuesFor } from '../logic/guides.js';
 import { familyById } from '../data/engines.js';
 
 let family = null; // Motor-Bauart des Fahrzeugs
+let engineCode = ''; // Motorkennbuchstaben des Fahrzeugs
 
 const store = {
   get(id) { try { return JSON.parse(localStorage.getItem('t3hub-guide-' + id)) || []; } catch { return []; } },
@@ -39,8 +40,9 @@ function row(g) {
     <div class="r" aria-hidden="true">${wrenches(g.level)}</div></button>`;
 }
 
-export function guidesView(list = GUIDES, fam = null) {
+export function guidesView(list = GUIDES, fam = null, code = '') {
   family = fam;
+  engineCode = code || '';
   list = sortForEngine(list, fam);
   current = list;
   const groups = usedGroups(list, GUIDE_GROUPS);
@@ -92,10 +94,12 @@ export function closeGuide() {
 /**
  * Vollbild-Anleitung. onDone(guide) wird bei „Fertig“ aufgerufen (mit serviceKey → Wartungspunkt, sonst freier Serviceheft-Eintrag).
  */
-export function openGuide(id, { onDone, onClose, onEdit, guides = current, engineFamily } = {}) {
+export function openGuide(id, { onDone, onClose, onEdit, guides = current, engineFamily, code } = {}) {
   if (engineFamily !== undefined) family = engineFamily;
+  if (code !== undefined) engineCode = code || '';
   const g = guides.find((x) => x.id === id);
   if (!g) return;
+  const vals = valuesFor(g, { code: engineCode, familyCodes: familyById(family)?.codes });
   closeGuide();
   let done = store.get(g.id);
   const root = document.createElement('div');
@@ -111,7 +115,7 @@ export function openGuide(id, { onDone, onClose, onEdit, guides = current, engin
       <p class="g-meta">${levelText(g.level)} ${wrenches(g.level)} · ca. ${g.minutes} Min. · ${g.steps.length} Schritte</p>
       ${!fitsEngine(g, family) ? `<div class="g-box g-other"><h3>Anderer Motor</h3><p>Diese Anleitung ist für ${g.families.map((f) => esc(familyById(f)?.label || f)).join(' und ')} geschrieben. Bei deinem Motor (${esc(familyById(family)?.label || 'unbekannt')}) können Werte und Schritte abweichen – bitte mit deinem Handbuch vergleichen.</p></div>` : ''}
       ${onEdit ? `<button type="button" class="add g-edit" id="g-edit">${g.own ? '✎ Anleitung ändern' : '✎ Eigene Fassung erstellen'}</button>` : ''}
-      ${g.values?.length ? `<div class="g-box"><h3>Wichtige Werte</h3><dl class="g-values">${g.values.map((v) => `<dt>${esc(v.k)}</dt><dd>${esc(v.v)}${v.check ? ' <span class="g-ok">geprüft</span>' : v.src ? ` <span class="g-src">laut ${esc(v.src)}</span>` : ` <span class="g-warn">${v.missing ? 'fehlt' : 'ungeprüft'}</span>`}</dd>`).join('')}</dl></div>` : ''}
+      ${vals.list.length || vals.missing ? `<div class="g-box"><h3>Wichtige Werte${engineCode ? ` <span class="g-src">für ${esc(engineCode)}</span>` : ''}</h3>${vals.missing ? `<p class="g-note">Für deinen Motor (${esc(engineCode)}) haben wir hier noch keine eigenen Werte – bitte im Handbuch nachsehen.</p>` : ''}<dl class="g-values">${vals.list.map((v) => `<dt>${esc(v.k)}</dt><dd>${esc(v.v)}${v.check ? ' <span class="g-ok">geprüft</span>' : v.src ? ` <span class="g-src">laut ${esc(v.src)}</span>` : ` <span class="g-warn">${v.missing ? 'fehlt' : 'ungeprüft'}</span>`}</dd>`).join('')}</dl></div>` : ''}
       ${g.warnings?.length ? `<div class="g-box g-danger"><h3>Achtung</h3>${list(g.warnings)}</div>` : ''}
       ${g.tools?.length ? `<details class="g-box" open><summary><h3>Werkzeug</h3></summary>${list(g.tools)}</details>` : ''}
       ${g.material?.length ? `<details class="g-box" open><summary><h3>Material</h3></summary>${list(g.material)}</details>` : ''}
@@ -136,7 +140,7 @@ export function openGuide(id, { onDone, onClose, onEdit, guides = current, engin
     prog.textContent = `${p.done} von ${p.total} erledigt`;
     root.querySelectorAll('[data-step]').forEach((c) => { c.checked = done.includes(+c.dataset.step); c.closest('li').classList.toggle('done', c.checked); });
   };
-  const valuesBox = g.values?.length ? `<details class="g-box f-values"><summary><h3>Wichtige Werte</h3></summary><dl class="g-values">${g.values.map((v) => `<dt>${esc(v.k)}</dt><dd>${esc(v.v)}</dd>`).join('')}</dl></details>` : '';
+  const valuesBox = vals.list.length ? `<details class="g-box f-values"><summary><h3>Wichtige Werte</h3></summary><dl class="g-values">${vals.list.map((v) => `<dt>${esc(v.k)}</dt><dd>${esc(v.v)}</dd>`).join('')}</dl></details>` : '';
   // Werkstatt-Modus: immer nur ein Schritt, groß, mit „Erledigt – weiter“.
   const renderFocus = () => {
     const total = g.steps.length;

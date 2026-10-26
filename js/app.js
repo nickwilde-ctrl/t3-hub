@@ -22,7 +22,7 @@ import { gameCard, openGame } from './views/game.js';
 import { aboutCard } from './views/about.js';
 import { feedbackCard, feedbackSheet } from './views/feedback.js';
 
-const APP_VERSION = '0.28';
+const APP_VERSION = '0.29';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -45,7 +45,7 @@ let wsub = 'intervalle';
 
 const VIEWS = {
   home: () => (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
-  wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides(), state.vehicle.engineFamily) : wartungView(services(), state.log, currentKm())),
+  wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides(), state.vehicle.engineFamily, state.vehicle.engineCode) : wartungView(services(), state.log, currentKm())),
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + modsCard(state.vehicle)
@@ -139,6 +139,7 @@ document.addEventListener('click', (e) => {
   const showGuide = (id) => openGuide(id, {
     guides: allGuides(),
     engineFamily: state.vehicle.engineFamily || null,
+    code: state.vehicle.engineCode || '',
     onClose: render,
     onEdit: (g) => editGuide(g),
     onDone: (g) => {

@@ -74,3 +74,20 @@ export const fitsEngine = (guide, family) => !family || !guide.families?.length 
 
 /** Passende Anleitungen zuerst, Reihenfolge sonst unverändert. */
 export const sortForEngine = (guides, family) => [...guides.filter((g) => fitsEngine(g, family)), ...guides.filter((g) => !fitsEngine(g, family))];
+
+/**
+ * Werte einer Anleitung passend zum Motor. Werte mit `codes` gelten nur für diese Kennbuchstaben.
+ * Ist der Kennbuchstabe bekannt, werden nur seine Werte gezeigt; sonst alle der Bauart (familyCodes); sonst alle.
+ * missing = true, wenn die Anleitung motorabhängige Werte hat, aber keinen für diesen Kennbuchstaben.
+ */
+export function valuesFor(guide, { code = '', familyCodes = null } = {}) {
+  const all = guide.values || [];
+  const c = String(code).trim().toUpperCase();
+  const coded = all.filter((v) => v.codes?.length);
+  let list;
+  if (c) list = all.filter((v) => !v.codes?.length || v.codes.includes(c));
+  else if (familyCodes?.length) list = all.filter((v) => !v.codes?.length || v.codes.some((x) => familyCodes.includes(x)));
+  else list = all;
+  const missing = !!c && coded.length > 0 && !coded.some((v) => v.codes.includes(c));
+  return { list, missing };
+}

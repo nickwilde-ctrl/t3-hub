@@ -43,8 +43,8 @@ const NOT_FOR = {
 /** Standard-Wartungspunkte passend zur Motor-Bauart (unbekannt = alle). */
 export const servicesFor = (family) => DEFAULT_SERVICES
   .filter((d) => !(NOT_FOR[family] || []).includes(d.key))
-  // Ölmenge und Ölnorm im Hinweis gelten nur für den 2,1-l-Wasserboxer (gegen Handbuch geprüft)
-  .map((d) => (d.key === 'oil' && family && family !== 'wbx21' ? { ...d, hint: 'Ölmenge und Ölnorm stehen in deinem Handbuch.' } : d));
+  // Ölmenge und Ölnorm im Hinweis gelten für die Wasserboxer (gegen Handbuch geprüft)
+  .map((d) => (d.key === 'oil' && family && !['wbx21', 'wbx19'].includes(family) ? { ...d, hint: 'Ölmenge und Ölnorm stehen in deinem Handbuch.' } : d));
 
 /**
  * Hebt Wartungspunkte auf die aktuellen Startwerte: fehlende Standardpunkte werden ergänzt,
