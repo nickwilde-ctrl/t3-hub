@@ -5,7 +5,7 @@ import { fuelStats, consumptionCheck } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
 import { cockpit } from './views/cockpit.js';
 import { homeView } from './views/home.js';
-import { vehicleCard, editVehicleSheet, photoFrameSheet, modsCard, modSheet } from './views/vehicle.js';
+import { vehicleCard, editVehicleSheet, photoFrameSheet, modsCard, modSheet, specsCard } from './views/vehicle.js';
 import { toast, closeSheet, openSheet } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
@@ -22,7 +22,7 @@ import { gameCard, openGame } from './views/game.js';
 import { aboutCard } from './views/about.js';
 import { feedbackCard, feedbackSheet } from './views/feedback.js';
 
-const APP_VERSION = '0.33';
+const APP_VERSION = '0.34';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -48,7 +48,7 @@ const VIEWS = {
   wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides(), state.vehicle.engineFamily, state.vehicle.engineCode) : wartungView(services(), state.log, currentKm())),
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
-  mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + modsCard(state.vehicle)
+  mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + specsCard(state.vehicle) + modsCard(state.vehicle)
     + dataCard(state)
     + feedbackCard()
     + installCard()

@@ -3,6 +3,7 @@ import { esc, fmtDate, todayIso } from '../format.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
 import { newId } from '../db.js';
 import { ENGINE_FAMILIES, familyById } from '../data/engines.js';
+import { specsFor, SOURCE_NAMES } from '../data/specs.js';
 
 /** Vorschläge für freie Felder, angelehnt an den Fahrzeugschein (Zulassungsbescheinigung Teil I). */
 export const FACT_SUGGESTIONS = [
@@ -180,4 +181,19 @@ export function modSheet(vehicle, mod, save) {
       toast(edit ? 'Anbau gespeichert' : 'Anbau hinzugefügt');
     },
   });
+}
+
+/* ---------- Sollwerte für den Motor ---------- */
+
+export function specsCard(v) {
+  const sp = specsFor(v.engineCode, v.engineFamily);
+  if (!sp) {
+    return `<section class="sec"><div class="sec-head"><h2>Sollwerte</h2></div>
+      <div class="card soon-card"><p>Trag in der Fahrzeugakte Motor-Bauart und Kennbuchstaben ein – dann stehen hier Leerlauf, Kompression, Öldruck und weitere Sollwerte für deinen Motor.</p></div></section>`;
+  }
+  const used = [...new Set(sp.rows.map((r) => r[2]))].map((k) => SOURCE_NAMES[k] || k);
+  return `<section class="sec"><div class="sec-head"><h2>Sollwerte${sp.code ? ` <span class="faint">${esc(sp.code)}</span>` : ''}</h2></div>
+    <div class="card">${sp.title ? `<p class="hint" style="padding:12px 14px 0;margin:0">${esc(sp.title)} · ${esc(sp.power)}</p>` : `<p class="hint" style="padding:12px 14px 0;margin:0">Allgemeine Werte für die Bauart. Mit Kennbuchstaben kommen Leerlauf, Zündzeitpunkt und Kompression dazu.</p>`}
+      <dl class="facts">${sp.rows.map(([k, val, src]) => `<dt>${esc(k)}</dt><dd>${esc(val)}${src === 'TP' ? ' <span class="faint">(T3-Pedia)</span>' : ''}</dd>`).join('')}</dl>
+      <p class="hint" style="padding:0 14px 14px;margin:0">Quellen: ${used.map(esc).join(', ')}. Nur Zahlen übernommen.</p></div></section>`;
 }

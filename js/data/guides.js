@@ -297,7 +297,7 @@ export const GUIDES = [
     tools: ['Lappen', 'Taschenlampe'],
     material: ['Bei Bedarf neuer blauer Deckel (VW 025 121 321 B)'],
     values: [
-      { k: 'Öffnungsdruck', v: '1,4–1,6 bar (T3-Pedia nennt ca. 1–1,5 bar)', check: true },
+      { k: 'Öffnungsdruck', v: '„So wird’s gemacht“: 1,4–1,6 bar · „Jetzt helfe ich mir selbst“: 0,9–1,15 bar · T3-Pedia: ca. 1–1,5 bar', check: false, src: 'Handbücher widersprechen sich' },
       { k: 'Siedepunkt unter Druck', v: 'ca. 120 °C', check: true },
       { k: 'Rücksaugen beim Abkühlen', v: 'ca. 1 l aus dem Nachfüllbehälter', check: false, src: 'T3-Pedia' },
     ],
@@ -305,7 +305,7 @@ export const GUIDES = [
     steps: [
       { t: 'Dichtheit', d: 'Ausgleichsbehälter randvoll füllen und Deckel sowie Behälter auf Feuchtigkeit oder Haarrisse ansehen.' },
       { t: 'Rücklauf', d: 'Deckel abnehmen: Von der Schlauchseite muss er frei durchlässig sein.' },
-      { t: 'Überdruck', d: 'Von der Behälterseite kräftig hineinblasen bzw. mit 1,4–1,6 bar Druck geben – das Ventil muss hörbar zischen und öffnen. (Werkstatt: Prüfgerät VW 1274 mit Adapter.)' },
+      { t: 'Überdruck', d: 'Von der Behälterseite kräftig hineinblasen bzw. mit dem Öffnungsdruck aus den Werten oben Druck geben – das Ventil muss hörbar zischen und öffnen. (Werkstatt: Prüfgerät VW 1274 mit Adapter.)' },
       { t: 'Probe im Betrieb', d: 'Nachfüllbehälter auf MIN bringen. Warm (Lüfter läuft) muss der Stand steigen, nach dem Abkühlen wieder auf MIN fallen.' },
       { t: 'Ergebnis', d: 'Fällt ein Punkt durch: Deckel tauschen. Auch den Schlauch zum Nachfüllbehälter ansehen – ist er porös, bleibt dauerhaft Luft im System.' },
     ],
