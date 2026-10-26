@@ -82,11 +82,12 @@ test('Zeilen und Prüfung', () => {
 import { fitsEngine, sortForEngine } from '../js/logic/guides.js';
 
 test('Anleitungen passend zum Motor', () => {
-  const oil = GUIDES.find((g) => g.id === 'oelwechsel');
+  const plugs = GUIDES.find((g) => g.id === 'zuendkerzen');
   const rad = GUIDES.find((g) => g.id === 'radwechsel');
-  assert.ok(fitsEngine(oil, 'wbx21'));
-  assert.ok(fitsEngine(oil, null), 'unbekannter Motor: alles passt');
-  assert.ok(!fitsEngine(oil, 'diesel'));
+  assert.ok(fitsEngine(plugs, 'wbx21'));
+  assert.ok(fitsEngine(plugs, null), 'unbekannter Motor: alles passt');
+  assert.ok(!fitsEngine(plugs, 'diesel'), 'Diesel hat keine Zündkerzen');
+  assert.ok(fitsEngine(GUIDES.find((g) => g.id === 'oelwechsel'), 'diesel'));
   assert.ok(fitsEngine(rad, 'diesel'), 'ohne Angabe passt sie für alle');
   const sorted = sortForEngine(GUIDES, 'diesel');
   const firstOther = sorted.findIndex((g) => !fitsEngine(g, 'diesel'));
@@ -113,4 +114,13 @@ test('Werte passend zum Kennbuchstaben', () => {
   assert.equal(valuesFor(z, { code: 'MV' }).missing, false);
   // Anleitung ohne motorabhängige Werte → nie missing
   assert.equal(valuesFor(GUIDES.find((g) => g.id === 'radwechsel'), { code: 'SP' }).missing, false);
+});
+
+test('Ölwechsel zeigt dem Diesel nur Diesel-Werte', () => {
+  const oil = GUIDES.find((g) => g.id === 'oelwechsel');
+  const jx = valuesFor(oil, { code: 'JX' }).list.map((v) => v.k);
+  assert.ok(jx.includes('Ölmenge Diesel') && jx.includes('Ölsorte Turbodiesel (JX)') && jx.includes('Ölablassschraube Diesel'));
+  assert.ok(!jx.includes('Ölmenge Wasserboxer') && !jx.includes('Ölsorte Saugdiesel (CS, KY)'));
+  const mv = valuesFor(oil, { code: 'MV' }).list.map((v) => v.k);
+  assert.ok(mv.includes('Ölmenge Wasserboxer') && !mv.includes('Ölmenge Diesel'));
 });

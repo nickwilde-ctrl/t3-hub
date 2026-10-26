@@ -22,7 +22,7 @@ export function aboutCard() {
       <details><summary>Quellen und Lizenzen</summary>
         <ul>
           <li><b>T3-Pedia</b> (t3-pedia.de): Fakten und Werte, Texte unter CC BY-SA 3.0. Die Anleitungen in T3 Hub sind eigene Texte.</li>
-          <li><b>Reparaturhandbuch</b> „Jetzt helfe ich mir selbst“: zum Prüfen von Werten. Es wurden nur Zahlen übernommen, keine Texte oder Abbildungen.</li>
+          <li><b>Reparaturhandbücher</b> „So wird’s gemacht“ (Etzold, Delius Klasing) und „Jetzt helfe ich mir selbst“ (Korp, Motorbuch Verlag): zum Prüfen von Werten. Es wurden nur Zahlen übernommen, keine Texte oder Abbildungen.</li>
           <li><b>Foren</b> (TheSamba, Club 80-90, GoWesty, Van Café): Erfahrungswerte, jeweils gekennzeichnet.</li>
           <li><b>Kartendaten</b> © OpenStreetMap-Mitwirkende, ODbL.</li>
           <li><b>Leaflet</b> (Karte zum Zoomen), BSD-2-Lizenz.</li>

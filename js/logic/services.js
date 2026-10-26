@@ -44,7 +44,8 @@ const NOT_FOR = {
 export const servicesFor = (family) => DEFAULT_SERVICES
   .filter((d) => !(NOT_FOR[family] || []).includes(d.key))
   // Ölmenge und Ölnorm im Hinweis gelten für die Wasserboxer (gegen Handbuch geprüft)
-  .map((d) => (d.key === 'oil' && family && !['wbx21', 'wbx19'].includes(family) ? { ...d, hint: 'Ölmenge und Ölnorm stehen in deinem Handbuch.' } : d));
+  .map((d) => (d.key === 'oil' && family === 'diesel' ? { ...d, hint: '4,5 l mit Filter (neuer Peilstab), Öl nach VW 505 00 – Ölfilter bei jedem Wechsel. Keine Longlife-Öle.' }
+    : d.key === 'oil' && family && !['wbx21', 'wbx19'].includes(family) ? { ...d, hint: 'Ölmenge und Ölnorm stehen in deinem Handbuch.' } : d));
 
 /**
  * Hebt Wartungspunkte auf die aktuellen Startwerte: fehlende Standardpunkte werden ergänzt,

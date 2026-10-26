@@ -39,5 +39,6 @@ test('Öl-Hinweis mit Mengen nur bei Wasserboxern', async () => {
   assert.match(oil('wbx21'), /4,5 l/);
   assert.match(oil(null), /4,5 l/);
   assert.match(oil('wbx19'), /4,5 l/);
-  assert.doesNotMatch(oil('diesel'), /4,5 l/);
+  assert.match(oil('diesel'), /505 00/);
+  assert.doesNotMatch(oil('luft'), /4,5 l/);
 });
