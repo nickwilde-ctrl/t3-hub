@@ -390,7 +390,7 @@ export const GUIDES = [
     engine: 'Wasserboxer 1,9 l und 2,1 l',
     level: 3,
     minutes: 30,
-    serviceKey: null,
+    serviceKey: 'timing',
     tools: ['Stroboskop-Zündlichtpistole mit Drehzahlanzeige', 'Schlüssel für die Klemmung am Zündverteiler', 'Kreide oder weißer Lackstift'],
     material: [],
     values: [

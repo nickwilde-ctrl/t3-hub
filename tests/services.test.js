@@ -54,3 +54,16 @@ test('Diesel bekommt Zahnriemen, Ventilspiel und Entwässern dazu, Öl alle 7.50
   assert.equal(by('oil').intervalKm, 7500);
   assert.ok(!servicesFor('wbx21').some((x) => x.key === 'timingbelt'));
 });
+
+test('Version 3: unveränderte Filter-Intervalle werden auf 30.000 km gehoben, eigene bleiben', async () => {
+  const { upgradeServices } = await import('../js/logic/services.js');
+  const ch = upgradeServices([
+    { key: 'airfilter', name: 'Luftfilter', intervalKm: 48000, intervalMonths: null, hint: 'Alle 24.000 km prüfen.', lastKm: 1 },
+    { key: 'fuelfilter', name: 'Kraftstofffilter', intervalKm: 40000, intervalMonths: null, hint: '' },
+  ], 'wbx21');
+  const air = ch.find((c) => c.key === 'airfilter');
+  assert.equal(air.intervalKm, 30000);
+  assert.equal(air.lastKm, 1);
+  assert.equal(ch.find((c) => c.key === 'fuelfilter'), undefined, 'selbst geändert → bleibt');
+  assert.ok(ch.some((c) => c.key === 'timing' && c.intervalKm === 30000), 'Zündzeitpunkt kommt dazu');
+});

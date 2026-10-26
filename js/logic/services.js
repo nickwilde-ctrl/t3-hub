@@ -8,16 +8,17 @@ export const SOON_DAYS = 45;
  * die Werte folgen dem Wartungsplan der T3-Fachwerkstatt GoWesty (Meilen umgerechnet und gerundet,
  * 3.500 mi ≈ 5.600 km, 15.000 mi ≈ 24.000 km, 30.000 mi ≈ 48.000 km). Alle Werte sind in der App änderbar.
  * Quelle: https://gowesty.com/blogs/article-library/maintenance-schedule-recommendation-vanagon
- * Ölmenge/-norm: 4,5 l, VW 500 00 / 501 01 / 502 00 (repareo.de, T3 2.1 70 kW).
+ * Version 3: Luftfilter, Kraftstofffilter und Zündzeitpunkt nach dem Wartungsplan in „Jetzt helfe ich mir selbst“ (alle 30.000 km).
  */
-export const DEFAULTS_VERSION = 2;
+export const DEFAULTS_VERSION = 3;
 export const DEFAULT_SERVICES = [
   { key: 'hu', name: 'Hauptuntersuchung (HU)', intervalKm: null, intervalMonths: 24, hint: 'Fälligkeit steht auf der Plakette und im Fahrzeugschein.' },
   { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00).' },
   { key: 'plugs', name: 'Zündkerzen', intervalKm: 24000, intervalMonths: null, hint: '' },
   { key: 'ignition', name: 'Verteilerkappe, Verteilerfinger, Zündkabel', intervalKm: 48000, intervalMonths: null, hint: 'Kabel nur, wenn nötig.' },
-  { key: 'airfilter', name: 'Luftfilter', intervalKm: 48000, intervalMonths: null, hint: 'Alle 24.000 km prüfen.' },
-  { key: 'fuelfilter', name: 'Kraftstofffilter', intervalKm: 48000, intervalMonths: null, hint: '' },
+  { key: 'timing', name: 'Zündzeitpunkt prüfen', intervalKm: 30000, intervalMonths: null, hint: 'Sollwert für deinen Motor: siehe Anleitung oder Sollwerte unter „Mehr“.' },
+  { key: 'airfilter', name: 'Luftfilter wechseln', intervalKm: 30000, intervalMonths: null, hint: 'Alle 15.000 km reinigen.' },
+  { key: 'fuelfilter', name: 'Kraftstofffilter', intervalKm: 30000, intervalMonths: null, hint: '' },
   { key: 'brakefluid', name: 'Bremsflüssigkeit', intervalKm: null, intervalMonths: 24, hint: 'DOT 4, unabhängig von den Kilometern.' },
   { key: 'coolant', name: 'Kühlmittel spülen und erneuern', intervalKm: null, intervalMonths: 24, hint: 'G11 (grün) oder G12 (rot) – nie mischen – mit destilliertem Wasser.' },
   { key: 'gearoil', name: 'Getriebeöl', intervalKm: 48000, intervalMonths: null, hint: 'Schaltgetriebe: API GL4, SAE 75W-90.' },
@@ -25,7 +26,9 @@ export const DEFAULT_SERVICES = [
 
 /** Bisherige Platzhalter (Version 1), damit unveränderte Einträge auf die neuen Werte gehoben werden können. */
 export const OLD_DEFAULTS = {
-  oil: [7500, 12], plugs: [15000, 24], brakefluid: [null, 24], coolant: [null, 36], fuelfilter: [20000, null], hu: [null, 24],
+  oil: [[7500, 12]], plugs: [[15000, 24]], brakefluid: [[null, 24]], coolant: [[null, 36]], hu: [[null, 24]],
+  // Version 2 (GoWesty) → Version 3 (Wartungsplan „Jetzt helfe ich mir selbst“, 26.10.2026)
+  fuelfilter: [[20000, null], [48000, null]], airfilter: [[48000, null]],
 };
 
 /** Frühere Hinweistexte: werden auf den aktuellen Text gehoben (auch wenn das Intervall geändert wurde). */
@@ -49,7 +52,7 @@ export const ALL_SERVICES = [...DEFAULT_SERVICES, ...Object.values(EXTRA_SERVICE
 
 /** Wartungspunkte, die es bei einer Motor-Bauart nicht gibt. */
 const NOT_FOR = {
-  diesel: ['plugs', 'ignition'],   // Diesel: keine Zündkerzen, keine Zündanlage
+  diesel: ['plugs', 'ignition', 'timing'], // Diesel: keine Zündkerzen, keine Zündanlage
   luft: ['coolant'],               // Luftgekühlt: kein Kühlmittel
 };
 
@@ -70,8 +73,7 @@ export function upgradeServices(services, family) {
   for (const def of servicesFor(family)) {
     const s = services.find((x) => x.key === def.key);
     if (!s) { changed.push({ ...def, lastKm: null, lastDate: null }); continue; }
-    const old = OLD_DEFAULTS[def.key];
-    const untouched = old && s.intervalKm === old[0] && s.intervalMonths === old[1];
+    const untouched = (OLD_DEFAULTS[def.key] || []).some(([km, mo]) => s.intervalKm === km && s.intervalMonths === mo);
     if (untouched && (s.intervalKm !== def.intervalKm || s.intervalMonths !== def.intervalMonths || s.name !== def.name || s.hint !== def.hint)) {
       changed.push({ ...s, name: def.name, intervalKm: def.intervalKm, intervalMonths: def.intervalMonths, hint: def.hint });
     } else if (OLD_HINTS[def.key]?.includes(s.hint)) {
