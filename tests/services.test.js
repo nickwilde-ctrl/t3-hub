@@ -76,3 +76,14 @@ test('Öl-Hinweis wird auf den Text mit Intervall-Erklärung gehoben', async () 
   assert.match(up.hint, /15\.000 km/);
   assert.match(up.hint, /GoWesty/);
 });
+
+test('Sicherheits-Prüfpunkte: ergänzt bei alten Daten, Kühlrohre nicht beim Luftgekühlten', async () => {
+  const { DEFAULT_SERVICES, servicesFor, upgradeServices, isSafety } = await import('../js/logic/services.js');
+  const safety = DEFAULT_SERVICES.filter((d) => d.safety).map((d) => d.key);
+  assert.deepEqual(safety, ['brakecheck', 'steering', 'fuelhoses', 'fuelhoses-new', 'coolantpipes']);
+  const old = servicesFor('wbx21').filter((d) => !d.safety).map((d) => ({ ...d }));
+  const added = upgradeServices(old, 'wbx21').map((x) => x.key);
+  assert.deepEqual(added, safety);
+  assert.ok(!servicesFor('luft').some((d) => d.key === 'coolantpipes'));
+  assert.ok(isSafety({ key: 'steering' }) && !isSafety({ key: 'oil' }));
+});

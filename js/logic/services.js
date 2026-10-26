@@ -9,8 +9,11 @@ export const SOON_DAYS = 45;
  * 3.500 mi ≈ 5.600 km, 15.000 mi ≈ 24.000 km, 30.000 mi ≈ 48.000 km). Alle Werte sind in der App änderbar.
  * Quelle: https://gowesty.com/blogs/article-library/maintenance-schedule-recommendation-vanagon
  * Version 3: Luftfilter, Kraftstofffilter und Zündzeitpunkt nach dem Wartungsplan in „Jetzt helfe ich mir selbst“ (alle 30.000 km).
+ * Version 4: Sicherheits-Prüfpunkte. Prüfintervall „15.000 km oder jährlich“ nach dem Wartungsplan in
+ * „Jetzt helfe ich mir selbst“ (Bremsanlage, Lenkungsspiel, Spurstangenköpfe, Traggelenke, Undichtigkeiten).
+ * Kraftstoffschläuche erneuern (5 Jahre) ist kein Werkswert, sondern Empfehlung von T3-Fachleuten.
  */
-export const DEFAULTS_VERSION = 3;
+export const DEFAULTS_VERSION = 4;
 export const DEFAULT_SERVICES = [
   { key: 'hu', name: 'Hauptuntersuchung (HU)', intervalKm: null, intervalMonths: 24, hint: 'Fälligkeit steht auf der Plakette und im Fahrzeugschein.' },
   { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00). Das Werk nannte 7.500 km (bis 7/85) bzw. 15.000 km (ab 8/85); T3 Hub startet mit der kürzeren Empfehlung der T3-Fachwerkstatt GoWesty. Du kannst das Intervall ändern.' },
@@ -22,7 +25,19 @@ export const DEFAULT_SERVICES = [
   { key: 'brakefluid', name: 'Bremsflüssigkeit', intervalKm: null, intervalMonths: 24, hint: 'DOT 4, unabhängig von den Kilometern.' },
   { key: 'coolant', name: 'Kühlmittel spülen und erneuern', intervalKm: null, intervalMonths: 24, hint: 'G11 (grün) oder G12 (rot) – nie mischen – mit destilliertem Wasser.' },
   { key: 'gearoil', name: 'Getriebeöl', intervalKm: 48000, intervalMonths: null, hint: 'Schaltgetriebe: API GL4, SAE 75W-90.' },
+  // Sicherheits-Prüfpunkte (Version 4)
+  { key: 'brakecheck', name: 'Bremsen prüfen (Schläuche, Leitungen, Beläge)', intervalKm: 15000, intervalMonths: 12, safety: true, hint: 'Bremsschläuche: Risse, Scheuerstellen, Aufquellen beim Treten? Dann tauschen. Leitungen auf Rost, Beläge auf Stärke. Die Beläge vorne laut Handbuch schon alle 7.500 km ansehen.' },
+  { key: 'steering', name: 'Lenkung und Achsgelenke prüfen', intervalKm: 15000, intervalMonths: 12, safety: true, hint: 'Lenkungsspiel, Spurstangenköpfe, Traggelenke und ihre Manschetten. Spiel oder gerissene Manschette: bald in die Werkstatt – das betrifft die Lenkung.' },
+  { key: 'fuelhoses', name: 'Kraftstoffschläuche prüfen', intervalKm: 15000, intervalMonths: 12, safety: true, hint: 'Risse, feuchte Stellen, Benzingeruch? Nicht fahren, erst tauschen. Undichte Kraftstoffschläuche sind beim T3 die häufigste Brandursache.' },
+  { key: 'fuelhoses-new', name: 'Kraftstoffschläuche erneuern', intervalKm: null, intervalMonths: 60, safety: true, hint: 'Gummi altert auch von innen, man sieht es nicht immer. Kein Werkswert, sondern Empfehlung von T3-Fachleuten. Bei Einspritzern zwischen Pumpe und Einspritzleiste nur druckfesten Einspritzschlauch verwenden.' },
+  { key: 'coolantpipes', name: 'Kühlmittelrohre und -schläuche prüfen', intervalKm: 15000, intervalMonths: 12, safety: true, hint: 'Die langen Rohre unter dem Bus nach vorne zum Kühler: Rost, Nässe, lockere Schellen? Typische T3-Schwachstelle – ein Leck kann den Motor überhitzen.' },
 ];
+
+/** Gehört der Punkt zu den Sicherheits-Prüfpunkten? (nach Schlüssel, damit es auch für alte Einträge gilt) */
+export const isSafety = (s) => !!DEFAULT_SERVICES.find((d) => d.key === s.key)?.safety;
+
+/** Wartungspunkte, die nicht zu einem normalen Service gehören (beim „Alles auf einmal eintragen“ nicht vorab anhaken). */
+export const NOT_IN_SERVICE = ['hu', 'fuelhoses-new'];
 
 /** Bisherige Platzhalter (Version 1), damit unveränderte Einträge auf die neuen Werte gehoben werden können. */
 export const OLD_DEFAULTS = {
@@ -53,7 +68,7 @@ export const ALL_SERVICES = [...DEFAULT_SERVICES, ...Object.values(EXTRA_SERVICE
 /** Wartungspunkte, die es bei einer Motor-Bauart nicht gibt. */
 const NOT_FOR = {
   diesel: ['plugs', 'ignition', 'timing'], // Diesel: keine Zündkerzen, keine Zündanlage
-  luft: ['coolant'],               // Luftgekühlt: kein Kühlmittel
+  luft: ['coolant', 'coolantpipes'], // Luftgekühlt: kein Kühlmittel
 };
 
 /** Standard-Wartungspunkte passend zur Motor-Bauart (unbekannt = alle). */

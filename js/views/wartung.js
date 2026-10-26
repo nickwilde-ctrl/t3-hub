@@ -1,6 +1,6 @@
 // Reiter „Wartung“: Intervalle mit Ampel, Serviceheft, Formulare.
 import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
-import { serviceStatus } from '../logic/services.js';
+import { serviceStatus, isSafety } from '../logic/services.js';
 import { parseNumber } from '../logic/fuel.js';
 import { GUIDES } from '../data/guides.js';
 import { guideForService } from '../logic/guides.js';
@@ -30,7 +30,7 @@ export function wartungView(services, log, km) {
     const st = serviceStatus(s, km);
     const last = s.lastDate || s.lastKm != null ? `Zuletzt ${s.lastDate ? fmtDate(s.lastDate) : ''}${s.lastKm != null ? ' bei ' + de(s.lastKm) + ' km' : ''}` : '';
     return `<button type="button" class="row row-btn" data-edit-service="${s.id}">
-      <div class="t">${esc(s.name)}</div>
+      <div class="t">${esc(s.name)}${isSafety(s) ? '<span class="tag">Sicherheit</span>' : ''}</div>
       <div class="s">${statusText(st)}<br><span class="faint">${intervalText(s)}${last ? ' · ' + last : ''}</span></div>
       <div class="r">${pill(st.state)}</div></button>`;
   }).join('');

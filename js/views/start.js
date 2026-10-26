@@ -4,6 +4,7 @@ import { esc, de, todayIso } from '../format.js';
 import { parseNumber } from '../logic/fuel.js';
 import { experienceOf, startSteps, unknownServices } from '../logic/start.js';
 import { openSheet, toast } from './sheet.js';
+import { NOT_IN_SERVICE } from '../logic/services.js';
 
 const TEXT = {
   km: ['Kilometerstand eintragen', 'Tippe oben im Cockpit auf den Tachostand.', { action: 'set-km', label: 'Eintragen' }],
@@ -46,9 +47,11 @@ export function startCard(vehicle, services, km) {
  * raw = gespeicherte Wartungspunkte, shown = mit letztem Stand (für „offen“).
  */
 export function bulkDoneSheet({ raw, shown, km, saveMany, saveLog }) {
-  // Die HU gehört nicht zu einem Service: nie vorab anhaken.
-  const unknown = new Set(unknownServices(shown, km).map((s) => s.key).filter((k) => k !== 'hu'));
-  const rows = shown.map((s) => `<label class="check"><input type="checkbox" name="svc" value="${esc(s.id)}" ${unknown.has(s.key) ? 'checked' : ''}><span>${esc(s.name)}${unknown.has(s.key) ? '' : s.key === 'hu' ? ' <span class="faint">(gehört nicht zum Service)</span>' : ' <span class="faint">(schon eingetragen)</span>'}</span></label>`).join('');
+  // HU und das Erneuern der Kraftstoffschläuche gehören nicht zu einem Service: nie vorab anhaken.
+  const all = new Set(unknownServices(shown, km).map((s) => s.key));
+  const unknown = new Set([...all].filter((k) => !NOT_IN_SERVICE.includes(k)));
+  const note = (s) => (unknown.has(s.key) ? '' : NOT_IN_SERVICE.includes(s.key) && all.has(s.key) ? ' <span class="faint">(gehört nicht zum Service)</span>' : ' <span class="faint">(schon eingetragen)</span>');
+  const rows = shown.map((s) => `<label class="check"><input type="checkbox" name="svc" value="${esc(s.id)}" ${unknown.has(s.key) ? 'checked' : ''}><span>${esc(s.name)}${note(s)}</span></label>`).join('');
   openSheet({
     title: 'Alles auf einmal eintragen',
     submitLabel: 'Eintragen',

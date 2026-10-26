@@ -43,6 +43,9 @@ export function demoData(today = iso(new Date())) {
       { date: daysAgo(today, 240), km: km - 6900, title: 'Wasserpumpe getauscht', category: 'Reparatur', cost: 189, note: 'Pumpe hat getropft' },
       { date: daysAgo(today, 410), km: km - 9800, title: 'Bremsflüssigkeit', category: 'Wartung', serviceKey: 'brakefluid', cost: 45, note: 'Werkstatt' },
       { date: daysAgo(today, 300), km: km - 8100, title: 'Hauptuntersuchung (HU)', category: 'Wartung', serviceKey: 'hu', cost: 139, note: 'Ohne Mängel' },
+      { date: daysAgo(today, 300), km: km - 8100, title: 'Bremsen prüfen (Schläuche, Leitungen, Beläge)', category: 'Wartung', serviceKey: 'brakecheck', cost: null, note: 'Bei der HU mit angesehen' },
+      { date: daysAgo(today, 300), km: km - 8100, title: 'Lenkung und Achsgelenke prüfen', category: 'Wartung', serviceKey: 'steering', cost: null, note: 'Bei der HU mit angesehen' },
+      { date: daysAgo(today, 120), km: km - 3900, title: 'Kraftstoffschläuche prüfen', category: 'Wartung', serviceKey: 'fuelhoses', cost: null, note: 'Trocken, keine Risse' },
     ],
     tours: [{
       name: 'Herbst an der Ostsee', from: tourFrom, to: tourTo, startKm, endKm: startKm + 812, otherCost: 0, note: '',

@@ -389,7 +389,7 @@ export const GUIDES = [
     engine: 'T3 2WD',
     level: 2,
     minutes: 60,
-    serviceKey: null,
+    serviceKey: 'brakecheck',
     tools: ['Wagenheber und Unterstellböcke', 'Drehmomentschlüssel', 'Messschieber', 'Taschenlampe'],
     material: [],
     values: [
