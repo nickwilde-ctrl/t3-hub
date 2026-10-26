@@ -251,6 +251,41 @@ export const GUIDES = [
     verified: false,
   },
   {
+    id: 'einspritzduesen-diesel',
+    families: ['diesel'], // passende Motor-Bauarten (fehlt = alle)
+    title: 'Defekte Einspritzdüse finden und tauschen (Diesel)',
+    group: 'Kraftstoff',
+    engine: 'Diesel und Turbodiesel (CS, KY, JX)',
+    level: 2,
+    minutes: 60,
+    serviceKey: null,
+    tools: ['Gabelschlüssel für die Überwurfmuttern der Einspritzleitungen', 'Steckschlüssel SW 27 (Düse)', 'Drehmomentschlüssel', 'Kunststoff-Kugelschreiber oder Drahthäkchen', 'Lappen'],
+    material: ['Je Düse eine neue Wärmeschutzdichtung', 'Bei Bedarf neue Einspritzdüse'],
+    values: [
+      { k: 'Anzeichen', v: 'ständig defekte Glühkerzen, starker schwarzer Rauch, hoher Verbrauch, Überhitzung, starkes Klopfen, Leistungsabfall', check: true },
+      { k: 'Einspritzdüse', v: '70 Nm (SW 27)', check: true },
+      { k: 'Einspritzleitungen', v: '25 Nm', check: true },
+      { k: 'Wärmeschutzdichtung', v: 'bei jedem Ausbau neu · Einbaulage: Pfeil zeigt zum Zylinderkopf', check: true },
+    ],
+    warnings: [
+      'Beim Lösen der Leitungen spritzt Diesel unter Druck heraus – Schutzbrille, Lappen drumlegen, Hände weg vom Strahl.',
+      'Nur kurz lösen und gleich wieder festziehen; nicht rauchen, kein offenes Feuer.',
+    ],
+    steps: [
+      { t: 'Motor im Leerlauf', d: 'Motor starten und im Leerlauf laufen lassen.' },
+      { t: 'Düsen der Reihe nach prüfen', d: 'An der ersten Düse die Überwurfmutter der Einspritzleitung kurz lockern und wieder festziehen. Die Drehzahl muss dabei abfallen. Dann die nächste Düse.' },
+      { t: 'Übeltäter erkennen', d: 'Bleibt die Drehzahl trotz gelöster Leitung gleich, ist diese Düse defekt. Motor abstellen.' },
+      { t: 'Leitungen abbauen', d: 'Einspritzleitungen komplett abbauen und Rücklaufleitungen abziehen. Offene Anschlüsse sauber halten.' },
+      { t: 'Düse ausbauen', d: 'Düse mit dem Steckschlüssel SW 27 herausdrehen. Die alte Wärmeschutzdichtung sitzt oft noch im Loch – mit Kunststoff-Kuli oder Drahthäkchen herausfischen.' },
+      { t: 'Neue Dichtung einlegen', d: 'Neue Wärmeschutzdichtung einlegen, der Pfeil zeigt zum Zylinderkopf.' },
+      { t: 'Düse einbauen', d: 'Düse mit 70 Nm festziehen, Einspritzleitungen mit 25 Nm anschrauben, Rücklaufleitungen aufstecken.' },
+      { t: 'Probelauf', d: 'Motor starten, alle Anschlüsse auf Dichtheit prüfen. Arbeit im Serviceheft notieren.' },
+    ],
+    hint: 'Zerlegen lohnt sich laut Handbuch nur bei Verschmutzung – meist ist eine neue Düse sinnvoller, denn genau prüfen kann man sie nur in der Werkstatt. Wer zerlegt: sofort wieder einbauen, sonst rosten die Teile fest (Ober- an Unterteil 70 Nm).',
+    source: 'Eigene Zusammenstellung (T3 Hub) nach Werten aus dem Reparaturhandbuch „Jetzt helfe ich mir selbst“ (Korp) (geprüft 26.10.2026).',
+    verified: false,
+  },
+  {
     id: 'blauer-deckel',
     families: ['wbx21', 'wbx19'], // passende Motor-Bauarten (fehlt = alle)
     title: 'Blauen Deckel (Druckventil) prüfen',

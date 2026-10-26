@@ -37,7 +37,7 @@ test('Fortschritt', () => {
 });
 
 test('verwendete Baugruppen in fester Reihenfolge', () => {
-  assert.deepEqual(usedGroups(GUIDES, GUIDE_GROUPS), ['Check', 'Motor', 'Zündung', 'Kühlung', 'Getriebe', 'Bremsen', 'Fahrwerk']);
+  assert.deepEqual(usedGroups(GUIDES, GUIDE_GROUPS), ['Check', 'Motor', 'Zündung', 'Kühlung', 'Kraftstoff', 'Getriebe', 'Bremsen', 'Fahrwerk']);
 });
 
 test('Werkstatt-Modus: nächster offener Schritt', () => {

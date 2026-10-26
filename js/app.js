@@ -22,7 +22,7 @@ import { gameCard, openGame } from './views/game.js';
 import { aboutCard } from './views/about.js';
 import { feedbackCard, feedbackSheet } from './views/feedback.js';
 
-const APP_VERSION = '0.32.1';
+const APP_VERSION = '0.33';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
