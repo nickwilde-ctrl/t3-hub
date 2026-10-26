@@ -24,7 +24,7 @@ import { feedbackCard, feedbackSheet } from './views/feedback.js';
 import { openStromkarte } from './views/stromkarte.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.40';
+const APP_VERSION = '0.40.1';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [

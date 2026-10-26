@@ -50,14 +50,15 @@ export function elektrikView(wiring) {
   wires = current.wires || [];
   const hasMap = !!current.map;
   const seg = `<div class="seg${hasMap ? ' three' : ''}"><button type="button" data-el-part="fehler" aria-pressed="${part === 'fehler'}">Fehlersuche</button><button type="button" data-el-part="kabel" aria-pressed="${part === 'kabel'}">${hasMap ? 'Kabel' : 'Kabel suchen'}</button>${hasMap ? '<button type="button" data-action="open-stromkarte" aria-pressed="false">Karte</button>' : ''}</div>`;
+  const noMap = hasMap ? '' : '<p class="hint">Die Stromkarte fehlt noch. Lade die neue Plandaten-Datei (mit Karte) noch einmal über Mehr → Daten → „Backup wiederherstellen“.</p>';
   if (part === 'fehler') {
-    return `<section class="sec">${seg}<div class="label">Was ist los?</div><div class="card list">${FAULTS.map((f) => `<button type="button" class="row row-btn el-row" data-el-fault="${f.id}">
+    return `<section class="sec">${seg}${noMap}<div class="label">Was ist los?</div><div class="card list">${FAULTS.map((f) => `<button type="button" class="row row-btn el-row" data-el-fault="${f.id}">
         <span class="el-ico"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[f.icon] || ''}</svg></span><div class="t">${esc(f.title)}</div><div class="s">${esc(f.short)}</div></button>`).join('')}</div>
       <div class="card el-pad"><div class="label">Multimeter in 30 Sekunden</div>
         <p><b>Strom da?</b> Auf 20 V Gleichspannung stellen. Schwarz an Masse (blankes Metall), Rot an das Kabel. Um 12 V heißt: Strom kommt an.</p>
         <p><b>Kabel heil?</b> Auf Durchgang (Piepser) stellen, Kabel an beiden Enden abklemmen, beide Enden messen. Piept es, ist es heil.</p></div></section>`;
   }
-  return `<section class="sec">${seg}<input type="search" id="el-q" class="el-search" placeholder="Bauteil, Farbe, Sicherung, Stecker" value="${esc(query)}" autocomplete="off">
+  return `<section class="sec">${seg}${noMap}<input type="search" id="el-q" class="el-search" placeholder="Bauteil, Farbe, Sicherung, Stecker" value="${esc(query)}" autocomplete="off">
     <div class="chips el-chips">${CHIPS.map((c) => `<button type="button" data-el-chip="${esc(c)}">${esc(c)}</button>`).join('')}</div>
     <div id="el-results">${results()}</div>
     <button type="button" class="add el-remove" data-action="remove-wiring">Plandaten von diesem Gerät entfernen</button></section>`;
