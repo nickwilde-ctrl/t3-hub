@@ -1,6 +1,7 @@
 // Kopfbereich: Foto, Name, Kennzeichen und das Kombiinstrument.
 import { de, esc } from '../format.js';
 import { photoStyleAttr } from './vehicle.js';
+import { engineLabel } from '../data/engines.js';
 
 let swept = false;
 
@@ -77,7 +78,7 @@ export function cockpit({ vehicle, km, avg, last, due, soon = 0, unknown, check 
     none: ['var(--muted)', 'Noch zu wenige Volltankungen für eine Bewertung'],
   }[check.state];
   const v = vehicle;
-  const meta = `<div class="meta">${v.plate ? plateTag(v.plate) : ''}${v.engine ? `<span>${esc(v.engine)}</span>` : ''}</div>`;
+  const meta = `<div class="meta">${v.plate ? plateTag(v.plate) : ''}${engineLabel(v) ? `<span>${esc(engineLabel(v))}</span>` : ''}</div>`;
   const file = '<input type="file" id="photo-in" accept="image/*">';
   const hero = v.photo
     ? `<div class="hero"><img src="${v.photo}" alt="Foto von ${esc(v.name)}" style="${photoStyleAttr(v.photoPos)}"><details class="photo-menu"><summary aria-label="Foto einstellen">${WRENCH}</summary><div class="pm-list"><button type="button" data-action="photo-frame">Ausschnitt anpassen</button><label>Foto ändern${file}</label></div></details><div class="cap"><div class="eyebrow">${esc(v.model)}</div><h1>${esc(v.name)}</h1>${meta}</div></div>`

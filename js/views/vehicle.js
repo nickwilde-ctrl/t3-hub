@@ -2,7 +2,7 @@
 import { esc, fmtDate, todayIso } from '../format.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
 import { newId } from '../db.js';
-import { ENGINE_FAMILIES, familyById } from '../data/engines.js';
+import { ENGINE_FAMILIES, engineLabel, engineText } from '../data/engines.js';
 import { specsFor, SOURCE_NAMES } from '../data/specs.js';
 
 /** Vorschläge für freie Felder, angelehnt an den Fahrzeugschein (Zulassungsbescheinigung Teil I). */
@@ -16,10 +16,7 @@ export function vehicleCard(v) {
     ['Name', v.name],
     ['Modell', v.model],
     ['Kennzeichen', v.plate],
-    ['Motor', v.engine],
-    // Bauart und Kennbuchstaben nur extra zeigen, wenn sie nicht schon im Motor-Text stehen
-    ['Motor-Bauart', familyById(v.engineFamily) && !(v.engine || '').includes(familyById(v.engineFamily).label) ? familyById(v.engineFamily).label : ''],
-    ['Kennbuchstaben', v.engineCode && !(v.engine || '').includes(v.engineCode) ? v.engineCode : ''],
+    ['Motor', engineLabel(v)],
   ].filter(([, val]) => val);
   const rows = [...base, ...v.facts.filter((f) => f.k || f.v).map((f) => [f.k, f.v])];
   return `<section class="sec"><div class="sec-head"><h2>Fahrzeugakte</h2><button type="button" class="add" data-action="edit-vehicle">Bearbeiten</button></div>
@@ -43,16 +40,13 @@ export function editVehicleSheet(vehicle, save) {
     body: `
       <div class="field"><label for="v-name">Name</label><input id="v-name" name="name" value="${esc(v.name)}" placeholder="z. B. Peanut" autocomplete="off"></div>
       <div class="field"><label for="v-model">Modell und Baujahr</label><input id="v-model" name="model" value="${esc(v.model)}" placeholder="z. B. VW T3 · Baujahr 1985"></div>
-      <div class="two">
-        <div class="field"><label for="v-plate">Kennzeichen</label><input id="v-plate" name="plate" value="${esc(v.plate)}" placeholder="B AB 1234 H" autocapitalize="characters" autocomplete="off"></div>
-        <div class="field"><label for="v-engine">Motor (kurz)</label><input id="v-engine" name="engine" value="${esc(v.engine)}" placeholder="2,1 l WBX · 70 kW"></div>
-      </div>
+      <div class="field"><label for="v-plate">Kennzeichen</label><input id="v-plate" name="plate" value="${esc(v.plate)}" placeholder="B AB 1234 H" autocapitalize="characters" autocomplete="off"></div>
+      <p class="hint" style="margin:0">Kennzeichen mit Leerzeichen eingeben, so wie es auf dem Schild steht. Ein H für Oldtimer einfach ans Ende.</p>
       <div class="two">
         <div class="field"><label for="v-fam">Motor-Bauart</label><select id="v-fam" name="engineFamily"><option value="">weiß ich nicht</option>${ENGINE_FAMILIES.map((f) => `<option value="${f.id}" ${f.id === v.engineFamily ? 'selected' : ''}>${esc(f.label)}</option>`).join('')}</select></div>
         <div class="field"><label for="v-code">Kennbuchstaben</label><input id="v-code" name="engineCode" value="${esc(v.engineCode || '')}" placeholder="z. B. MV" autocapitalize="characters" autocomplete="off" maxlength="3"></div>
       </div>
       <div class="field"><label for="v-tank">Tankinhalt in Litern</label><input id="v-tank" name="tankLiters" inputmode="numeric" value="${v.tankLiters ?? 60}" placeholder="60"></div>
-      <p class="hint" style="margin:0">Kennzeichen mit Leerzeichen eingeben, so wie es auf dem Schild steht. Ein H für Oldtimer einfach ans Ende.</p>
       <div class="field"><label>Weitere Daten</label><div id="facts" class="facts-edit">${facts.map((f, i) => factRow(f.k, f.v, i)).join('')}</div>
         <button type="button" class="add" id="add-fact" style="justify-self:start">+ Feld hinzufügen</button></div>
       <datalist id="fact-suggestions">${FACT_SUGGESTIONS.map((s) => `<option value="${esc(s)}">`).join('')}</datalist>`,
@@ -77,9 +71,10 @@ export function editVehicleSheet(vehicle, save) {
         name,
         model: form.elements['model'].value.trim(),
         plate: form.elements['plate'].value.trim().toUpperCase().replace(/\s+/g, ' '),
-        engine: form.elements['engine'].value.trim(),
         engineFamily: form.elements['engineFamily'].value || null,
         engineCode: form.elements['engineCode'].value.trim().toUpperCase(),
+        // Motor-Text wird nicht mehr frei eingegeben, sondern aus Bauart und Kennbuchstaben gebildet.
+        engine: engineText(form.elements['engineFamily'].value, form.elements['engineCode'].value),
         tankLiters: Math.max(20, Math.min(200, parseInt(form.elements['tankLiters'].value, 10) || 60)),
         facts,
       });

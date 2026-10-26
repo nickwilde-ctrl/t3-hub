@@ -22,3 +22,9 @@ export function engineText(familyId, code = '') {
   const c = String(code).trim().toUpperCase();
   return [f ? f.label : '', c].filter(Boolean).join(' · ');
 }
+
+/** Motor-Anzeige für Cockpit und Fahrzeugakte: aus Bauart und Kennbuchstaben, sonst alter Freitext. */
+export function engineLabel(v = {}) {
+  const fam = v.engineFamily || familyForCode(v.engineCode);
+  return engineText(fam, v.engineCode || '') || String(v.engine || '').trim();
+}
