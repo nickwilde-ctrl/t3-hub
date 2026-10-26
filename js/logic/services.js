@@ -13,7 +13,7 @@ export const SOON_DAYS = 45;
 export const DEFAULTS_VERSION = 3;
 export const DEFAULT_SERVICES = [
   { key: 'hu', name: 'Hauptuntersuchung (HU)', intervalKm: null, intervalMonths: 24, hint: 'Fälligkeit steht auf der Plakette und im Fahrzeugschein.' },
-  { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00).' },
+  { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00). Das Werk nannte 7.500 km (bis 7/85) bzw. 15.000 km (ab 8/85); T3 Hub startet mit der kürzeren Empfehlung der T3-Fachwerkstatt GoWesty. Du kannst das Intervall ändern.' },
   { key: 'plugs', name: 'Zündkerzen', intervalKm: 24000, intervalMonths: null, hint: '' },
   { key: 'ignition', name: 'Verteilerkappe, Verteilerfinger, Zündkabel', intervalKm: 48000, intervalMonths: null, hint: 'Kabel nur, wenn nötig.' },
   { key: 'timing', name: 'Zündzeitpunkt prüfen', intervalKm: 30000, intervalMonths: null, hint: 'Sollwert für deinen Motor: siehe Anleitung oder Sollwerte unter „Mehr“.' },
@@ -33,7 +33,7 @@ export const OLD_DEFAULTS = {
 
 /** Frühere Hinweistexte: werden auf den aktuellen Text gehoben (auch wenn das Intervall geändert wurde). */
 export const OLD_HINTS = {
-  oil: ['4,5 l, Norm VW 500 00 / 501 01 / 502 00.'],
+  oil: ['4,5 l, Norm VW 500 00 / 501 01 / 502 00.', '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00).'],
   coolant: ['Phosphatfreies Kühlmittel mit destilliertem Wasser.'],
 };
 

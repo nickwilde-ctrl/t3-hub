@@ -67,3 +67,12 @@ test('Version 3: unveränderte Filter-Intervalle werden auf 30.000 km gehoben, e
   assert.equal(ch.find((c) => c.key === 'fuelfilter'), undefined, 'selbst geändert → bleibt');
   assert.ok(ch.some((c) => c.key === 'timing' && c.intervalKm === 30000), 'Zündzeitpunkt kommt dazu');
 });
+
+test('Öl-Hinweis wird auf den Text mit Intervall-Erklärung gehoben', async () => {
+  const { upgradeServices } = await import('../js/logic/services.js');
+  const s = { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00).' };
+  const up = upgradeServices([s], 'wbx21').find((x) => x.key === 'oil');
+  assert.ok(up, 'Ölwechsel wird aktualisiert');
+  assert.match(up.hint, /15\.000 km/);
+  assert.match(up.hint, /GoWesty/);
+});

@@ -16,7 +16,7 @@ export function tankenView(state) {
     <button type="button" class="btn add-main" data-action="add-fuel" aria-label="Tankung eintragen">+ Tankung</button></div>`;
   if (!state.fuels.length) {
     return `<section class="sec"><div class="card soon-card"><h3>Noch keine Tankungen</h3>
-      <p>Trag deine erste Tankung ein. Deine bisherigen Daten aus Road Trip kannst du ab Schritt 2.7 übernehmen.</p>
+      <p>Trag deine erste Tankung ein. Hast du bisher die App Road Trip benutzt? Unter Mehr → Daten übernimmst du deine alten Tankungen.</p>
       <button type="button" class="btn" data-action="add-fuel" style="justify-self:start;margin-top:6px">+ Tankung eintragen</button></div></section>`;
   }
   return tabs + (sub === 'auswertung' ? auswertung(state) : tankbuch(state));

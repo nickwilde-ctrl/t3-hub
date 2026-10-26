@@ -40,7 +40,7 @@ export const GUIDES = [
       { k: 'Ölsorte Saugdiesel (CS, KY)', v: 'VW 505 00, 500 00 oder 501 00 bzw. API CD (Stand 1996)', check: true, codes: ['CS', 'KY'] },
       { k: 'Ölsorte Turbodiesel (JX)', v: 'VW 505 00 · Leichtlauföl nur, wenn auf der Dose VW 500 00 und VW 505 00 stehen', check: true, codes: ['JX'] },
       { k: 'Kein Longlife-Öl', v: 'VW 503 00 und 506 00 dürfen im VW Bus nicht verwendet werden', check: true },
-      { k: 'Wechselintervall Benziner', v: 'bis Baujahr 7/85: alle 7.500 km, Filter bei jedem 2. Wechsel · ab 8/85: alle 15.000 km (oder jährlich), Filter jedes Mal', check: true, codes: ['MV', 'SS', 'SR', 'DJ', 'DF', 'DG', 'GW', 'EY', 'SP', 'DH'] },
+      { k: 'Wechselintervall Benziner', v: 'bis Baujahr 7/85: alle 7.500 km, Filter bei jedem 2. Wechsel · ab 8/85: alle 15.000 km (oder jährlich), Filter jedes Mal. T3 Hub schlägt kürzer vor: 5.500 km oder 12 Monate, nach der T3-Fachwerkstatt GoWesty', check: true, codes: ['MV', 'SS', 'SR', 'DJ', 'DF', 'DG', 'GW', 'EY', 'SP', 'DH'] },
       { k: 'Wechselintervall Diesel', v: 'alle 7.500 km, Ölfilter bei jedem Wechsel', check: true, codes: ['CS', 'KY', 'JX'] },
       { k: 'Ölverbrauch', v: 'normal: Benziner 0,1–0,5 l, Diesel 0,5–1,0 l je 1000 km · Grenze laut Werk 1,5 l je 1000 km (ein anderes Handbuch nennt für den Benziner 1,0 l)', check: true },
     ],

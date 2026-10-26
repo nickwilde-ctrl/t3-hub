@@ -64,7 +64,13 @@ export function plateTag(plate) {
 
 const WRENCH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/></svg>';
 
-export function cockpit({ vehicle, km, avg, last, due, unknown, check = { state: 'none' } }) {
+/** Wartungsanzeige: Rot nur bei überfällig, Gelb wenn bald etwas fällig wird. */
+const maint = (due, soon, unknown) => {
+  const [color, n, word, label] = due ? ['var(--bad)', due, 'fällig', `${due} überfällig`] : soon ? ['var(--warn)', soon, 'bald', `${soon} bald fällig`] : ['var(--ok)', 0, 'fällig', 'nichts fällig'];
+  return `<span class="lamp" style="background:${color}" role="img" aria-label="${label}"></span>${n} <small>${word}</small> · ${unknown} <small>offen</small>`;
+};
+
+export function cockpit({ vehicle, km, avg, last, due, soon = 0, unknown, check = { state: 'none' } }) {
   const lamp = {
     ok: ['var(--ok)', `Letzte Tankung im üblichen Bereich (${check.diff != null ? (check.diff > 0 ? '+' : '−') + de(Math.abs(check.diff), 0) : ''} % zum bisherigen Schnitt)`],
     high: ['var(--amber)', `Letzte Tankung ${check.diff != null ? de(check.diff, 0) : ''} % über dem bisherigen Schnitt`],
@@ -83,7 +89,7 @@ export function cockpit({ vehicle, km, avg, last, due, unknown, check = { state:
       <div class="readouts">
         <div class="ro"><div class="k">Tachostand</div><div class="odo" aria-label="${de(km)} km">${digits}</div></div>
         <div class="ro"><div class="k">Ø Verbrauch</div><div class="v"><span class="lamp" style="background:${lamp[0]}" title="${esc(lamp[1])}" role="img" aria-label="${esc(lamp[1])}"></span>${avg != null ? de(avg, 1) : '–'} <small>l/100 km</small></div></div>
-        <div class="ro"><div class="k">Wartung</div><div class="v"><span class="lamp" style="background:${due ? 'var(--bad)' : 'var(--ok)'}"></span>${due} <small>fällig</small> · ${unknown} <small>offen</small></div></div>
+        <div class="ro"><div class="k">Wartung</div><div class="v">${maint(due, soon, unknown)}</div></div>
       </div>
     </div>`;
 }

@@ -7,7 +7,7 @@ const PILL = { ok: 'OK', soon: 'Bald', over: 'Fällig', unknown: 'Offen' };
 const CLS = { ok: 'ok', soon: 'soon', over: 'over', unknown: 'unk' };
 
 export function statusText(st) {
-  if (st.state === 'unknown') return 'Letzter Wechsel unbekannt. Einmal eintragen, dann rechnet die App.';
+  if (st.state === 'unknown') return 'Noch nicht eingetragen. Einmal eintragen, wann es zuletzt gemacht wurde, dann rechnet die App.';
   if (st.state === 'over') {
     const p = [];
     if (st.remainingKm != null && st.remainingKm <= 0) p.push(de(-st.remainingKm) + ' km');
@@ -39,7 +39,7 @@ export function homeView({ services, fuels, km }) {
     ${last
       ? `<div class="card list"><button type="button" class="row row-btn" data-tab="tanken"><div class="t">Letzte Tankung</div><div class="s">${fmtDate(last.date)} · ${de(last.liters, 1)} l · ${de(last.pricePerLiter, 3)} €/l</div><div class="r"><span class="num big">${de(last.liters * last.pricePerLiter, 0)} €</span></div></button></div>
          ${recent.length >= 2 ? `<div class="card pad">${lineChart('home-cons', recent, { label: 'Verbrauch der letzten Volltankungen', step: 2, dec: 0, avg: s.avgConsumption, avgDec: 1 })}<p class="hint">Verbrauch der letzten ${recent.length} Volltankungen in l/100 km</p></div>` : ''}`
-      : `<div class="card soon-card"><h3>Noch keine Tankungen</h3><p>Trag deine erste Tankung ein. Deine bisherigen Daten aus Road Trip kannst du ab Schritt 2.7 übernehmen.</p></div>`}
+      : `<div class="card soon-card"><h3>Noch keine Tankungen</h3><p>Trag deine erste Tankung ein. Hast du bisher die App Road Trip benutzt? Unter Mehr → Daten übernimmst du deine alten Tankungen.</p></div>`}
   </section>`;
 }
 

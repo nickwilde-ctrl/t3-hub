@@ -38,7 +38,7 @@ export function wartungView(services, log, km) {
   return `
   <section class="sec"><div class="sec-head"><h2>Intervalle</h2><span class="label">Stand ${de(km)} km</span></div>
     <div class="card list">${rows}</div>
-    <div class="sec-foot"><p class="hint" style="margin:0">Antippen, um etwas als erledigt einzutragen oder das Intervall zu ändern. Startwerte nach Empfehlung einer T3-Fachwerkstatt.</p>
+    <div class="sec-foot"><p class="hint" style="margin:0">Antippen, um etwas als erledigt einzutragen oder das Intervall zu ändern. Startwerte aus dem Wartungsplan im Handbuch und den Empfehlungen der T3-Fachwerkstatt GoWesty. Jedes Intervall kannst du ändern.</p>
     <button type="button" class="add" data-action="add-service">+ Wartungspunkt</button></div></section>
   <section class="sec"><div class="sec-head"><h2>Serviceheft</h2><button type="button" class="add" data-action="add-log">+ Eintrag</button></div>
     ${entries.length ? `<div class="card list">${entries.map((l) => `<button type="button" class="row row-btn" data-edit-log="${l.id}">

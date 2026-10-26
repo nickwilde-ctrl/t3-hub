@@ -24,7 +24,7 @@ import { feedbackCard, feedbackSheet } from './views/feedback.js';
 import { openStromkarte } from './views/stromkarte.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.40.1';
+const APP_VERSION = '0.41';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -77,7 +77,8 @@ function render() {
     avg: s.avgConsumption,
     last: s.lastConsumption,
     check: consumptionCheck(state.fuels),
-    due: st.filter((x) => x.state === 'over' || x.state === 'soon').length,
+    due: st.filter((x) => x.state === 'over').length,
+    soon: st.filter((x) => x.state === 'soon').length,
     unknown: st.filter((x) => x.state === 'unknown').length,
   });
   document.getElementById('tabs').innerHTML = TABS.map(
