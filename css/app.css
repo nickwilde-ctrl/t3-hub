@@ -514,3 +514,8 @@ body.in-setup{overflow:hidden}
 .sk-node .code{font:700 15px var(--f-display);stroke:none}
 .sk-node.plug text{font-size:14px;fill:#a39d8f}
 @media (min-width:900px){.sk{grid-template-columns:minmax(0,1fr) 380px;grid-template-rows:auto auto auto minmax(0,1fr)}.sk-top,.sk-areas,.sk-filters{grid-column:1/-1}.sk-panel{grid-column:2;grid-row:4;max-height:none;border-top:0;border-left:1px solid var(--line)}}
+/* Tachostand antippen zum Eintragen */
+.odo-btn{background:none;border:0;padding:0;margin:0;color:inherit;font:inherit;text-align:left;cursor:pointer;display:grid;gap:inherit;justify-items:start}
+.odo-btn:active .odo span{filter:brightness(1.4)}
+.odo-btn:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:4px}
+.odo-edit{color:var(--amber);font-size:12px;letter-spacing:0;margin-left:2px}

@@ -87,7 +87,7 @@ export function cockpit({ vehicle, km, avg, last, due, soon = 0, unknown, check 
     <div class="cluster">
       <div class="dial">${dial(last, avg)}</div>
       <div class="readouts">
-        <div class="ro"><div class="k">Tachostand</div><div class="odo" aria-label="${de(km)} km">${digits}</div></div>
+        <button type="button" class="ro odo-btn" data-action="set-km" aria-label="Tachostand ${de(km)} km – antippen zum Eintragen"><div class="k">Tachostand <span class="odo-edit" aria-hidden="true">✎</span></div><div class="odo">${digits}</div></button>
         <div class="ro"><div class="k">Ø Verbrauch</div><div class="v"><span class="lamp" style="background:${lamp[0]}" title="${esc(lamp[1])}" role="img" aria-label="${esc(lamp[1])}"></span>${avg != null ? de(avg, 1) : '–'} <small>l/100 km</small></div></div>
         <div class="ro"><div class="k">Wartung</div><div class="v">${maint(due, soon, unknown)}</div></div>
       </div>

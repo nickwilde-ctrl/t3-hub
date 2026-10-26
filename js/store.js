@@ -103,6 +103,11 @@ export function services() {
   return state.services.map((s) => withLastDone(s, state.log)).sort((a, b) => serviceOrder(a) - serviceOrder(b) || a.name.localeCompare(b.name));
 }
 
+/** Kilometerstand von Hand (Cockpit). Zählt wie eine Tankung für die Fälligkeiten. */
+export async function setKmNow(km, date) {
+  await saveVehicle({ ...state.vehicle, kmNow: { km, date } });
+}
+
 export async function saveVehicle(vehicle) {
   await db.put('vehicles', vehicle);
   state.vehicle = vehicle;
@@ -176,6 +181,7 @@ export function currentKm() {
   return Math.max(
     0,
     state.vehicle?.kmStart?.km || 0,
+    state.vehicle?.kmNow?.km || 0,
     ...state.fuels.map((f) => f.km),
     ...state.log.map((l) => l.km || 0),
     ...state.tours.map((t) => t.endKm || t.startKm || 0),

@@ -1,5 +1,5 @@
 // Einstieg: Daten laden, Navigation, Bildschirme zeichnen.
-import { state, load, createVehicle, createDemo, resetAll, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, saveWiring, removeWiring, filesForLog, syncFiles, deleteLog, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
+import { state, load, createVehicle, createDemo, resetAll, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, saveWiring, removeWiring, setKmNow, filesForLog, syncFiles, deleteLog, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
 import { requestPersistence } from './db.js';
 import { fuelStats, consumptionCheck } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
@@ -22,9 +22,10 @@ import { gameCard, openGame } from './views/game.js';
 import { aboutCard } from './views/about.js';
 import { feedbackCard, feedbackSheet } from './views/feedback.js';
 import { openStromkarte } from './views/stromkarte.js';
+import { kmSheet } from './views/km.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.41';
+const APP_VERSION = '0.42';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -102,6 +103,7 @@ document.addEventListener('click', (e) => {
     return;
   }
   if (action && action.dataset.action === 'open-game') { openGame(); return; }
+  if (action && action.dataset.action === 'set-km') { kmSheet(currentKm(), setKmNow); return; }
   if (action && action.dataset.action === 'add-mod') {
     modSheet(state.vehicle, null, saveVehicle);
     return;
