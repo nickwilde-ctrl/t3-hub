@@ -1,12 +1,12 @@
 // Einstieg: Daten laden, Navigation, Bildschirme zeichnen.
-import { state, load, createVehicle, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, filesForLog, syncFiles, deleteLog, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
+import { state, load, createVehicle, createDemo, resetAll, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, filesForLog, syncFiles, deleteLog, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
 import { requestPersistence } from './db.js';
 import { fuelStats, consumptionCheck } from './logic/fuel.js';
 import { serviceStatus } from './logic/services.js';
 import { cockpit } from './views/cockpit.js';
 import { homeView } from './views/home.js';
 import { vehicleCard, editVehicleSheet, photoFrameSheet, modsCard, modSheet } from './views/vehicle.js';
-import { toast, closeSheet } from './views/sheet.js';
+import { toast, closeSheet, openSheet } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
 import { wartungView, wartungTabs, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
@@ -40,20 +40,20 @@ if (!TABS.some(([id]) => id === tab)) tab = 'home';
 let wsub = 'intervalle';
 
 const VIEWS = {
-  home: () => backupReminder(state) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
-  wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides()) : wartungView(services(), state.log, currentKm())),
+  home: () => (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
+  wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides(), state.vehicle.engineFamily) : wartungView(services(), state.log, currentKm())),
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
   mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + modsCard(state.vehicle)
     + dataCard(state)
     + installCard()
     + gameCard()
-    + '<p class="foot">T3 Hub · Version 0.25 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.26 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
   // Erster Start: Einrichtung statt leerer App. Ein wiederhergestelltes Backup schließt die Begrüßung.
-  if (state.needsSetup) { showSetup(createVehicle); return; }
+  if (state.needsSetup) { showSetup(createVehicle, createDemo); return; }
   if (setupAtWelcome()) closeSetup();
   if (!state.vehicle) return;
   const s = fuelStats(state.fuels);
@@ -72,8 +72,12 @@ function render() {
     ([id, label, icon]) =>
       `<button type="button" data-tab="${id}" ${tab === id ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg>${label}</button>`,
   ).join('');
-  document.getElementById('view').innerHTML = VIEWS[tab]();
+  document.getElementById('view').innerHTML = (state.vehicle.demo ? demoBanner() : '') + VIEWS[tab]();
 }
+
+/** Hinweis, solange der Beispielbus aktiv ist. */
+const demoBanner = () => `<div class="card demo-banner"><div><b>Das ist ein Beispielbus.</b> Schau dich in Ruhe um und probier alles aus.</div>
+  <button type="button" class="btn" data-action="leave-demo">Eigenen Bus einrichten</button></div>`;
 
 document.addEventListener('click', (e) => {
   const menu = document.querySelector('details.photo-menu[open]');
@@ -128,6 +132,7 @@ document.addEventListener('click', (e) => {
   // Anleitung öffnen; „Ändern“ führt in den Editor und danach zurück in die gespeicherte Anleitung
   const showGuide = (id) => openGuide(id, {
     guides: allGuides(),
+    engineFamily: state.vehicle.engineFamily || null,
     onClose: render,
     onEdit: (g) => editGuide(g),
     onDone: (g) => {
@@ -149,6 +154,15 @@ document.addEventListener('click', (e) => {
     return;
   }
   if (action && action.dataset.action === 'add-guide') { editGuide(null); return; }
+  if (action && action.dataset.action === 'leave-demo') {
+    openSheet({
+      title: 'Eigenen Bus einrichten?',
+      submitLabel: 'Beispiel löschen',
+      body: '<p style="margin:0">Der Beispielbus mit allen Beispieldaten wird gelöscht. Danach richtest du deinen eigenen Bus ein.</p>',
+      async onSubmit() { await resetAll(); window.scrollTo(0, 0); },
+    });
+    return;
+  }
   const editService = e.target.closest('[data-edit-service]');
   if (editService) {
     const id = editService.dataset.editService;

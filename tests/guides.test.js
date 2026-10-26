@@ -78,3 +78,18 @@ test('Zeilen und Prüfung', () => {
   assert.match(checkGuide({ title: 'X', steps: [{ t: '' }], minutes: 5 }), /Überschrift/);
   assert.equal(checkGuide({ title: 'X', steps: [{ t: 'a', d: '' }], minutes: 5 }), '');
 });
+
+import { fitsEngine, sortForEngine } from '../js/logic/guides.js';
+
+test('Anleitungen passend zum Motor', () => {
+  const oil = GUIDES.find((g) => g.id === 'oelwechsel');
+  const rad = GUIDES.find((g) => g.id === 'radwechsel');
+  assert.ok(fitsEngine(oil, 'wbx21'));
+  assert.ok(fitsEngine(oil, null), 'unbekannter Motor: alles passt');
+  assert.ok(!fitsEngine(oil, 'diesel'));
+  assert.ok(fitsEngine(rad, 'diesel'), 'ohne Angabe passt sie für alle');
+  const sorted = sortForEngine(GUIDES, 'diesel');
+  const firstOther = sorted.findIndex((g) => !fitsEngine(g, 'diesel'));
+  assert.ok(sorted.slice(firstOther).every((g) => !fitsEngine(g, 'diesel')));
+  assert.equal(sorted.length, GUIDES.length);
+});

@@ -66,3 +66,11 @@ export function checkGuide(g) {
   if (!(g.minutes > 0)) return 'Bitte die ungefähre Dauer in Minuten eintragen.';
   return '';
 }
+
+// ---------- Passend zum Motor ----------
+
+/** Passt die Anleitung zur Motor-Bauart? Unbekannte Bauart oder Anleitung ohne Angabe = passt. */
+export const fitsEngine = (guide, family) => !family || !guide.families?.length || guide.families.includes(family);
+
+/** Passende Anleitungen zuerst, Reihenfolge sonst unverändert. */
+export const sortForEngine = (guides, family) => [...guides.filter((g) => fitsEngine(g, family)), ...guides.filter((g) => !fitsEngine(g, family))];

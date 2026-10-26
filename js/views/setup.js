@@ -24,6 +24,7 @@ function welcome() {
     <p class="hint su-note">Alle Daten bleiben auf diesem Gerät. Kein Konto, keine Anmeldung.</p>
     <div class="su-actions">
       <button type="button" class="btn su-next" data-su="start">Bus einrichten</button>
+      <button type="button" class="btn ghost" data-su="demo">Erst mal ausprobieren</button>
       <label class="btn ghost su-restore">Backup wiederherstellen<input type="file" id="restore-in" accept="application/json,.json" hidden></label>
     </div>`;
 }
@@ -113,7 +114,7 @@ function read(root) {
  * Zeigt die Einrichtung (nur wenn noch kein Fahrzeug existiert).
  * create(setup) legt das Fahrzeug an; danach wird die normale App gezeichnet.
  */
-export function showSetup(create) {
+export function showSetup(create, demo) {
   if (document.getElementById('setup-root')) return;
   data = { name: '', photo: null, year: null, family: '', code: '', km: null, oilKm: null, oilDate: null };
   step = 0;
@@ -143,6 +144,7 @@ export function showSetup(create) {
       return;
     }
     if (a === 'close') closeSetup();
+    if (a === 'demo') { b.disabled = true; try { await demo(); closeSetup(); } catch (err3) { b.disabled = false; toast('Das hat nicht geklappt'); console.error(err3); } }
   });
   // Kennbuchstabe eingetippt → passende Bauart gleich auswählen
   root.addEventListener('input', (e) => {

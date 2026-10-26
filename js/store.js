@@ -3,6 +3,7 @@ import * as db from './db.js';
 import { servicesFor, upgradeServices, withLastDone, serviceOrder } from './logic/services.js';
 import { STORE_NAMES } from './logic/backup.js';
 import { matchTours, fuelKey } from './logic/roadtrip.js';
+import { demoData } from './logic/demo.js';
 
 export const state = {
   vehicle: null,
@@ -53,6 +54,27 @@ export async function createVehicle(setup) {
   }));
   await load();
   return vehicle;
+}
+
+/** Beispielbus zum Ausprobieren anlegen (vehicle.demo = true). */
+export async function createDemo() {
+  const d = demoData();
+  const id = db.newId();
+  const withIds = (list) => list.map((x) => ({ ...x, id: db.newId(), vehicleId: id }));
+  const vehicle = { ...d.vehicle, id, mods: d.vehicle.mods.map((m) => ({ ...m, id: db.newId() })), kmStart: null, createdAt: new Date().toISOString() };
+  await db.put('vehicles', vehicle);
+  await db.putMany('services', servicesFor(vehicle.engineFamily).map((s) => ({ ...s, id: db.newId(), vehicleId: id, lastKm: d.serviceLast[s.key]?.km ?? null, lastDate: d.serviceLast[s.key]?.date ?? null })));
+  await db.putMany('fuels', withIds(d.fuels));
+  await db.putMany('log', withIds(d.log));
+  await db.putMany('tours', withIds(d.tours).map((t) => ({ ...t, expenses: t.expenses.map((e) => ({ ...e, id: db.newId() })), journal: t.journal.map((j) => ({ ...j, id: db.newId() })) })));
+  await load();
+}
+
+/** Alles auf diesem Gerät löschen (z. B. Beispielbus verlassen). Danach startet die Einrichtung. */
+export async function resetAll() {
+  await db.replaceAll({});
+  await db.setMeta('lastBackup', null);
+  await load();
 }
 
 export async function load() {

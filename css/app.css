@@ -423,3 +423,6 @@ body.in-setup{overflow:hidden}
 .su-opt input{width:20px;height:20px;margin-top:2px;accent-color:var(--amber)}
 .su-opt span{display:grid;gap:2px}.su-opt b{font-size:16px}.su-opt small{color:var(--muted);font-size:13px;line-height:1.35}
 .su-box{background:var(--panel);border:1px solid var(--hair);border-radius:12px;padding:12px 14px;display:grid;gap:10px}
+.g-other{border-color:color-mix(in srgb,var(--amber) 55%,transparent)}.g-other h3{color:var(--amber)}.g-other p{margin:6px 0 0;font-size:15px;line-height:1.45}
+.demo-banner{display:grid;gap:10px;padding:14px;margin-bottom:16px;border-color:color-mix(in srgb,var(--amber) 55%,transparent)}
+.demo-banner .btn{justify-self:start}

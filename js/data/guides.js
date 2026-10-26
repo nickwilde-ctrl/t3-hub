@@ -1,5 +1,6 @@
 // Mitgelieferte Reparaturleitfäden. Eigene Texte (nicht aus Büchern übernommen).
 // Werte mit check: false sind ungeprüft und müssen gegen ein Reparaturhandbuch geprüft werden.
+// families: für welche Motor-Bauarten (js/data/engines.js) die Werte gelten; fehlt = für alle T3.
 // serviceKey verknüpft eine Anleitung mit einem Wartungspunkt (siehe js/logic/services.js).
 
 export const GUIDE_GROUPS = ['Check', 'Motor', 'Zündung', 'Kühlung', 'Kraftstoff', 'Getriebe', 'Bremsen', 'Fahrwerk', 'Elektrik', 'Karosserie'];
@@ -7,6 +8,7 @@ export const GUIDE_GROUPS = ['Check', 'Motor', 'Zündung', 'Kühlung', 'Kraftsto
 export const GUIDES = [
   {
     id: 'oelwechsel',
+    families: ['wbx21'], // passende Motor-Bauarten (fehlt = alle)
     title: 'Ölwechsel mit Ölfilter',
     group: 'Motor',
     engine: '2,1 l Wasserboxer (MV)',
@@ -61,6 +63,7 @@ export const GUIDES = [
   },
   {
     id: 'zuendkerzen',
+    families: ['wbx21'], // passende Motor-Bauarten (fehlt = alle)
     title: 'Zündkerzen wechseln',
     group: 'Zündung',
     engine: '2,1 l Wasserboxer (MV)',
@@ -105,6 +108,7 @@ export const GUIDES = [
 
   {
     id: 'kuehlsystem',
+    families: ['wbx21', 'wbx19'], // passende Motor-Bauarten (fehlt = alle)
     title: 'Kühlmittel einfüllen und entlüften',
     group: 'Kühlung',
     engine: '2,1 l Wasserboxer',
@@ -157,6 +161,7 @@ export const GUIDES = [
   },
   {
     id: 'blauer-deckel',
+    families: ['wbx21', 'wbx19'], // passende Motor-Bauarten (fehlt = alle)
     title: 'Blauen Deckel (Druckventil) prüfen',
     group: 'Kühlung',
     engine: 'Wasserboxer',
@@ -253,6 +258,7 @@ export const GUIDES = [
   },
   {
     id: 'zuendzeitpunkt',
+    families: ['wbx21'], // passende Motor-Bauarten (fehlt = alle)
     title: 'Zündzeitpunkt prüfen und einstellen',
     group: 'Zündung',
     engine: '2,1 l Wasserboxer (MV, auch SS/SR)',
