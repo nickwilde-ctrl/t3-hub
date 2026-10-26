@@ -19,7 +19,7 @@ export const DEFAULT_SERVICES = [
   { key: 'airfilter', name: 'Luftfilter', intervalKm: 48000, intervalMonths: null, hint: 'Alle 24.000 km prüfen.' },
   { key: 'fuelfilter', name: 'Kraftstofffilter', intervalKm: 48000, intervalMonths: null, hint: '' },
   { key: 'brakefluid', name: 'Bremsflüssigkeit', intervalKm: null, intervalMonths: 24, hint: 'DOT 4, unabhängig von den Kilometern.' },
-  { key: 'coolant', name: 'Kühlmittel spülen und erneuern', intervalKm: null, intervalMonths: 24, hint: 'Phosphatfreies Kühlmittel mit destilliertem Wasser.' },
+  { key: 'coolant', name: 'Kühlmittel spülen und erneuern', intervalKm: null, intervalMonths: 24, hint: 'G11 (grün) oder G12 (rot) – nie mischen – mit destilliertem Wasser.' },
   { key: 'gearoil', name: 'Getriebeöl', intervalKm: 48000, intervalMonths: null, hint: 'Schaltgetriebe: API GL4, SAE 75W-90.' },
 ];
 
@@ -31,6 +31,7 @@ export const OLD_DEFAULTS = {
 /** Frühere Hinweistexte: werden auf den aktuellen Text gehoben (auch wenn das Intervall geändert wurde). */
 export const OLD_HINTS = {
   oil: ['4,5 l, Norm VW 500 00 / 501 01 / 502 00.'],
+  coolant: ['Phosphatfreies Kühlmittel mit destilliertem Wasser.'],
 };
 
 /**
