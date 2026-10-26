@@ -10,7 +10,7 @@ const list = (dir) => fs.readdirSync(path.join(root, dir), { withFileTypes: true
 
 test('alle App-Dateien stehen im Offline-Speicher (CORE in sw.js)', () => {
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-  const files = [...list('js'), ...list('css'), ...list('icons'), 'index.html', 'manifest.webmanifest'];
+  const files = [...list('js'), ...list('css'), ...list('icons'), ...list('fonts').filter((f) => f.endsWith('.woff')), 'index.html', 'manifest.webmanifest'];
   const missing = files.filter((f) => !sw.includes(`'./${f.split(path.sep).join('/')}'`));
   assert.deepEqual(missing, []);
 });

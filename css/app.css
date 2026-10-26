@@ -426,3 +426,9 @@ body.in-setup{overflow:hidden}
 .g-other{border-color:color-mix(in srgb,var(--amber) 55%,transparent)}.g-other h3{color:var(--amber)}.g-other p{margin:6px 0 0;font-size:15px;line-height:1.45}
 .demo-banner{display:grid;gap:10px;padding:14px;margin-bottom:16px;border-color:color-mix(in srgb,var(--amber) 55%,transparent)}
 .demo-banner .btn{justify-self:start}
+.about{padding:4px 14px}
+.about details{border-bottom:1px solid var(--hair);padding:12px 0}.about details:last-child{border-bottom:0}
+.about summary{cursor:pointer;font-weight:600;font-size:16px;list-style:none}.about summary::-webkit-details-marker{display:none}
+.about summary::after{content:" ▸";color:var(--muted)}.about details[open] summary::after{content:" ▾"}
+.about p,.about li{font-size:14px;line-height:1.5;color:var(--muted)}.about p{margin:8px 0 0}.about b{color:var(--fg)}
+.about ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px}

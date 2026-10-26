@@ -19,6 +19,7 @@ import { stopSheet, openMapView } from './views/stops.js';
 import { dataCard, backupReminder, createBackup, restoreFromFile, roadTripFromFile } from './views/daten.js';
 import { installCard } from './views/install.js';
 import { gameCard, openGame } from './views/game.js';
+import { aboutCard } from './views/about.js';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -48,7 +49,8 @@ const VIEWS = {
     + dataCard(state)
     + installCard()
     + gameCard()
-    + '<p class="foot">T3 Hub · Version 0.26 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + aboutCard()
+    + '<p class="foot">T3 Hub · Version 0.27 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {

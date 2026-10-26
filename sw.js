@@ -2,13 +2,22 @@
 // Eigene Dateien: erst aus dem Netz (damit Updates sofort ankommen), bei Funkloch aus dem Speicher.
 // Schriften von Google: einmal laden, dann aus dem Speicher.
 // Bei jeder Änderung an den App-Dateien VERSION erhöhen.
-const VERSION = 'v0.26.0';
+const VERSION = 'v0.27.0';
 const CACHE = 't3hub-' + VERSION;
 const CORE = [
   './',
   './index.html',
   './manifest.webmanifest',
   './css/app.css',
+  './css/fonts.css',
+  './fonts/Barlow-Regular.woff',
+  './fonts/Barlow-Medium.woff',
+  './fonts/Barlow-SemiBold.woff',
+  './fonts/Barlow-Bold.woff',
+  './fonts/BarlowCondensed-Medium.woff',
+  './fonts/BarlowCondensed-SemiBold.woff',
+  './fonts/BarlowCondensed-Bold.woff',
+
   './js/app.js',
   './js/db.js',
   './js/store.js',
@@ -25,6 +34,7 @@ const CORE = [
   './js/views/guides.js',
   './js/views/guideEditor.js',
   './js/views/setup.js',
+  './js/views/about.js',
   './js/data/engines.js',
   './js/logic/demo.js',
   './js/views/game.js',
@@ -68,17 +78,6 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
-  if (isFont) {
-    e.respondWith(
-      caches.match(req).then((hit) => hit || fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy));
-        return res;
-      })),
-    );
-    return;
-  }
   if (url.origin !== location.origin) return;
   // cache: 'no-cache' fragt GitHub jedes Mal, ob es eine neuere Datei gibt (sonst hält das iPhone sie bis zu 10 Min.)
   e.respondWith(

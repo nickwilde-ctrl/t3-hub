@@ -123,6 +123,7 @@ export function openGuide(id, { onDone, onClose, onEdit, guides = current, engin
         <button type="button" class="add" id="g-reset">Häkchen zurücksetzen</button>
       </div>
       ${g.source ? `<p class="hint">${esc(g.source)}</p>` : ''}
+      <p class="hint">Arbeiten auf eigene Verantwortung. Bei Bremsen, Lenkung und Fahrwerk im Zweifel in die Fachwerkstatt.</p>
     </div>
     <div class="g-focus" id="g-focus" hidden></div>`;
   document.body.appendChild(root);
