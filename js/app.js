@@ -47,7 +47,7 @@ const VIEWS = {
     + dataCard(state)
     + installCard()
     + gameCard()
-    + '<p class="foot">T3 Hub · Version 0.24.1 · Deine Daten bleiben auf diesem Gerät.</p>',
+    + '<p class="foot">T3 Hub · Version 0.24.2 · Deine Daten bleiben auf diesem Gerät.</p>',
 };
 
 function render() {
