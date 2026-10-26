@@ -42,3 +42,15 @@ test('Öl-Hinweis mit Mengen nur bei Wasserboxern', async () => {
   assert.match(oil('diesel'), /505 00/);
   assert.doesNotMatch(oil('luft'), /4,5 l/);
 });
+
+test('Diesel bekommt Zahnriemen, Ventilspiel und Entwässern dazu, Öl alle 7.500 km', async () => {
+  const { servicesFor } = await import('../js/logic/services.js');
+  const d = servicesFor('diesel');
+  const by = (k) => d.find((x) => x.key === k);
+  assert.equal(by('timingbelt').intervalKm, 120000);
+  assert.equal(by('timingbelt-check').intervalKm, 30000);
+  assert.equal(by('valves').intervalKm, 30000);
+  assert.equal(by('fuelwater').intervalMonths, 6);
+  assert.equal(by('oil').intervalKm, 7500);
+  assert.ok(!servicesFor('wbx21').some((x) => x.key === 'timingbelt'));
+});

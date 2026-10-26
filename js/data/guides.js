@@ -179,7 +179,7 @@ export const GUIDES = [
     engine: 'Diesel und Turbodiesel (CS, KY, JX)',
     level: 2,
     minutes: 45,
-    serviceKey: null,
+    serviceKey: 'timingbelt-check',
     tools: ['Werkzeug für die Zahnriemenabdeckung', 'Nuss und Ratsche für die Kurbelwellen-Riemenscheibe (zum Durchdrehen)', 'Gummihammer', 'Taschenlampe', 'Werkstatt: Spannungsmessgerät VW 210'],
     material: [],
     values: [
@@ -189,7 +189,7 @@ export const GUIDES = [
       { k: 'Spannung behelfsmäßig', v: 'an derselben Stelle mit dem Daumen etwa 10 mm durchdrückbar', check: true },
       { k: 'Nockenwellen-Zahnriemenrad', v: '45 Nm', check: true },
       { k: 'Förderbeginn (Werkstatt)', v: 'zulässig 0,83–0,97 mm Hub, einstellen auf 0,90 ±0,02 mm – mit Adapter VW 2066 und Messuhr 0–3 mm · Verschlussschraube mit neuem Dichtring 15 Nm (undicht: 25 Nm)', check: true },
-      { k: 'Wechselintervall', v: 'noch nicht eingetragen – im Wartungsplan des Handbuchs nachsehen', check: false, missing: true },
+      { k: 'Intervall', v: 'Zustand und Spannung alle 30.000 km prüfen · Riemen alle 120.000 km wechseln', check: true },
     ],
     warnings: [
       'Motor nur an der Kurbelwellen-Riemenscheibe durchdrehen, nie an der Nockenwelle oder der Einspritzpumpe.',
@@ -216,7 +216,7 @@ export const GUIDES = [
     engine: 'Diesel und Turbodiesel (CS, KY, JX)',
     level: 3,
     minutes: 90,
-    serviceKey: null,
+    serviceKey: 'valves',
     tools: ['Fühlerlehre (Blätter in 0,05-mm-Schritten)', 'Nuss und Ratsche für die Kurbelwellen-Riemenscheibe', 'Zum Einstellen: Spezialzange VW 10-208 und Niederhalter VW 546 (Motor bis 7/82) bzw. VW 2078 (ab 8/82)', 'Zettel und Stift für die Messwerte'],
     material: ['Neue Ventildeckeldichtung', 'Bei Bedarf Einstellplättchen (aus dem VW-Teilelager)'],
     values: [
@@ -228,7 +228,7 @@ export const GUIDES = [
       { k: 'Einstellplättchen', v: '3,00–4,25 mm in 0,05-mm-Schritten (VW 056 109 555 bis 580), Dicke unten eingeätzt', check: true },
       { k: 'Reihenfolge der Ventile', v: 'A–E–A–E–E–A–E–A (Auslass außen)', check: true },
       { k: 'Zündfolge', v: '1–3–4–2', check: true },
-      { k: 'Prüfintervall', v: 'noch nicht eingetragen – im Wartungsplan des Handbuchs nachsehen', check: false, missing: true },
+      { k: 'Prüfintervall', v: 'alle 30.000 km, dabei Ventildeckeldichtung erneuern', check: true },
     ],
     warnings: [
       'Bevor ein Tassenstößel heruntergedrückt wird, die Kurbelwelle etwa ¼ Umdrehung weiterdrehen: Steht der Kolben im OT, stoßen die Ventile an den Kolben.',

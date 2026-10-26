@@ -34,6 +34,19 @@ export const OLD_HINTS = {
   coolant: ['Phosphatfreies Kühlmittel mit destilliertem Wasser.'],
 };
 
+/** Zusätzliche Wartungspunkte je Motor-Bauart (Wartungsplan „Jetzt helfe ich mir selbst“). */
+export const EXTRA_SERVICES = {
+  diesel: [
+    { key: 'fuelwater', name: 'Kraftstofffilter entwässern', intervalKm: 7500, intervalMonths: 6, hint: 'Wasser aus dem Diesel-Kraftstofffilter ablassen.' },
+    { key: 'valves', name: 'Ventilspiel prüfen', intervalKm: 30000, intervalMonths: null, hint: 'Warm messen (Kühlmittel ab 35 °C). Ventildeckeldichtung erneuern.' },
+    { key: 'timingbelt-check', name: 'Zahnriemen prüfen (Zustand und Spannung)', intervalKm: 30000, intervalMonths: null, hint: 'Verölt, rissig, Zähne abgenutzt? Dann sofort ersetzen.' },
+    { key: 'timingbelt', name: 'Zahnriemen wechseln', intervalKm: 120000, intervalMonths: null, hint: 'Reißt er, ist der Motor meist kaputt. Danach Förderbeginn einstellen lassen (Werkstatt).' },
+  ],
+};
+
+/** Alle Standard- und Zusatzpunkte (z. B. für Prüfungen und die Sortierung). */
+export const ALL_SERVICES = [...DEFAULT_SERVICES, ...Object.values(EXTRA_SERVICES).flat()];
+
 /** Wartungspunkte, die es bei einer Motor-Bauart nicht gibt. */
 const NOT_FOR = {
   diesel: ['plugs', 'ignition'],   // Diesel: keine Zündkerzen, keine Zündanlage
@@ -41,10 +54,10 @@ const NOT_FOR = {
 };
 
 /** Standard-Wartungspunkte passend zur Motor-Bauart (unbekannt = alle). */
-export const servicesFor = (family) => DEFAULT_SERVICES
+export const servicesFor = (family) => [...DEFAULT_SERVICES, ...(EXTRA_SERVICES[family] || [])]
   .filter((d) => !(NOT_FOR[family] || []).includes(d.key))
   // Ölmenge und Ölnorm im Hinweis gelten für die Wasserboxer (gegen Handbuch geprüft)
-  .map((d) => (d.key === 'oil' && family === 'diesel' ? { ...d, hint: '4,5 l mit Filter (neuer Peilstab), Öl nach VW 505 00 – Ölfilter bei jedem Wechsel. Keine Longlife-Öle.' }
+  .map((d) => (d.key === 'oil' && family === 'diesel' ? { ...d, intervalKm: 7500, intervalMonths: 6, hint: '4,5 l mit Filter (neuer Peilstab), Öl nach VW 505 00 – Ölfilter bei jedem Wechsel. Keine Longlife-Öle.' }
     : d.key === 'oil' && family && !['wbx21', 'wbx19'].includes(family) ? { ...d, hint: 'Ölmenge und Ölnorm stehen in deinem Handbuch.' } : d));
 
 /**
@@ -70,7 +83,7 @@ export function upgradeServices(services, family) {
 
 /** Sortierreihenfolge der Standardpunkte; eigene Punkte kommen danach. */
 export const serviceOrder = (s) => {
-  const i = DEFAULT_SERVICES.findIndex((d) => d.key === s.key);
+  const i = ALL_SERVICES.findIndex((d) => d.key === s.key);
   return i < 0 ? 100 : i;
 };
 

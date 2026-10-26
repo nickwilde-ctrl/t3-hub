@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { searchGuides, guideForService, progress, usedGroups, nextStep } from '../js/logic/guides.js';
 import { GUIDES, GUIDE_GROUPS } from '../js/data/guides.js';
-import { DEFAULT_SERVICES } from '../js/logic/services.js';
+import { ALL_SERVICES } from '../js/logic/services.js';
 
 test('Suche findet über Titel, Material und Schritte, ohne Groß/Klein und Umlaute', () => {
   assert.equal(searchGuides(GUIDES, 'ölfilter')[0].id, 'oelwechsel');
@@ -14,7 +14,7 @@ test('Suche findet über Titel, Material und Schritte, ohne Groß/Klein und Umla
 });
 
 test('jede Anleitung ist vollständig und gehört zu einem echten Wartungspunkt', () => {
-  const keys = DEFAULT_SERVICES.map((s) => s.key);
+  const keys = ALL_SERVICES.map((s) => s.key);
   for (const g of GUIDES) {
     assert.ok(g.id && g.title && g.steps.length >= 3, g.id);
     assert.ok(GUIDE_GROUPS.includes(g.group), g.id + ' Baugruppe');
