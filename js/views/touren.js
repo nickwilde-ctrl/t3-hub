@@ -1,5 +1,5 @@
 // Reiter „Touren“ und Kostenübersicht im Reiter „Mehr“.
-import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
+import { de, eur, eurExact, esc, fmtDate, todayIso, plural } from '../format.js';
 import { parseNumber } from '../logic/fuel.js';
 import { tourStats, fuelsInTour, costsByCategory, costYears, COST_CATEGORIES, TRIP_CATEGORIES, compareTours } from '../logic/costs.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
@@ -30,7 +30,7 @@ export function tourenView(state, km) {
     return `<button type="button" class="card list tour-card" data-open-tour="${t.id}">
       <div class="row"><div class="t tour-name">${esc(t.name)}${s.running ? '<span class="tag live">läuft</span>' : ''}</div><div class="s">${when}</div><div class="r"><span class="num big">${de(s.km)}</span><div class="label">km</div></div></div>
       <div class="row"><div class="t">Gesamt</div><div class="s">${top || 'Noch keine Kosten'}</div><div class="r num big" style="color:var(--amber)">${eur(s.total)}</div></div>
-      ${(t.journal || []).length ? `<div class="row"><div class="s">${t.journal.length} Tagebuch-Einträge</div></div>` : ''}
+      ${(t.journal || []).length ? `<div class="row"><div class="s">${plural(t.journal.length, 'Tagebuch-Eintrag', 'Tagebuch-Einträge')}</div></div>` : ''}
     </button>`;
   }).join('');
   return `${runningCard(state)}<section class="sec">${head}${cards}<p class="hint">Antippen für Details, Stellplätze, Ausgaben und Tagebuch.</p></section>${compareCard(state, km)}`;
@@ -208,7 +208,7 @@ export function tourSheet(state, tour, { km, saveTour, removeTour, saveFuels }) 
       if (el.assign.checked) {
         const match = fuelsInTour(saved, state.fuels).filter((f) => !f.tourId || f.tourId === saved.id);
         if (match.length) await saveFuels(match.map((f) => ({ ...f, tourId: saved.id })));
-        toast(match.length ? `Tour gespeichert, ${match.length} Tankungen zugeordnet` : 'Tour gespeichert');
+        toast(match.length ? `Tour gespeichert, ${plural(match.length, 'Tankung', 'Tankungen')} zugeordnet` : 'Tour gespeichert');
       } else {
         toast('Tour gespeichert');
       }

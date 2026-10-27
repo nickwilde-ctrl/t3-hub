@@ -4,7 +4,7 @@ import { openSheet, toast } from './sheet.js';
 import { FEEDBACK_KINDS, deviceText, feedbackText } from '../logic/feedback.js';
 import { isStandalone } from './install.js';
 
-const AREAS = ['Home', 'Wartung', 'Anleitungen', 'Tanken', 'Touren', 'Mehr', 'Einrichtung', 'Sonstiges'];
+const AREAS = ['Home', 'Serviceheft', 'Anleitungen', 'Tanken', 'Touren', 'Mehr', 'Einrichtung', 'Sonstiges'];
 
 export function feedbackCard() {
   return `<section class="sec"><div class="card soon-card"><span class="label">Testphase</span><h3>Feedback geben</h3>

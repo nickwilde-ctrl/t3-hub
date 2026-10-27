@@ -1,5 +1,5 @@
 // Reiter „Tanken“: Auswertung und Tankbuch, dazu das Formular für Tankungen.
-import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
+import { de, eur, eurExact, esc, fmtDate, todayIso, plural } from '../format.js';
 import { fuelStats, consumptionByMonth, withConsumption, completeFill, parseNumber, consumptionCheck, distanceSince } from '../logic/fuel.js';
 import { lineChart, barChart, MONTHS } from './charts.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
@@ -38,7 +38,7 @@ function auswertung(state) {
   <section class="sec"><div class="sec-head"><h2>Seit Beginn</h2><span class="label">ab ${fmtDate(s.since)}</span></div>
     <div class="card stats">
       ${stat('Gefahren', de(s.km), 'km')}
-      ${stat('Getankt', de(s.totalLiters, 0), 'l', s.count + ' Tankungen')}
+      ${stat('Getankt', de(s.totalLiters, 0), 'l', plural(s.count, 'Tankung', 'Tankungen'))}
       ${stat('Spritkosten', de(s.totalCost, 0), '€')}
       ${stat('Ø Verbrauch', de(s.avgConsumption, 1), 'l/100 km')}
       ${stat('Ø Preis', de(s.avgPrice, 3), '€/l', 'nach Litern gewichtet')}
@@ -61,7 +61,7 @@ function tankbuch(state) {
   const tourName = (id) => (state.tours.find((t) => t.id === id) || {}).name;
   const asc = withConsumption(state.fuels);
   const rows = asc.map((f, i) => ({ ...f, dist: i > 0 ? f.km - asc[i - 1].km : null })).reverse();
-  return `<section class="sec"><div class="sec-head"><h2>Tankbuch</h2><span class="label">${state.fuels.length} Einträge</span></div>
+  return `<section class="sec"><div class="sec-head"><h2>Tankbuch</h2><span class="label">${plural(state.fuels.length, 'Eintrag', 'Einträge')}</span></div>
     <div class="card list">${rows.map((f) => `<button type="button" class="row row-btn" data-edit-fuel="${f.id}">
       <div class="t num" style="font-size:18px">${de(f.km)} km${f.dist != null ? `<span class="dist">+${de(f.dist)} km</span>` : ''}<span class="tag">${f.full ? 'Voll' : 'Teil'}</span>${f.tourId && tourName(f.tourId) ? `<span class="tag">${esc(tourName(f.tourId))}</span>` : ''}</div>
       <div class="s">${fmtDate(f.date)} · ${de(f.liters, 2)} l · ${de(f.pricePerLiter, 3)} €/l · ${eurExact(f.liters * f.pricePerLiter)}${f.note ? ' · ' + esc(f.note) : ''}</div>

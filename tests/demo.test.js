@@ -15,3 +15,13 @@ test('Beispielbus: plausible Daten', () => {
   assert.ok(avg > 11 && avg < 16, 'Verbrauch wie ein T3: ' + avg);
   assert.ok(d.tours[0].endKm > d.tours[0].startKm);
 });
+
+test('Beispielbus: die Tour liegt zwischen ihren Tankungen und bekommt sie zugeordnet', () => {
+  const d = demoData('2026-10-27');
+  const tour = d.tours[0];
+  const inTour = d.fuels.filter((f) => f.date >= tour.from && f.date <= tour.to);
+  assert.ok(inTour.length >= 1);
+  const before = d.fuels.filter((f) => f.date < tour.from).pop();
+  const after = d.fuels.find((f) => f.date > tour.to);
+  assert.ok(tour.startKm > before.km && tour.endKm < after.km);
+});

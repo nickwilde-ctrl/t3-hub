@@ -1,7 +1,8 @@
 // Beispielbus zum Ausprobieren: erfundene, aber realistische Daten relativ zum heutigen Tag.
 // Reine Funktion ohne Speicher – IDs vergibt der Aufrufer.
 
-const iso = (d) => d.toISOString().slice(0, 10);
+// Datum in Ortszeit (toISOString rechnet auf UTC um und liefert kurz nach Mitternacht den Vortag)
+const iso = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 const daysAgo = (today, n) => { const d = new Date(today + 'T12:00:00'); d.setDate(d.getDate() - n); return iso(d); };
 
 /** Liefert { vehicle, fuels, log, tours, serviceLast } für den Beispielbus. */
@@ -19,7 +20,8 @@ export function demoData(today = iso(new Date())) {
   });
   fuels.unshift({ date: daysAgo(today, 172), km: km - fills.reduce((s, f) => s + f[1], 0), liters: 44.0, pricePerLiter: 1.719, full: true, note: '' });
   const tourFrom = daysAgo(today, 41), tourTo = daysAgo(today, 36);
-  const startKm = fuels[4].km - 120;
+  // Tour 41–36 Tage her: die Tankung vom Tag 38 liegt dazwischen (fuels[6]), die nächste (Tag 19) danach
+  const startKm = fuels[6].km - 330;
   return {
     vehicle: {
       name: 'Beispiel-Bulli',
@@ -48,7 +50,7 @@ export function demoData(today = iso(new Date())) {
       { date: daysAgo(today, 120), km: km - 3900, title: 'Kraftstoffschläuche prüfen', category: 'Wartung', serviceKey: 'fuelhoses', cost: null, note: 'Trocken, keine Risse' },
     ],
     tours: [{
-      name: 'Herbst an der Ostsee', from: tourFrom, to: tourTo, startKm, endKm: startKm + 812, otherCost: 0, note: '',
+      name: 'Herbst an der Ostsee', from: tourFrom, to: tourTo, startKm, endKm: startKm + 700, otherCost: 0, note: '',
       expenses: [
         { date: tourFrom, category: 'Camping / Stellplatz', amount: 24, note: 'Stellplatz am Deich' },
         { date: daysAgo(today, 39), category: 'Camping / Stellplatz', amount: 18, note: '' },

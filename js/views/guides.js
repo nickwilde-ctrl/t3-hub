@@ -1,5 +1,5 @@
 // Reparaturleitfäden: Liste (im Reiter Serviceheft) und Vollbild-Ansicht mit Werkstatt-Modus.
-import { esc } from '../format.js';
+import { esc, plural } from '../format.js';
 import { GUIDES, GUIDE_GROUPS } from '../data/guides.js';
 
 let current = GUIDES; // zuletzt gezeigte Liste (mitgelieferte + eigene)
@@ -39,9 +39,12 @@ function row(g) {
   const other = !fitsEngine(g, family);
   return `<button type="button" class="row row-btn" data-open-guide="${esc(g.id)}"${matchesFuel(g, fuelSel) ? '' : ' hidden'}>
     <div class="t">${esc(g.title)}<span class="tag">${esc(g.group)}</span>${g.own ? `<span class="tag own">${g.basedOn ? 'Eigene Fassung' : 'Eigene'}</span>` : ''}${other ? '<span class="tag">anderer Motor</span>' : ''}</div>
-    <div class="s">${levelText(g.level)} · ca. ${g.minutes} Min. · ${g.steps.length} Schritte${p.done && !p.complete ? ` · <b class="amber">begonnen (${p.done}/${p.total})</b>` : ''}${valueState(g)}</div>
+    <div class="s">${levelText(g.level)} · ca. ${g.minutes} Min. · ${plural(g.steps.length, 'Schritt', 'Schritte')}${p.done && !p.complete ? ` · <b class="amber">begonnen (${p.done}/${p.total})</b>` : ''}${valueState(g)}</div>
     <div class="r" aria-hidden="true">${wrenches(g.level)}</div></button>`;
 }
+
+/** „9 von 13 Anleitungen“, wenn ein Filter etwas ausblendet, sonst „13 Anleitungen“. */
+const countText = (shown, total) => (shown === total ? plural(total, 'Anleitung', 'Anleitungen') : `${shown} von ${plural(total, 'Anleitung', 'Anleitungen')}`);
 
 export function guidesView(list = GUIDES, fam = null, code = '') {
   family = fam;
@@ -51,7 +54,7 @@ export function guidesView(list = GUIDES, fam = null, code = '') {
   current = list;
   const groups = usedGroups(list, GUIDE_GROUPS);
   return `<section class="sec">
-    <div class="sec-head"><span class="label">${list.length} Anleitungen</span><button type="button" class="add" data-action="add-guide">+ Eigene Anleitung</button></div>
+    <div class="sec-head"><span class="label" id="guide-count">${countText(list.filter((x) => matchesFuel(x, fuelSel)).length, list.length)}</span><button type="button" class="add" data-action="add-guide">+ Eigene Anleitung</button></div>
     <div class="field"><label for="guide-q">Anleitung suchen</label><input id="guide-q" type="search" placeholder="z. B. Ölfilter, Zündkerze" autocomplete="off"></div>
     <div class="seg guide-fuel" role="group" aria-label="Motor">${[['', 'Alle Motoren'], ['Benzin', 'Benziner'], ['Diesel', 'Diesel']].map(([v, l]) => `<button type="button" data-guide-fuel="${v}" aria-pressed="${fuelSel === v}">${l}</button>`).join('')}</div>
     <div class="chips" role="group" aria-label="Baugruppe">
@@ -70,6 +73,8 @@ export function filterGuides() {
   const g = document.querySelector('[data-guide-group][aria-pressed="true"]')?.dataset.guideGroup || '';
   const ids = new Set(searchGuides(current, q, g).filter((x) => matchesFuel(x, fuelSel)).map((x) => x.id));
   document.querySelectorAll('#guide-list [data-open-guide]').forEach((b) => (b.hidden = !ids.has(b.dataset.openGuide)));
+  const count = document.getElementById('guide-count');
+  if (count) count.textContent = countText(ids.size, current.length);
   const empty = document.getElementById('guide-empty');
   if (empty) empty.hidden = ids.size > 0;
 }
@@ -123,7 +128,7 @@ export function openGuide(id, { onDone, onClose, onEdit, guides = current, engin
     <div class="guide-body">
       <div class="eyebrow">${esc(g.group)} · ${esc(g.engine || 'T3')}</div>
       <h2 class="g-title">${esc(g.title)}</h2>
-      <p class="g-meta">${levelText(g.level)} ${wrenches(g.level)} · ca. ${g.minutes} Min. · ${g.steps.length} Schritte</p>
+      <p class="g-meta">${levelText(g.level)} ${wrenches(g.level)} · ca. ${g.minutes} Min. · ${plural(g.steps.length, 'Schritt', 'Schritte')}</p>
       ${!fitsEngine(g, family) ? `<div class="g-box g-other"><h3>Anderer Motor</h3><p>Diese Anleitung ist für ${g.families.map((f) => esc(familyById(f)?.label || f)).join(' und ')} geschrieben. Bei deinem Motor (${esc(familyById(family)?.label || 'unbekannt')}) können Werte und Schritte abweichen – bitte mit deinem Handbuch vergleichen.</p></div>` : ''}
       ${onEdit ? `<button type="button" class="add g-edit" id="g-edit">${g.own ? '✎ Anleitung ändern' : '✎ Eigene Fassung erstellen'}</button>` : ''}
       ${vals.list.length || vals.missing ? `<div class="g-box"><h3>Wichtige Werte${engineCode ? ` <span class="g-src">für ${esc(engineCode)}</span>` : ''}</h3>${vals.missing ? `<p class="g-note">Für deinen Motor (${esc(engineCode)}) haben wir hier noch keine eigenen Werte – bitte im Handbuch nachsehen.</p>` : ''}<dl class="g-values">${vals.list.map((v) => `<dt>${esc(v.k)}</dt><dd>${esc(v.v)}${v.check ? ' <span class="g-ok">geprüft</span>' : v.src ? ` <span class="g-src">laut ${esc(v.src)}</span>` : ` <span class="g-warn">${v.missing ? 'fehlt' : 'ungeprüft'}</span>`}</dd>`).join('')}</dl></div>` : ''}

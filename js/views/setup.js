@@ -64,7 +64,7 @@ function step3() {
     <div class="su-box"><b>Letzter Ölwechsel</b> <span class="faint">(optional – falls du es weißt)</span>
       <div class="two"><div class="field"><label for="su-oil-km">bei km</label><input id="su-oil-km" inputmode="numeric" value="${data.oilKm ?? ''}"></div>
       <div class="field"><label for="su-oil-date">am</label><input id="su-oil-date" type="date" value="${esc(data.oilDate || '')}" max="${todayIso()}"></div></div></div>
-    <p class="hint" style="margin:0">Weitere Wartungen trägst du später im Reiter „Wartung“ ein.</p>`;
+    <p class="hint" style="margin:0">Weitere Wartungen trägst du später im Reiter „Serviceheft“ ein.</p>`;
 }
 
 function done() {
@@ -73,7 +73,7 @@ function done() {
       ${isStandalone() || isIos() ? '' : '<li><b>Als App installieren</b><span>Im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen. Dann startet T3 Hub wie eine normale App und funktioniert auch offline.</span></li>'}
       <li><b>Ab und zu ein Backup</b><span>Deine Daten liegen nur auf diesem Gerät. Unter „Mehr“ sicherst du sie mit einem Tipp – die App erinnert dich daran.</span></li>
       ${data.experience === 'erfahren'
-        ? '<li><b>Erster Schritt</b><span>Unter Wartung eintragen, was du weißt – nach einem Service auch alles auf einmal. Die Intervalle kannst du anpassen.</span></li>'
+        ? '<li><b>Erster Schritt</b><span>Im Serviceheft eintragen, was du weißt – nach einem Service auch alles auf einmal. Die Intervalle kannst du anpassen.</span></li>'
         : '<li><b>Erster Schritt</b><span>Auf der Startseite zeigt dir „So fängst du an“, was du als Erstes einträgst. Das dauert nur ein paar Minuten.</span></li>'}
       <li><b>Tanken</b><span>Beim nächsten Tanken gleich die Tankung eintragen. Ab der zweiten Volltankung siehst du deinen Verbrauch.</span></li>
     </ul>

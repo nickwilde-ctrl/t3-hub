@@ -4,6 +4,7 @@ import { servicesFor, upgradeServices, withLastDone, serviceOrder } from './logi
 import { STORE_NAMES } from './logic/backup.js';
 import { matchTours, fuelKey } from './logic/roadtrip.js';
 import { demoData } from './logic/demo.js';
+import { todayIso } from './format.js';
 
 export const state = {
   vehicle: null,
@@ -32,7 +33,7 @@ async function firstVehicle() {
  * setup: { name, photo, year, family, code, engine, km, oilKm, oilDate }
  */
 export async function createVehicle(setup) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
   const vehicle = {
     id: db.newId(),
     name: setup.name,
@@ -63,12 +64,15 @@ export async function createDemo() {
   const d = demoData();
   const id = db.newId();
   const withIds = (list) => list.map((x) => ({ ...x, id: db.newId(), vehicleId: id }));
+  const tours = withIds(d.tours);
+  // Tankungen im Reisezeitraum gehören zur Tour, so wie es die App auch bei eigenen Touren macht
+  const fuels = withIds(d.fuels).map((f) => ({ ...f, tourId: tours.find((t) => f.date >= t.from && f.date <= t.to)?.id ?? null }));
   const vehicle = { ...d.vehicle, id, mods: d.vehicle.mods.map((m) => ({ ...m, id: db.newId() })), kmStart: null, createdAt: new Date().toISOString() };
   await db.put('vehicles', vehicle);
   await db.putMany('services', servicesFor(vehicle.engineFamily).map((s) => ({ ...s, id: db.newId(), vehicleId: id, lastKm: d.serviceLast[s.key]?.km ?? null, lastDate: d.serviceLast[s.key]?.date ?? null })));
-  await db.putMany('fuels', withIds(d.fuels));
+  await db.putMany('fuels', fuels);
   await db.putMany('log', withIds(d.log));
-  await db.putMany('tours', withIds(d.tours).map((t) => ({ ...t, expenses: t.expenses.map((e) => ({ ...e, id: db.newId() })), journal: t.journal.map((j) => ({ ...j, id: db.newId() })) })));
+  await db.putMany('tours', tours.map((t) => ({ ...t, expenses: t.expenses.map((e) => ({ ...e, id: db.newId() })), journal: t.journal.map((j) => ({ ...j, id: db.newId() })) })));
   await load();
 }
 

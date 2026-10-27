@@ -391,6 +391,7 @@ body.in-setup{overflow:hidden}
 .su-photo-btn{justify-self:start;margin-top:8px;display:inline-block;cursor:pointer}
 .su-opts{display:grid;gap:8px}
 .su-opt{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;background:var(--panel);border:1px solid var(--hair);border-radius:var(--r-card);padding:12px 14px;cursor:pointer}
+.field .su-opt{text-transform:none;letter-spacing:normal;font-size:var(--fs-text);font-weight:400;color:var(--fg)}
 .su-opt:has(input:checked){border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
 .su-opt input{width:20px;height:20px;margin-top:2px;accent-color:var(--amber)}
 .su-opt span{display:grid;gap:2px}.su-opt b{font-size:16px}.su-opt small{color:var(--muted);font-size:var(--fs-meta);line-height:1.35}

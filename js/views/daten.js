@@ -1,5 +1,5 @@
 // Backup sichern und wiederherstellen, Road-Trip-Import, Backup-Erinnerung.
-import { de, esc, fmtDate } from '../format.js';
+import { de, esc, fmtDate, plural } from '../format.js';
 import { buildBackup, checkBackup, daysSince, backupFileName } from '../logic/backup.js';
 import { fromRoadTrip } from '../logic/roadtrip.js';
 import { WIRING_FORMAT } from '../logic/wiring.js';
@@ -77,7 +77,7 @@ export async function restoreFromFile(file, restoreAll, saveWiring) {
     title: 'Backup wiederherstellen?',
     submitLabel: 'Ersetzen',
     body: `<p style="margin:0">Backup von <b>${esc(v.name)}</b> vom ${fmtDate(obj.exportedAt.slice(0, 10))}:</p>
-      <p class="hint" style="margin:0">${de(c.fuels)} Tankungen · ${de(c.log)} Serviceheft-Einträge · ${de(c.tours)} Touren · ${de(c.services)} Wartungspunkte${c.files ? ` · ${de(c.files)} Fotos/Rechnungen` : ''}${c.guides ? ` · ${de(c.guides)} eigene Anleitungen` : ''}${c.wiring ? ' · Plandaten Elektrik' : ''}</p>
+      <p class="hint" style="margin:0">${plural(c.fuels, 'Tankung', 'Tankungen')} · ${plural(c.log, 'Serviceheft-Eintrag', 'Serviceheft-Einträge')} · ${plural(c.tours, 'Tour', 'Touren')} · ${plural(c.services, 'Wartungspunkt', 'Wartungspunkte')}${c.files ? ` · ${plural(c.files, 'Foto/Rechnung', 'Fotos/Rechnungen')}` : ''}${c.guides ? ` · ${plural(c.guides, 'eigene Anleitung', 'eigene Anleitungen')}` : ''}${c.wiring ? ' · Plandaten Elektrik' : ''}</p>
       <p style="margin:0;color:var(--bad)">Alle Daten, die jetzt auf diesem Gerät sind, werden dabei ersetzt.</p>`,
     async onSubmit() {
       await restoreAll(obj);
@@ -93,14 +93,14 @@ export async function roadTripFromFile(file, importRoadTrip) {
   openSheet({
     title: 'Aus Road Trip übernehmen',
     submitLabel: 'Übernehmen',
-    body: `<p style="margin:0">Gefunden${parsed.vehicleName ? ` für <b>${esc(parsed.vehicleName)}</b>` : ''}: ${de(parsed.fuels.length)} Tankungen, ${de(parsed.log.length)} Wartungen, ${de(parsed.tours.length)} Touren.</p>
+    body: `<p style="margin:0">Gefunden${parsed.vehicleName ? ` für <b>${esc(parsed.vehicleName)}</b>` : ''}: ${plural(parsed.fuels.length, 'Tankung', 'Tankungen')}, ${plural(parsed.log.length, 'Wartung', 'Wartungen')}, ${plural(parsed.tours.length, 'Tour', 'Touren')}.</p>
       ${parsed.skipped.length ? `<p class="hint" style="margin:0">Unvollständig und deshalb nicht übernommen: ${esc(parsed.skipped.join(', '))}. Touren brauchen einen End-Kilometerstand.</p>` : ''}
       ${tourList ? `<div class="field"><label>Welche Touren übernehmen?</label><div class="tour-pick">${tourList}</div></div>
       <p class="hint" style="margin:0">Tipp: Zeiträume wie „Sommer 2026“ sind keine echten Reisen. Die kannst du hier abwählen.</p>` : ''}`,
     async onSubmit(form) {
       const refs = [...form.querySelectorAll('input[name=tour]:checked')].map((x) => x.value);
       const r = await importRoadTrip(parsed, refs);
-      toast(`${r.fuels} Tankungen übernommen${r.duplicates ? `, ${r.duplicates} schon vorhanden` : ''}`);
+      toast(`${plural(r.fuels, 'Tankung', 'Tankungen')} übernommen${r.duplicates ? `, ${r.duplicates} schon vorhanden` : ''}`);
     },
   });
 }

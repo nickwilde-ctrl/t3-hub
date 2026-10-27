@@ -20,3 +20,6 @@ export const todayIso = () => {
   const d = new Date();
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 };
+
+/** „1 Tankung“, „2 Tankungen“ – Zahl mit der richtigen Einzahl oder Mehrzahl. */
+export const plural = (n, one, many) => `${Number(n).toLocaleString('de-DE')} ${Number(n) === 1 ? one : many}`;
