@@ -16,14 +16,14 @@ export const SOON_DAYS = 45;
 export const DEFAULTS_VERSION = 4;
 export const DEFAULT_SERVICES = [
   { key: 'hu', name: 'Hauptuntersuchung (HU)', intervalKm: null, intervalMonths: 24, hint: 'Fälligkeit steht auf der Plakette und im Fahrzeugschein.' },
-  { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00). Das Werk nannte 7.500 km (bis 7/85) bzw. 15.000 km (ab 8/85); T3 Hub startet mit der kürzeren Empfehlung der T3-Fachwerkstatt GoWesty. Du kannst das Intervall ändern.' },
+  { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00).' },
   { key: 'plugs', name: 'Zündkerzen', intervalKm: 24000, intervalMonths: null, hint: '' },
   { key: 'ignition', name: 'Verteilerkappe, Verteilerfinger, Zündkabel', intervalKm: 48000, intervalMonths: null, hint: 'Kabel nur, wenn nötig.' },
   { key: 'timing', name: 'Zündzeitpunkt prüfen', intervalKm: 30000, intervalMonths: null, hint: 'Sollwert für deinen Motor: siehe Anleitung oder Sollwerte unter „Mehr“.' },
   { key: 'airfilter', name: 'Luftfilter wechseln', intervalKm: 30000, intervalMonths: null, hint: 'Alle 15.000 km reinigen.' },
   { key: 'fuelfilter', name: 'Kraftstofffilter', intervalKm: 30000, intervalMonths: null, hint: '' },
   { key: 'brakefluid', name: 'Bremsflüssigkeit', intervalKm: null, intervalMonths: 24, hint: 'DOT 4, unabhängig von den Kilometern.' },
-  { key: 'coolant', name: 'Kühlmittel spülen und erneuern', intervalKm: null, intervalMonths: 24, hint: 'G11 (grün) oder G12 (rot) – nie mischen – mit destilliertem Wasser.' },
+  { key: 'coolant', name: 'Kühlmittel spülen und erneuern', intervalKm: null, intervalMonths: 24, hint: 'G11 (VW TL 774 C) oder G12 (VW TL 774 D) – nie mischen, auf die Norm achten, nicht auf die Farbe. Mit destilliertem Wasser.' },
   { key: 'gearoil', name: 'Getriebeöl', intervalKm: 48000, intervalMonths: null, hint: 'Schaltgetriebe: API GL4, SAE 75W-90.' },
   // Sicherheits-Prüfpunkte (Version 4)
   { key: 'brakecheck', name: 'Bremsen prüfen (Schläuche, Leitungen, Beläge)', intervalKm: 15000, intervalMonths: 12, safety: true, hint: 'Bremsschläuche: Risse, Scheuerstellen, Aufquellen beim Treten? Dann tauschen. Leitungen auf Rost, Beläge auf Stärke. Die Beläge vorne laut Handbuch schon alle 7.500 km ansehen.' },
@@ -48,8 +48,8 @@ export const OLD_DEFAULTS = {
 
 /** Frühere Hinweistexte: werden auf den aktuellen Text gehoben (auch wenn das Intervall geändert wurde). */
 export const OLD_HINTS = {
-  oil: ['4,5 l, Norm VW 500 00 / 501 01 / 502 00.', '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00).'],
-  coolant: ['Phosphatfreies Kühlmittel mit destilliertem Wasser.'],
+  oil: ['4,5 l, Norm VW 500 00 / 501 01 / 502 00.', '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00). Das Werk nannte 7.500 km (bis 7/85) bzw. 15.000 km (ab 8/85); T3 Hub startet mit der kürzeren Empfehlung der T3-Fachwerkstatt GoWesty. Du kannst das Intervall ändern.'],
+  coolant: ['Phosphatfreies Kühlmittel mit destilliertem Wasser.', 'G11 (grün) oder G12 (rot) – nie mischen – mit destilliertem Wasser.'],
 };
 
 /** Zusätzliche Wartungspunkte je Motor-Bauart (Wartungsplan „Jetzt helfe ich mir selbst“). */
@@ -96,6 +96,61 @@ export function upgradeServices(services, family) {
     }
   }
   return changed;
+}
+
+/** Text für ein Intervall, z. B. „alle 5.500 km oder alle 12 Monate“. */
+export function intervalText(s) {
+  const de = (n) => Number(n).toLocaleString('de-DE');
+  const p = [];
+  if (s.intervalKm) p.push('alle ' + de(s.intervalKm) + ' km');
+  if (s.intervalMonths) p.push(s.intervalMonths % 12 === 0 ? `alle ${s.intervalMonths / 12 === 1 ? '12 Monate' : s.intervalMonths / 12 + ' Jahre'}` : `alle ${s.intervalMonths} Monate`);
+  return p.join(' oder ') || 'ohne Intervall';
+}
+
+const JH = 'Wartungsplan im Handbuch „Jetzt helfe ich mir selbst“.';
+const GW = 'Empfehlung der T3-Fachwerkstatt GoWesty.';
+/**
+ * Herkunft der Startwerte. src: 'plan' = Wartungsplan ab Werk (laut Handbuch), 'empfehlung' = Empfehlung
+ * von Fachleuten (oft strenger), 'gesetz' = gesetzlich. werk = was der Wartungsplan sagt, wenn es abweicht;
+ * null = in T3 Hub noch nicht mit dem Handbuch geprüft.
+ */
+export const ORIGIN = {
+  hu: { src: 'gesetz', basis: 'Gesetzlich vorgeschrieben.' },
+  oil: { src: 'empfehlung', basis: 'Empfehlung der T3-Fachwerkstatt GoWesty – bewusst kürzer als ab Werk.', werk: '7.500 km (bis 7/85) bzw. 15.000 km oder jährlich (ab 8/85)' },
+  plugs: { src: 'empfehlung', basis: GW, werk: null },
+  ignition: { src: 'empfehlung', basis: GW, werk: null },
+  timing: { src: 'plan', basis: JH },
+  airfilter: { src: 'plan', basis: JH },
+  fuelfilter: { src: 'plan', basis: JH },
+  brakefluid: { src: 'plan', basis: JH },
+  coolant: { src: 'empfehlung', basis: 'Empfehlung von T3-Fachleuten wegen Korrosion im Alu-Motor.', werk: 'Wechsel nur nach Reparaturen (Handbuch „So wird’s gemacht“)' },
+  gearoil: { src: 'empfehlung', basis: GW, werk: 'nur Ölstand prüfen, alle 15.000 km oder jährlich' },
+  brakecheck: { src: 'plan', basis: JH },
+  steering: { src: 'plan', basis: JH },
+  fuelhoses: { src: 'plan', basis: 'Wartungsplan im Handbuch „Jetzt helfe ich mir selbst“ („Undichtigkeiten prüfen“).' },
+  coolantpipes: { src: 'plan', basis: 'Wartungsplan im Handbuch „Jetzt helfe ich mir selbst“ („Undichtigkeiten prüfen“).' },
+  'fuelhoses-new': { src: 'empfehlung', basis: 'Empfehlung von T3-Fachleuten.', werk: 'kein Werkswert' },
+  fuelwater: { src: 'plan', basis: JH },
+  valves: { src: 'plan', basis: JH },
+  'timingbelt-check': { src: 'plan', basis: JH },
+  timingbelt: { src: 'plan', basis: JH },
+};
+const ORIGIN_LABEL = { plan: 'Wartungsplan', empfehlung: 'Empfehlung', gesetz: 'Gesetzlich', eigen: 'Eigenes Intervall' };
+
+/**
+ * Woher kommt das Intervall dieses Wartungspunkts?
+ * @returns {{kind:'plan'|'empfehlung'|'gesetz'|'eigen', label:string, basis:string, werk:string|null|undefined}}
+ */
+export function intervalOrigin(s, family) {
+  const def = servicesFor(family).find((d) => d.key === s.key);
+  if (!def) return { kind: 'eigen', label: 'Eigener Wartungspunkt', basis: 'Von dir angelegt.' };
+  let o = ORIGIN[s.key] || { src: 'empfehlung', basis: '', werk: null };
+  if (s.key === 'oil' && family === 'diesel') o = { src: 'plan', basis: JH };
+  const changed = (s.intervalKm ?? null) !== def.intervalKm || (s.intervalMonths ?? null) !== def.intervalMonths;
+  if (changed) {
+    return { kind: 'eigen', label: ORIGIN_LABEL.eigen, basis: `Von dir geändert. Startwert war ${intervalText(def)} (${ORIGIN_LABEL[o.src]}).`, werk: o.werk };
+  }
+  return { kind: o.src, label: ORIGIN_LABEL[o.src], basis: o.basis, werk: o.werk };
 }
 
 /** Sortierreihenfolge der Standardpunkte; eigene Punkte kommen danach. */

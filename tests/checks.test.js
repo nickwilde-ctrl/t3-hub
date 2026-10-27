@@ -48,3 +48,13 @@ test('unrealistischer Verbrauch bei Volltankung', () => {
 test('beim Bearbeiten zählt die Tankung nicht gegen sich selbst', () => {
   assert.deepEqual(codes({ ...base[3] }), []);
 });
+
+test('Tankmenge zweistufig: knapp drüber Hinweis, deutlich drüber Warnung', () => {
+  assert.deepEqual(codes(f(null, '2026-10-01', 11600, 60, 2.0)).filter((c) => c.startsWith('liters')), []);
+  assert.ok(codes(f(null, '2026-10-01', 11600, 62.4, 2.0)).includes('liters-over'));
+  assert.ok(!codes(f(null, '2026-10-01', 11600, 62.4, 2.0)).includes('liters'));
+  assert.ok(codes(f(null, '2026-10-01', 11600, 66.5, 2.0)).includes('liters'));
+  assert.ok(!codes(f(null, '2026-10-01', 11600, 66.5, 2.0)).includes('liters-over'));
+  // Syncro mit 70-l-Tank: 66,5 l ist normal
+  assert.deepEqual(codes(f(null, '2026-10-01', 11600, 66.5, 2.0), base, { tankLiters: 70 }).filter((c) => c.startsWith('liters')), []);
+});

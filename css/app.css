@@ -532,3 +532,7 @@ body.in-setup{overflow:hidden}
 .st-btns{display:flex;flex-wrap:wrap;gap:8px}
 .st-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--hair);padding-top:10px}
 .st-pick label.check{text-transform:none;letter-spacing:0;font:500 15px var(--f-body);color:var(--fg)}
+
+/* Herkunft eines Wartungsintervalls (0.46) */
+.origin{border:1px solid var(--line);border-radius:4px;padding:10px 12px;background:var(--panel-2)}
+.origin p{margin:4px 0 0;font-size:14px;color:var(--fg)}

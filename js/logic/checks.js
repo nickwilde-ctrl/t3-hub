@@ -8,6 +8,7 @@ export const MAX_KM_BETWEEN = 900; // mehr als eine Tankfüllung beim T3
 export const PRICE_DEVIATION = 0.2; // 20 % Abweichung vom Schnitt der letzten Tankungen
 export const CONS_MIN = 6;
 export const CONS_MAX = 30;
+export const TANK_STRONG = 1.1; // ab 10 % über dem Tankinhalt deutliche Warnung
 
 const byDateKm = (a, b) => a.date.localeCompare(b.date) || a.km - b.km;
 
@@ -38,8 +39,11 @@ export function fuelWarnings(entry, fuels, { tankLiters = DEFAULT_TANK_LITERS, t
     add('km-gap', `Seit der letzten Tankung sind es ${de(entry.km - prev.km)} km – mehr als eine Tankfüllung. Fehlt eine Tankung?`);
   }
 
-  if (entry.liters > tankLiters * 1.1) {
-    add('liters', `${de(entry.liters, 1)} Liter sind mehr, als in den Tank passen (${de(tankLiters)} l).`);
+  // Zweistufig: knapp über dem Tankinhalt nur ein Hinweis, deutlich darüber eine klare Warnung.
+  if (entry.liters > tankLiters * TANK_STRONG) {
+    add('liters', `${de(entry.liters, 1)} Liter sind deutlich mehr, als in deinen Tank passen (${de(tankLiters)} l laut Fahrzeugakte). Tippfehler?`);
+  } else if (entry.liters > tankLiters) {
+    add('liters-over', `Du hast ${de(entry.liters, 1)} l eingetragen, dein Tank fasst laut Fahrzeugakte ${de(tankLiters)} l. Bitte kurz prüfen.`);
   }
 
   const recent = before.slice(-5);

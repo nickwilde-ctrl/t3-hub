@@ -68,13 +68,16 @@ test('Version 3: unveränderte Filter-Intervalle werden auf 30.000 km gehoben, e
   assert.ok(ch.some((c) => c.key === 'timing' && c.intervalKm === 30000), 'Zündzeitpunkt kommt dazu');
 });
 
-test('Öl-Hinweis wird auf den Text mit Intervall-Erklärung gehoben', async () => {
-  const { upgradeServices } = await import('../js/logic/services.js');
-  const s = { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00).' };
+test('Öl-Hinweis: Intervall-Erklärung steht seit 0.46 im Herkunfts-Kasten, Hinweis wird gekürzt', async () => {
+  const { upgradeServices, OLD_HINTS } = await import('../js/logic/services.js');
+  const long = OLD_HINTS.oil[1];
+  const s = { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: long };
   const up = upgradeServices([s], 'wbx21').find((x) => x.key === 'oil');
   assert.ok(up, 'Ölwechsel wird aktualisiert');
-  assert.match(up.hint, /15\.000 km/);
-  assert.match(up.hint, /GoWesty/);
+  assert.doesNotMatch(up.hint, /GoWesty/);
+  assert.match(up.hint, /4,5 l/);
+  // gekürzter Hinweis bleibt danach stabil
+  assert.ok(!upgradeServices([{ ...s, hint: up.hint }], 'wbx21').some((x) => x.key === 'oil'));
 });
 
 test('Sicherheits-Prüfpunkte: ergänzt bei alten Daten, Kühlrohre nicht beim Luftgekühlten', async () => {
@@ -86,4 +89,23 @@ test('Sicherheits-Prüfpunkte: ergänzt bei alten Daten, Kühlrohre nicht beim L
   assert.deepEqual(added, safety);
   assert.ok(!servicesFor('luft').some((d) => d.key === 'coolantpipes'));
   assert.ok(isSafety({ key: 'steering' }) && !isSafety({ key: 'oil' }));
+});
+
+test('Herkunft der Intervalle: Wartungsplan, Empfehlung, gesetzlich, eigenes', async () => {
+  const { servicesFor, intervalOrigin, intervalText, ALL_SERVICES, ORIGIN } = await import('../js/logic/services.js');
+  const def = (k, fam = 'wbx21') => ({ ...servicesFor(fam).find((d) => d.key === k) });
+  assert.equal(intervalOrigin(def('airfilter'), 'wbx21').kind, 'plan');
+  const oil = intervalOrigin(def('oil'), 'wbx21');
+  assert.equal(oil.kind, 'empfehlung');
+  assert.match(oil.werk, /15\.000/);
+  assert.equal(intervalOrigin(def('oil', 'diesel'), 'diesel').kind, 'plan');
+  assert.equal(intervalOrigin(def('hu'), 'wbx21').kind, 'gesetz');
+  assert.equal(intervalOrigin(def('plugs'), 'wbx21').werk, null); // noch nicht geprüft
+  const changed = intervalOrigin({ ...def('oil'), intervalKm: 7500 }, 'wbx21');
+  assert.equal(changed.kind, 'eigen');
+  assert.match(changed.basis, /5\.500 km/);
+  assert.equal(intervalOrigin({ key: 'custom-x', intervalKm: 1000 }, 'wbx21').kind, 'eigen');
+  // jeder Standardpunkt hat eine Herkunft
+  for (const d of ALL_SERVICES) assert.ok(ORIGIN[d.key], d.key);
+  assert.equal(intervalText({ intervalKm: 5500, intervalMonths: 12 }), 'alle 5.500 km oder alle 12 Monate');
 });

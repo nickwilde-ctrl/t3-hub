@@ -135,14 +135,14 @@ export const GUIDES = [
       'Eine zweite Person (hält die Drehzahl)',
     ],
     material: [
-      'Kühlkonzentrat, 7 l – G11 (grün, TL-VW 774 C) oder G12 (rot, TL-VW 774 D), niemals mischen',
+      'Kühlkonzentrat, 7 l – G11 (VW TL 774 C) oder G12 (VW TL 774 D), niemals mischen; Norm auf dem Kanister prüfen',
       'Destilliertes Wasser, ca. 10,5 l',
     ],
     values: [
       { k: 'Füllmenge', v: '17,5 l (mit Zusatzheizer hinten mehr)', check: true },
       { k: 'Mischung bis −25 °C', v: '7,0 l Konzentrat + 10,5 l Wasser', check: true },
       { k: 'Mischung bis −35 °C', v: '8,75 l Konzentrat + 8,75 l Wasser', check: true },
-      { k: 'Sorte', v: 'G11 (grün) oder G12 (rot) – nie mischen. Braunes Kühlmittel (gemischt) sofort wechseln. Umstellen von G11 auf G12 nur nach vollständigem Spülen.', check: true },
+      { k: 'Sorte', v: 'G11 nach VW TL 774 C oder G12 nach VW TL 774 D – nie mischen. Maßgeblich ist die Norm auf dem Kanister, nicht die Farbe (G11 meist grün, G12 meist rot). Braunes Kühlmittel (gemischt) sofort wechseln. Umstellen von G11 auf G12 nur nach vollständigem Spülen.', check: true },
       { k: 'Wasser', v: 'destilliert (laut „Jetzt helfe ich mir selbst“)', check: true },
       { k: 'Entlüftungsschraube', v: 'rechts oben am Kühler, SW 13, ca. 2 Umdrehungen öffnen', check: false, src: 'T3-Pedia' },
       { k: 'Drehzahl beim Entlüften', v: 'ca. 2500 U/min halten', check: false, src: 'T3-Pedia' },

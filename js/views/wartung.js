@@ -1,6 +1,6 @@
 // Reiter „Wartung“: Intervalle mit Ampel, Serviceheft, Formulare.
 import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
-import { serviceStatus, isSafety } from '../logic/services.js';
+import { serviceStatus, isSafety, intervalText, intervalOrigin } from '../logic/services.js';
 import { parseNumber } from '../logic/fuel.js';
 import { GUIDES } from '../data/guides.js';
 import { guideForService } from '../logic/guides.js';
@@ -9,14 +9,15 @@ import { attachEditor, wireAttachments, attachmentSummary } from './attachments.
 import { statusText, pill } from './home.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
 
-export const CATEGORIES = ['Wartung', 'Reparatur', 'Ausbau', 'Sonstiges'];
+/** Kasten „Woher kommt das Intervall?“ im Wartungspunkt. */
+function originBox(o, s) {
+  let werk = '';
+  if (o.werk) werk = ` Wartungsplan ab Werk: ${esc(o.werk)}.`;
+  else if (o.werk === null) werk = ' Das Werksintervall ist in T3 Hub noch nicht mit dem Handbuch geprüft.';
+  return `<div class="origin"><div class="label">Intervall · ${esc(o.label)}</div><p>${esc(intervalText(s).replace(/^./, (c) => c.toUpperCase()))}. ${esc(o.basis)}${werk}</p></div>`;
+}
 
-const intervalText = (s) => {
-  const p = [];
-  if (s.intervalKm) p.push('alle ' + de(s.intervalKm) + ' km');
-  if (s.intervalMonths) p.push(s.intervalMonths % 12 === 0 ? `alle ${s.intervalMonths / 12 === 1 ? '12 Monate' : s.intervalMonths / 12 + ' Jahre'}` : `alle ${s.intervalMonths} Monate`);
-  return p.join(' oder ') || 'ohne Intervall';
-};
+export const CATEGORIES = ['Wartung', 'Reparatur', 'Ausbau', 'Sonstiges'];
 
 /** Umschalter oben im Reiter Wartung. */
 /** Unterreiter. „Elektrik“ erscheint nur, wenn auf diesem Gerät eigene Plandaten geladen sind. */
@@ -25,20 +26,20 @@ export const wartungTabs = (sub, elektrik = false) => `<div class="seg sub wsub$
     <button type="button" data-wsub="anleitungen" aria-pressed="${sub === 'anleitungen'}">Anleitungen</button>${elektrik ? `
     <button type="button" data-wsub="elektrik" aria-pressed="${sub === 'elektrik'}">Elektrik</button>` : ''}</div>`;
 
-export function wartungView(services, log, km) {
+export function wartungView(services, log, km, family = null) {
   const rows = services.map((s) => {
     const st = serviceStatus(s, km);
     const last = s.lastDate || s.lastKm != null ? `Zuletzt ${s.lastDate ? fmtDate(s.lastDate) : ''}${s.lastKm != null ? ' bei ' + de(s.lastKm) + ' km' : ''}` : '';
     return `<button type="button" class="row row-btn" data-edit-service="${s.id}">
       <div class="t">${esc(s.name)}${isSafety(s) ? '<span class="tag">Sicherheit</span>' : ''}</div>
-      <div class="s">${statusText(st)}<br><span class="faint">${intervalText(s)}${last ? ' · ' + last : ''}</span></div>
+      <div class="s">${statusText(st)}<br><span class="faint">${intervalText(s)} · ${esc(intervalOrigin(s, family).label)}${last ? ' · ' + last : ''}</span></div>
       <div class="r">${pill(st.state)}</div></button>`;
   }).join('');
   const entries = [...log].sort((a, b) => b.date.localeCompare(a.date) || (b.km || 0) - (a.km || 0));
   return `
   <section class="sec"><div class="sec-head"><h2>Intervalle</h2><span class="label">Stand ${de(km)} km</span></div>
     <div class="card list">${rows}</div>
-    <div class="sec-foot"><p class="hint" style="margin:0">Antippen, um etwas als erledigt einzutragen oder das Intervall zu ändern. Startwerte aus dem Wartungsplan im Handbuch und den Empfehlungen der T3-Fachwerkstatt GoWesty. Jedes Intervall kannst du ändern.</p>
+    <div class="sec-foot"><p class="hint" style="margin:0">Antippen, um etwas als erledigt einzutragen oder das Intervall zu ändern. Bei jedem Punkt steht, woher das Intervall kommt: „Wartungsplan“ (ab Werk, laut Handbuch), „Empfehlung“ (von T3-Fachleuten, oft strenger als ab Werk) oder „Eigenes Intervall“. Jedes Intervall kannst du ändern.</p>
     <button type="button" class="add" data-action="add-service">+ Wartungspunkt</button></div></section>
   <section class="sec"><div class="sec-head"><h2>Serviceheft</h2><button type="button" class="add" data-action="add-log">+ Eintrag</button></div>
     ${entries.length ? `<div class="card list">${entries.map((l) => `<button type="button" class="row row-btn" data-edit-log="${l.id}">
@@ -50,7 +51,7 @@ export function wartungView(services, log, km) {
 }
 
 /** Wartungspunkt: als erledigt eintragen, Stand setzen oder Intervall ändern. */
-export function serviceSheet(service, raw, { km, saveService, saveLog, removeService, log = [], filesForLog, syncFiles, guides = GUIDES }) {
+export function serviceSheet(service, raw, { km, family = null, saveService, saveLog, removeService, log = [], filesForLog, syncFiles, guides = GUIDES }) {
   // service = mit tatsächlichem letzten Stand (zum Anzeigen), raw = gespeicherter Datensatz (zum Speichern)
   const s = service;
   const custom = !s.key || s.key.startsWith('custom-');
@@ -65,6 +66,7 @@ export function serviceSheet(service, raw, { km, saveService, saveLog, removeSer
     submitLabel: 'Speichern',
     body: `
       ${s.hint ? `<p class="hint" style="margin:0">${esc(s.hint)}</p>` : ''}
+      ${originBox(intervalOrigin(s, family), s)}
       ${guide ? `<button type="button" class="add guide-link" data-open-guide="${esc(guide.id)}">Anleitung öffnen: ${esc(guide.title)}</button>` : ''}
       <div class="seg" role="group" aria-label="Was möchtest du tun?">
         <button type="button" data-mode="done" aria-pressed="true">Erledigt eintragen</button>

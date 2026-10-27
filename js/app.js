@@ -27,7 +27,7 @@ import { startCard, bulkDoneSheet } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.45';
+const APP_VERSION = '0.46';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -53,7 +53,7 @@ const VIEWS = {
   wartung: () => {
     if (wsub === 'elektrik' && !state.wiring) wsub = 'intervalle';
     return wartungTabs(wsub, !!state.wiring) + (wsub === 'anleitungen' ? guidesView(allGuides(), state.vehicle.engineFamily, state.vehicle.engineCode)
-      : wsub === 'elektrik' ? elektrikView(state.wiring) : wartungView(services(), state.log, currentKm()));
+      : wsub === 'elektrik' ? elektrikView(state.wiring) : wartungView(services(), state.log, currentKm(), state.vehicle?.engineFamily || null));
   },
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
@@ -134,6 +134,7 @@ document.addEventListener('click', (e) => {
   }
   const wOps = {
     km: currentKm(),
+    family: state.vehicle?.engineFamily || null,
     services: services(),
     saveService: (x) => saveItem('services', x),
     removeService: (id) => deleteItem('services', id),
