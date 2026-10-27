@@ -553,7 +553,7 @@ body.in-setup{overflow:hidden}
 .due-row{grid-template-columns:1fr auto}
 .due-row .r{font-size:14px;color:var(--muted);white-space:nowrap}
 .due-row .r.due-soon{color:var(--warn)}.due-row .r.due-over{color:var(--bad)}
-.sec.links{display:grid;gap:2px}
+.links{display:grid;gap:2px}
 .link-row{display:flex;justify-content:space-between;align-items:center;min-height:46px;background:none;border:0;border-bottom:1px solid var(--hair);color:var(--amber);font:600 16px var(--f-body);text-align:left;padding:0 2px;cursor:pointer}
 .link-row.quiet{color:var(--muted);font-weight:500;font-size:15px}
 .link-row.quiet .go{color:var(--amber);font-weight:600}

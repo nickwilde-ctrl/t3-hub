@@ -142,3 +142,32 @@ test('Fällig-Seite: Kurztext, Gruppen und nächste Fälligkeit', async () => {
   assert.equal(nextDueText(hu, { km: null, date: '2025-12-31' }), 'bis 12.2027');
   assert.equal(planGroups([], 0, today).next, null);
 });
+
+test('Startseite: nur fällige Punkte, sonst der nächste', async () => {
+  const { homeDue } = await import('../js/logic/services.js');
+  const today = new Date('2026-10-27T12:00:00');
+  const oil = { id: 'a', key: 'oil', intervalKm: 5500, intervalMonths: 12, lastKm: 140230, lastDate: '2026-08-26' };
+  const cool = { id: 'b', key: 'coolant', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-12-05' };
+  const hu = { id: 'c', key: 'hu', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2025-12-31' };
+  const plugs = { id: 'd', key: 'plugs', intervalKm: 30000, intervalMonths: null, lastKm: null, lastDate: null };
+  const brake = { id: 'e', key: 'brakefluid', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-01-01' };
+  // Bremsflüssigkeit überfällig, Kühlmittel bald; Öl und HU sind OK und gehören nicht dazu
+  const h = homeDue([oil, cool, hu, plugs, brake], 142380, today);
+  assert.deepEqual(h.due.map((x) => x.s.key), ['brakefluid', 'coolant']);
+  assert.equal(h.next, null);
+  assert.equal(h.moreDue, 0);
+  assert.equal(h.unknown, 1);
+  // nichts fällig → nur der nächste Punkt
+  const calm = homeDue([oil, hu, plugs], 142380, today);
+  assert.deepEqual(calm.due, []);
+  assert.equal(calm.next.s.key, 'oil');
+  // mehr als drei fällig → drei zeigen, Rest zählen
+  const late = (key) => ({ id: key, key, intervalKm: null, intervalMonths: 12, lastKm: null, lastDate: '2024-01-01' });
+  const many = homeDue(['a', 'b', 'c', 'd', 'e'].map(late), 0, today);
+  assert.equal(many.due.length, 3);
+  assert.equal(many.moreDue, 2);
+  // gar nichts eingetragen
+  const none = homeDue([plugs], 0, today);
+  assert.equal(none.next, null);
+  assert.equal(none.unknown, 1);
+});

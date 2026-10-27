@@ -231,6 +231,20 @@ export function planGroups(services, km, today = new Date()) {
   };
 }
 
+/**
+ * Startseite „Als Nächstes fällig“: nur überfällige und bald fällige Punkte (höchstens 3).
+ * Ist nichts dran, kommt stattdessen der eine nächste Punkt (next). unknown = Anzahl ohne Datum.
+ */
+export function homeDue(services, km, today = new Date()) {
+  const g = planGroups(services, km, today);
+  return {
+    due: g.urgent.slice(0, 3),
+    moreDue: Math.max(0, g.urgent.length - 3),
+    next: g.urgent.length ? null : g.next,
+    unknown: g.unknown.length,
+  };
+}
+
 /** Wann ist der Punkt nach einem Eintrag wieder fällig? z. B. „bei 145.730 km oder bis 08.2027“. */
 export function nextDueText(service, entry) {
   if (!service || !entry) return '';
