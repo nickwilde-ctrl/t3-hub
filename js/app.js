@@ -7,6 +7,8 @@ import { cockpit } from './views/cockpit.js';
 import { homeView } from './views/home.js';
 import { vehicleCard, editVehicleSheet, photoFrameSheet, modsCard, modSheet, specsCard } from './views/vehicle.js';
 import { toast, closeSheet, openSheet } from './views/sheet.js';
+import { initLayers, popHandled } from './nav.js';
+import { normalizeNav, sameNav, navFromHash } from './logic/nav.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
 import { faelligView, alleView, eintraegeView, wartungTabs, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
@@ -27,7 +29,7 @@ import { startCard, bulkDoneSheet } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.51';
+const APP_VERSION = '0.52';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -43,11 +45,19 @@ const allGuides = () => mergeGuides(GUIDES, state.guides);
 
 const currentTour = () => state.tours.find((x) => x.id === getOpenTour());
 
-let tab = (location.hash || '#home').slice(1);
-if (!TABS.some(([id]) => id === tab)) tab = 'home';
+const TAB_IDS = TABS.map(([id]) => id);
+let tab = navFromHash(location.hash, TAB_IDS).tab;
 
 let wsub = 'intervalle';
 let msub = '';
+
+/** Wo wir gerade sind – das merkt sich der Browser-Verlauf, damit „Zurück“ in der App bleibt. */
+const navState = () => ({ tab, wsub, msub, tour: tab === 'touren' ? getOpenTour() : null });
+/** Neue Seite im Verlauf anlegen (nur wenn wir wirklich woanders sind). */
+const pushNav = () => {
+  if (sameNav(navState(), history.state, TAB_IDS)) return;
+  history.pushState(navState(), '', '#' + tab);
+};
 
 /** Eintrag „Elektrik“ unter Mehr – nur sichtbar, wenn auf diesem Gerät eigene Plandaten geladen sind. */
 const elektrikCard = (w) => (w ? `<section class="sec"><button type="button" class="card link-card" data-msub="elektrik"><span><b>Elektrik</b><br><span class="faint">Fehlersuche, Kabel und Stromkarte · nur auf diesem Gerät</span></span><span aria-hidden="true">›</span></button></section>` : '');
@@ -158,9 +168,9 @@ document.addEventListener('click', (e) => {
     return;
   }
   const wsubBtn = e.target.closest('[data-wsub]');
-  if (wsubBtn) { wsub = wsubBtn.dataset.wsub; render(); window.scrollTo(0, 0); return; }
+  if (wsubBtn) { wsub = wsubBtn.dataset.wsub; pushNav(); render(); window.scrollTo(0, 0); return; }
   const msubBtn = e.target.closest('[data-msub]');
-  if (msubBtn) { msub = msubBtn.dataset.msub; render(); window.scrollTo(0, 0); return; }
+  if (msubBtn) { msub = msubBtn.dataset.msub; pushNav(); render(); window.scrollTo(0, 0); return; }
   const elPart = e.target.closest('[data-el-part]');
   if (elPart) { setElPart(elPart.dataset.elPart); render(); return; }
   const elChip = e.target.closest('[data-el-chip]');
@@ -234,12 +244,12 @@ document.addEventListener('click', (e) => {
   if (openTour) {
     setOpenTour(openTour.dataset.openTour);
     tab = 'touren';
-    history.replaceState(null, '', '#touren');
+    pushNav();
     render();
     window.scrollTo(0, 0);
     return;
   }
-  if (action && action.dataset.action === 'close-tour') { setOpenTour(null); render(); window.scrollTo(0, 0); return; }
+  if (action && action.dataset.action === 'close-tour') { setOpenTour(null); pushNav(); render(); window.scrollTo(0, 0); return; }
   if (action && action.dataset.action === 'add-expense') { expenseSheet(currentTour(), null, tOps.saveTour); return; }
   if (action && action.dataset.action === 'add-journal') { journalSheet(currentTour(), null, tOps.saveTour); return; }
   if (action && action.dataset.action === 'add-stop') {
@@ -273,7 +283,7 @@ document.addEventListener('click', (e) => {
   if (b.dataset.tab === 'touren' && b.closest('nav')) setOpenTour(null);
   tab = b.dataset.tab;
   if (b.closest('nav')) { msub = ''; if (wsub === 'alle') wsub = 'intervalle'; }
-  history.replaceState(null, '', '#' + tab);
+  pushNav();
   render();
   window.scrollTo(0, 0);
 });
@@ -300,6 +310,18 @@ document.addEventListener('change', async (e) => {
 });
 
 onChange(render);
+
+// Zurück-Taste bleibt in der App: Seite aus dem Verlauf wiederherstellen, Formulare und Vollbild-Fenster schließen.
+history.replaceState(navState(), '', '#' + tab);
+initLayers(closeSheet);
+window.addEventListener('popstate', (e) => {
+  if (popHandled()) return;
+  const n = normalizeNav(e.state || navFromHash(location.hash, TAB_IDS), TAB_IDS);
+  tab = n.tab; wsub = n.wsub; msub = n.msub; setOpenTour(n.tour);
+  if (!state.vehicle) return;
+  render();
+  window.scrollTo(0, 0);
+});
 
 (async () => {
   try {
