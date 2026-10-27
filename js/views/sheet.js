@@ -56,11 +56,26 @@ export function openSheet({ title, body, submitLabel = 'Speichern', onSubmit, on
   root.querySelector('#sheet-cancel').onclick = closeSheet;
   // sticky: lange Formulare schließen nicht beim Tippen daneben (sonst ist alles Geschriebene weg)
   if (!sticky) root.querySelector('#scrim').addEventListener('click', (e) => { if (e.target.id === 'scrim') closeSheet(); });
+  // Doppeltipp: während des Speicherns zählt kein weiterer Tipp, und ein Hinweis
+  // lässt sich nicht im selben Atemzug mit „Trotzdem speichern“ wegtippen.
+  let busy = false;
+  let warnedAt = 0;
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const res = await onSubmit(form, { confirmed });
+    if (busy) return;
+    if (confirmed && Date.now() - warnedAt < 700) return;
+    busy = true;
+    submitBtn.disabled = true;
+    let res;
+    try {
+      res = await onSubmit(form, { confirmed });
+    } finally {
+      busy = false;
+      submitBtn.disabled = false;
+    }
     if (res && Array.isArray(res.warnings) && res.warnings.length) {
       confirmed = true;
+      warnedAt = Date.now();
       errEl.className = 'err warn';
       errEl.innerHTML = `<b>Bitte kurz prüfen:</b><ul>${res.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>Passt alles? Dann nochmal tippen.`;
       submitBtn.textContent = 'Trotzdem speichern';

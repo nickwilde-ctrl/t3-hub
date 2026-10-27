@@ -27,7 +27,7 @@ import { startCard, bulkDoneSheet } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.48.1';
+const APP_VERSION = '0.48.2';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
