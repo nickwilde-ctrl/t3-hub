@@ -1,6 +1,6 @@
-// Reiter „Wartung“: Intervalle mit Ampel, Serviceheft, Formulare.
+// Reiter „Serviceheft“ (intern: wartung): Fällig, Alle Wartungspunkte, Einträge, Formulare.
 import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
-import { serviceStatus, isSafety, intervalText, intervalOrigin } from '../logic/services.js';
+import { serviceStatus, isSafety, intervalText, intervalOrigin, dueShort, planGroups, nextDueText } from '../logic/services.js';
 import { parseNumber } from '../logic/fuel.js';
 import { GUIDES } from '../data/guides.js';
 import { guideForService } from '../logic/guides.js';
@@ -19,38 +19,80 @@ function originBox(o, s) {
 
 export const CATEGORIES = ['Wartung', 'Reparatur', 'Ausbau', 'Sonstiges'];
 
-/** Umschalter oben im Reiter Wartung. */
-/** Unterreiter. „Elektrik“ erscheint nur, wenn auf diesem Gerät eigene Plandaten geladen sind. */
-export const wartungTabs = (sub, elektrik = false) => `<div class="seg sub wsub${elektrik ? ' three' : ''}" role="tablist">
-    <button type="button" data-wsub="intervalle" aria-pressed="${sub !== 'anleitungen' && sub !== 'elektrik'}">Wartung</button>
-    <button type="button" data-wsub="anleitungen" aria-pressed="${sub === 'anleitungen'}">Anleitungen</button>${elektrik ? `
-    <button type="button" data-wsub="elektrik" aria-pressed="${sub === 'elektrik'}">Elektrik</button>` : ''}</div>`;
+/** Umschalter oben im Serviceheft. */
+export const wartungTabs = (sub) => `<h1 class="page-title">Serviceheft</h1>
+  <div class="seg sub wsub three" role="tablist">
+    <button type="button" data-wsub="intervalle" aria-pressed="${sub === 'intervalle' || sub === 'alle'}">Fällig</button>
+    <button type="button" data-wsub="eintraege" aria-pressed="${sub === 'eintraege'}">Einträge</button>
+    <button type="button" data-wsub="anleitungen" aria-pressed="${sub === 'anleitungen'}">Anleitungen</button></div>`;
 
-export function wartungView(services, log, km, family = null) {
-  const rows = services.map((s) => {
-    const st = serviceStatus(s, km);
-    const last = s.lastDate || s.lastKm != null ? `Zuletzt ${s.lastDate ? fmtDate(s.lastDate) : ''}${s.lastKm != null ? ' bei ' + de(s.lastKm) + ' km' : ''}` : '';
-    return `<button type="button" class="row row-btn" data-edit-service="${s.id}">
-      <div class="t">${esc(s.name)}${isSafety(s) ? '<span class="tag">Sicherheit</span>' : ''}</div>
-      <div class="s">${statusText(st)}<br><span class="faint">${intervalText(s)} · ${esc(intervalOrigin(s, family).label)}${last ? ' · ' + last : ''}</span></div>
-      <div class="r">${pill(st.state)}</div></button>`;
-  }).join('');
-  const entries = [...log].sort((a, b) => b.date.localeCompare(a.date) || (b.km || 0) - (a.km || 0));
-  return `
-  <section class="sec"><div class="sec-head"><h2>Intervalle</h2><span class="label">Stand ${de(km)} km</span></div>
-    <div class="card list">${rows}</div>
-    <div class="sec-foot"><p class="hint" style="margin:0">Antippen, um etwas als erledigt einzutragen oder das Intervall zu ändern. Bei jedem Punkt steht, woher das Intervall kommt: „Wartungsplan“ (ab Werk, laut Handbuch), „Empfehlung“ (von T3-Fachleuten, oft strenger als ab Werk) oder „Eigenes Intervall“. Jedes Intervall kannst du ändern.</p>
-    <button type="button" class="add" data-action="add-service">+ Wartungspunkt</button></div></section>
-  <section class="sec"><div class="sec-head"><h2>Serviceheft</h2><button type="button" class="add" data-action="add-log">+ Eintrag</button></div>
-    ${entries.length ? `<div class="card list">${entries.map((l) => `<button type="button" class="row row-btn" data-edit-log="${l.id}">
-      <div class="t">${esc(l.title)}<span class="tag">${esc(l.category)}</span></div>
-      <div class="s">${fmtDate(l.date)}${l.km != null ? ' · ' + de(l.km) + ' km' : ''}${l.parts?.length ? ' · ' + (l.parts.length === 1 ? '1 Teil' : l.parts.length + ' Teile') : ''}${l.attachments?.length ? ' · 📎 ' + attachmentSummary(l.attachments) : ''}${l.note ? ' · ' + esc(l.note) : ''}</div>
-      <div class="r num big">${l.cost ? eurExact(l.cost) : ''}</div></button>`).join('')}</div>`
-      : '<div class="card soon-card"><h3>Noch keine Einträge</h3><p>Hier landen Wartungen, Reparaturen und Ausbauten mit Datum, Kilometerstand und Kosten.</p></div>'}
+const DUE_CLS = { over: 'over', soon: 'soon', ok: 'ok' };
+const dueRow = ({ s, st }) => `<button type="button" class="row row-btn due-row" data-edit-service="${s.id}">
+  <div class="t">${esc(s.name)}</div><div class="r due-${DUE_CLS[st.state] || 'ok'}">${esc(dueShort(st))}</div></button>`;
+
+/** Seite „Fällig“: der dringendste Punkt groß, die nächsten drei, Rest einen Tipp entfernt. */
+export function faelligView(services, km) {
+  const g = planGroups(services, km);
+  const n = g.next;
+  const label = !n ? '' : n.st.state === 'over' ? 'Jetzt dran · überfällig' : n.st.state === 'soon' ? 'Jetzt dran' : 'Als Nächstes';
+  const hero = n ? `<section class="sec"><div class="card next-card next-${DUE_CLS[n.st.state]}">
+      <div class="label">${label}</div>
+      <h2>${esc(n.s.name)}</h2>
+      <div class="next-due">${esc(n.st.state === 'over' ? statusText(n.st) : dueShort(n.st))}</div>
+      <button type="button" class="btn" data-edit-service="${n.s.id}">Erledigt eintragen</button></div></section>`
+    : `<section class="sec"><div class="card next-card"><div class="label">Als Nächstes</div><h2>Noch nichts eingetragen</h2><p class="hint" style="margin:0">Trag ein, wann zuletzt Ölwechsel, HU und Co. gemacht wurden – dann zeigt die App hier, was als Nächstes dran ist.</p></div></section>`;
+  const more = g.urgent.length > 1 ? `<p class="hint urgent-hint">Außerdem jetzt dran: ${g.urgent.slice(1).map((x) => esc(x.s.name)).join(', ')}</p>` : '';
+  return `${hero}${more}
+  <button type="button" class="btn wide" data-action="service-done">+ Service eintragen</button>
+  ${g.then.length ? `<section class="sec"><div class="sec-head"><h2 class="muted-h">Danach</h2></div><div class="card list">${g.then.map(dueRow).join('')}</div></section>` : ''}
+  <section class="sec links">
+    <button type="button" class="link-row" data-wsub="alle"><span>Alle ${g.total} Wartungspunkte</span><span aria-hidden="true">›</span></button>
+    ${g.unknown.length ? `<button type="button" class="link-row quiet" data-action="bulk-done"><span>${g.unknown.length === 1 ? '1 Punkt hat' : g.unknown.length + ' Punkte haben'} noch kein Datum</span><span class="go">Eintragen ›</span></button>` : ''}
   </section>`;
 }
 
-/** Wartungspunkt: als erledigt eintragen, Stand setzen oder Intervall ändern. */
+/** Alle Wartungspunkte („Was gehört zum Service meines T3?“). Details erst beim Antippen. */
+export function alleView(services, km, family = null) {
+  const rows = services.map((s) => {
+    const st = serviceStatus(s, km);
+    return `<button type="button" class="row row-btn" data-edit-service="${s.id}">
+      <div class="t">${esc(s.name)}${isSafety(s) ? '<span class="tag">Sicherheit</span>' : ''}</div>
+      <div class="s">${esc(dueShort(st).replace(/^./, (c) => c.toUpperCase()))}<br><span class="faint">${intervalText(s)} · ${esc(intervalOrigin(s, family).label)}</span></div>
+      <div class="r">${pill(st.state)}</div></button>`;
+  }).join('');
+  return `<section class="sec"><button type="button" class="back-link" data-wsub="intervalle">‹ Zurück</button>
+    <div class="sec-head"><h2>Alle Wartungspunkte</h2><span class="label">Stand ${de(km)} km</span></div>
+    <div class="card list">${rows}</div>
+    <div class="sec-foot"><p class="hint" style="margin:0">Antippen für Details, Herkunft des Intervalls und zum Eintragen.</p>
+    <button type="button" class="add" data-action="add-service">+ Wartungspunkt</button></div></section>`;
+}
+
+/** Einträge im Serviceheft, nach Jahr gruppiert mit Summe. */
+export function eintraegeView(log) {
+  const entries = [...log].sort((a, b) => b.date.localeCompare(a.date) || (b.km || 0) - (a.km || 0));
+  const add = '<button type="button" class="btn wide" data-action="add-log">+ Neuer Eintrag</button>';
+  if (!entries.length) return `${add}<section class="sec"><div class="card soon-card"><h3>Noch keine Einträge</h3><p>Hier landen Wartungen, Reparaturen und Ausbauten mit Datum, Kilometerstand und Kosten.</p></div></section>`;
+  const years = [];
+  for (const l of entries) {
+    const y = l.date.slice(0, 4);
+    if (!years.length || years[years.length - 1].y !== y) years.push({ y, items: [] });
+    years[years.length - 1].items.push(l);
+  }
+  return add + years.map(({ y, items }) => {
+    const sum = items.reduce((a, l) => a + (l.cost || 0), 0);
+    return `<section class="sec"><div class="sec-head"><h2>${y}</h2><span class="label">${sum ? eur(sum) + ' · ' : ''}${items.length === 1 ? '1 Eintrag' : items.length + ' Einträge'}</span></div>
+    <div class="card list">${items.map((l) => `<button type="button" class="row row-btn" data-edit-log="${l.id}">
+      <div class="t">${esc(l.title)}${l.category && l.category !== 'Wartung' ? `<span class="tag">${esc(l.category)}</span>` : ''}</div>
+      <div class="s">${fmtDate(l.date).slice(0, 6)}${l.km != null ? ' · ' + de(l.km) + ' km' : ''}${l.by === 'werkstatt' ? ' · Werkstatt' : l.by === 'selbst' ? ' · selbst' : ''}${l.parts?.length ? ' · ' + (l.parts.length === 1 ? '1 Teil' : l.parts.length + ' Teile') : ''}${l.attachments?.length ? ' · 📎 ' + attachmentSummary(l.attachments) : ''}</div>
+      <div class="r num big">${l.cost ? eurExact(l.cost) : ''}</div></button>`).join('')}</div></section>`;
+  }).join('');
+}
+
+/** Wer hat es gemacht? Zwei Knöpfe statt freier Notiz. */
+export const byField = (by = '') => `<div class="field"><label>Durchgeführt von</label><div class="seg by-seg" role="radiogroup">
+  <label class="by-opt"><input type="radio" name="by" value="selbst" ${by === 'selbst' ? 'checked' : ''}><span>Selbst</span></label>
+  <label class="by-opt"><input type="radio" name="by" value="werkstatt" ${by === 'werkstatt' ? 'checked' : ''}><span>Werkstatt</span></label></div></div>`;
+
 export function serviceSheet(service, raw, { km, family = null, saveService, saveLog, removeService, log = [], filesForLog, syncFiles, guides = GUIDES }) {
   // service = mit tatsächlichem letzten Stand (zum Anzeigen), raw = gespeicherter Datensatz (zum Speichern)
   const s = service;
@@ -78,6 +120,7 @@ export function serviceSheet(service, raw, { km, family = null, saveService, sav
         ${partsEditor([], lastParts)}
         ${attachEditor()}
         <div class="field"><label for="s-cost">Kosten in €</label><input id="s-cost" name="cost" inputmode="decimal" placeholder="leer = Summe der Teile"></div>
+        ${byField()}
         <div class="field"><label for="s-note">Notiz</label><input id="s-note" name="note" placeholder="Werkstatt, Auffälligkeiten …"></div>
         <label class="check"><input type="checkbox" name="onlyState"><span>Nur den Stand merken, kein Eintrag ins Serviceheft<br><span class="faint">Zum Beispiel, wenn du nur ungefähr weißt, wann es zuletzt gemacht wurde.</span></span></label>
       </div>
@@ -125,9 +168,11 @@ export function serviceSheet(service, raw, { km, family = null, saveService, sav
       const parts = readParts();
       const cost = el.cost.value.trim() ? parseNumber(el.cost.value) : partsTotal(parts);
       if (!(cost >= 0)) return 'Die Kosten sind keine gültige Zahl.';
-      const row = await saveLog({ date, km: kmVal != null ? Math.round(kmVal) : null, title: s.name, category: 'Wartung', cost, note: el.note.value.trim(), serviceKey: s.key, parts });
+      const by = form.querySelector('input[name=by]:checked')?.value || null;
+      const row = await saveLog({ date, km: kmVal != null ? Math.round(kmVal) : null, title: s.name, category: 'Wartung', cost, note: el.note.value.trim(), serviceKey: s.key, parts, by });
       if (att && syncFiles && att.ready() && att.added().length) await saveLog({ ...row, attachments: await syncFiles(row.id, att.keep(), att.added()) });
-      toast('Im Serviceheft eingetragen');
+      const next = nextDueText(raw, { km: kmVal != null ? Math.round(kmVal) : null, date });
+      toast(next ? `Eingetragen · nächstes Mal ${next}` : 'Im Serviceheft eingetragen');
     },
   });
 }
@@ -170,8 +215,9 @@ export function logSheet(entry, { km, saveLog, removeLog, services, prefill, fil
       ${partsEditor(e.parts || [])}
       ${attachEditor()}
       <div class="field"><label for="l-cost">Kosten in €</label><input id="l-cost" name="cost" inputmode="decimal" value="${e.cost ? String(e.cost).replace('.', ',') : ''}" placeholder="leer = Summe der Teile"></div>
+      ${byField(e.by || '')}
       <div class="field"><label for="l-note">Notiz</label><input id="l-note" name="note" value="${esc(e.note || '')}" placeholder="Werkstatt, Auffälligkeiten …"></div>
-      ${linked ? `<p class="hint" style="margin:0">Gehört zum Wartungspunkt „${esc(linked.name)}“.</p>` : ''}
+      ${linked ? `<p class="hint" style="margin:0">Gehört zum Wartungspunkt „${esc(linked.name)}“.${nextDueText(linked, e) ? ` Nächstes Mal fällig ${esc(nextDueText(linked, e))}.` : ''}</p>` : ''}
       ${edit ? '<button type="button" class="danger-link" id="l-del">Eintrag löschen</button>' : ''}`,
     onReady(form) {
       readParts = wireParts(form);
@@ -193,7 +239,7 @@ export function logSheet(entry, { km, saveLog, removeLog, services, prefill, fil
       const parts = readParts();
       const cost = el.cost.value.trim() ? parseNumber(el.cost.value) : partsTotal(parts);
       if (!(cost >= 0)) return 'Die Kosten sind keine gültige Zahl.';
-      const row = await saveLog({ ...(entry || {}), title, category: el.category.value, date: el.date.value, km: kmVal != null ? Math.round(kmVal) : null, cost, note: el.note.value.trim(), parts });
+      const row = await saveLog({ ...(entry || {}), title, category: el.category.value, date: el.date.value, km: kmVal != null ? Math.round(kmVal) : null, cost, note: el.note.value.trim(), parts, by: form.querySelector('input[name=by]:checked')?.value || entry?.by || null });
       if (att && syncFiles && att.ready() && (att.added().length || edit)) await saveLog({ ...row, attachments: await syncFiles(row.id, att.keep(), att.added()) });
       toast(edit ? 'Eintrag geändert' : 'Eintrag gespeichert');
     },

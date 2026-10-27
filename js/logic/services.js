@@ -197,3 +197,49 @@ export function withLastDone(s, log) {
   if (e && (!s.lastDate || e.date >= s.lastDate)) return { ...s, lastKm: e.km ?? s.lastKm, lastDate: e.date, lastFromLog: true };
   return { ...s, lastFromLog: false };
 }
+
+/**
+ * Kurzer Fälligkeitstext für Listen, z. B. „in 3.350 km“, „in 39 Tagen“, „bis 08.2027“, „überfällig“.
+ * Genommen wird, was zuerst eintritt (gleiche Gewichtung wie bei rank).
+ */
+export function dueShort(st) {
+  const de = (n) => Number(n).toLocaleString('de-DE');
+  if (st.state === 'unknown') return 'noch nicht eingetragen';
+  if (st.state === 'over') return 'überfällig';
+  const byKm = st.remainingKm != null ? st.remainingKm / 15000 : Infinity;
+  const byDays = st.remainingDays != null ? st.remainingDays / 365 : Infinity;
+  if (byKm <= byDays) return `in ${de(st.remainingKm)} km`;
+  if (st.remainingDays < 60) return `in ${st.remainingDays} ${st.remainingDays === 1 ? 'Tag' : 'Tagen'}`;
+  const d = st.dueDate;
+  return `bis ${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+}
+
+/**
+ * Teilt Wartungspunkte für die Seite „Fällig“ auf:
+ * next = der dringendste Punkt mit Datum, then = die nächsten (höchstens 3), unknown = ohne Datum,
+ * urgent = alle überfälligen und bald fälligen (für den Hinweis „Jetzt dran“).
+ */
+export function planGroups(services, km, today = new Date()) {
+  const all = services.map((s) => ({ s, st: serviceStatus(s, km, today) }));
+  const known = all.filter((x) => x.st.state !== 'unknown').sort((a, b) => a.st.rank - b.st.rank);
+  return {
+    next: known[0] || null,
+    then: known.slice(1, 4),
+    unknown: all.filter((x) => x.st.state === 'unknown'),
+    urgent: known.filter((x) => x.st.state === 'over' || x.st.state === 'soon'),
+    total: all.length,
+  };
+}
+
+/** Wann ist der Punkt nach einem Eintrag wieder fällig? z. B. „bei 145.730 km oder bis 08.2027“. */
+export function nextDueText(service, entry) {
+  if (!service || !entry) return '';
+  const de = (n) => Number(n).toLocaleString('de-DE');
+  const p = [];
+  if (service.intervalKm && entry.km != null) p.push(`bei ${de(entry.km + service.intervalKm)} km`);
+  if (service.intervalMonths && entry.date) {
+    const d = addMonths(entry.date, service.intervalMonths);
+    p.push(`bis ${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`);
+  }
+  return p.join(' oder ');
+}

@@ -1,4 +1,4 @@
-// Reparaturleitfäden: Liste (im Reiter Wartung) und Vollbild-Ansicht mit Werkstatt-Modus.
+// Reparaturleitfäden: Liste (im Reiter Serviceheft) und Vollbild-Ansicht mit Werkstatt-Modus.
 import { esc } from '../format.js';
 import { GUIDES, GUIDE_GROUPS } from '../data/guides.js';
 

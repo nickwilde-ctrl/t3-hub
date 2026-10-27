@@ -140,7 +140,7 @@ export function wiringFromObject(obj, saveWiring) {
     submitLabel: 'Laden',
     body: `<p style="margin:0"><b>${esc(obj.title || 'Plandaten')}</b></p>
       <p class="hint" style="margin:0">${de(check.counts.wires)} Kabel${check.counts.fuses ? ` · ${de(check.counts.fuses)} Sicherungen` : ''}${check.counts.map ? ' · mit Stromkarte' : ''}${obj.createdAt ? ` · erstellt ${fmtDate(String(obj.createdAt).slice(0, 10))}` : ''}</p>
-      <p style="margin:0">Die Plandaten bleiben nur auf diesem Gerät. Danach findest du unter Wartung den Reiter „Elektrik“. Deine übrigen Daten bleiben unverändert.</p>`,
+      <p style="margin:0">Die Plandaten bleiben nur auf diesem Gerät. Danach findest du unter Mehr den Punkt „Elektrik“. Deine übrigen Daten bleiben unverändert.</p>`,
     async onSubmit() {
       await saveWiring(obj);
       toast('Plandaten geladen');

@@ -4,7 +4,8 @@ import { esc, de, todayIso } from '../format.js';
 import { parseNumber } from '../logic/fuel.js';
 import { experienceOf, startSteps, unknownServices } from '../logic/start.js';
 import { openSheet, toast } from './sheet.js';
-import { NOT_IN_SERVICE } from '../logic/services.js';
+import { NOT_IN_SERVICE, serviceStatus } from '../logic/services.js';
+import { byField } from './wartung.js';
 
 const TEXT = {
   km: ['Kilometerstand eintragen', 'Tippe oben im Cockpit auf den Tachostand.', { action: 'set-km', label: 'Eintragen' }],
@@ -23,9 +24,9 @@ export function startCard(vehicle, services, km) {
   if (exp === 'erfahren') {
     return `<section class="sec"><div class="card st-card"><div class="label">Einrichten</div>
       <h3>Trag ein, was du weißt</h3>
-      <p>${open ? `${open} Wartungspunkte haben noch kein Datum.` : 'Alle Wartungspunkte haben ein Datum.'} Einzeln unter Wartung antippen oder alles auf einmal eintragen.${km > 0 ? '' : ' Den Tachostand setzt du oben im Cockpit.'}</p>
-      <p class="hint">Die Intervalle sind Startwerte und unter Wartung änderbar. Alte Tankungen aus Road Trip holst du unter Mehr → Daten.</p>
-      <div class="st-btns">${open ? '<button type="button" class="btn" data-action="bulk-done">Alles auf einmal eintragen</button>' : ''}<button type="button" class="btn ghost" data-tab="wartung">Zur Wartung</button></div>
+      <p>${open ? `${open} Wartungspunkte haben noch kein Datum.` : 'Alle Wartungspunkte haben ein Datum.'} Einzeln im Serviceheft antippen oder alles auf einmal eintragen.${km > 0 ? '' : ' Den Tachostand setzt du oben im Cockpit.'}</p>
+      <p class="hint">Die Intervalle sind Startwerte und im Serviceheft änderbar. Alte Tankungen aus Road Trip holst du unter Mehr → Daten.</p>
+      <div class="st-btns">${open ? '<button type="button" class="btn" data-action="bulk-done">Alles auf einmal eintragen</button>' : ''}<button type="button" class="btn ghost" data-tab="wartung">Zum Serviceheft</button></div>
       ${foot}</div></section>`;
   }
   const done = steps.filter((s) => s.done).length;
@@ -46,21 +47,25 @@ export function startCard(vehicle, services, km) {
  * Mehrere Wartungspunkte auf einmal als erledigt eintragen.
  * raw = gespeicherte Wartungspunkte, shown = mit letztem Stand (für „offen“).
  */
-export function bulkDoneSheet({ raw, shown, km, saveMany, saveLog }) {
+export function bulkDoneSheet({ raw, shown, km, saveMany, saveLog, mode = 'unknown' }) {
+  // mode 'unknown': Einrichten – alles ohne Datum vorab anhaken. mode 'service': „+ Service eintragen“ –
+  // vorab angehakt ist, was überfällig oder bald fällig ist.
   // HU und das Erneuern der Kraftstoffschläuche gehören nicht zu einem Service: nie vorab anhaken.
   const all = new Set(unknownServices(shown, km).map((s) => s.key));
-  const unknown = new Set([...all].filter((k) => !NOT_IN_SERVICE.includes(k)));
-  const note = (s) => (unknown.has(s.key) ? '' : NOT_IN_SERVICE.includes(s.key) && all.has(s.key) ? ' <span class="faint">(gehört nicht zum Service)</span>' : ' <span class="faint">(schon eingetragen)</span>');
+  const pre = mode === 'service' ? new Set(shown.filter((s) => ['over', 'soon'].includes(serviceStatus(s, km).state)).map((s) => s.key)) : all;
+  const unknown = new Set([...pre].filter((k) => !NOT_IN_SERVICE.includes(k)));
+  const note = (s) => (unknown.has(s.key) ? '' : NOT_IN_SERVICE.includes(s.key) && pre.has(s.key) ? ' <span class="faint">(gehört nicht zum Service)</span>' : mode === 'unknown' ? ' <span class="faint">(schon eingetragen)</span>' : '');
   const rows = shown.map((s) => `<label class="check"><input type="checkbox" name="svc" value="${esc(s.id)}" ${unknown.has(s.key) ? 'checked' : ''}><span>${esc(s.name)}${note(s)}</span></label>`).join('');
   openSheet({
-    title: 'Alles auf einmal eintragen',
+    title: mode === 'service' ? 'Service eintragen' : 'Alles auf einmal eintragen',
     submitLabel: 'Eintragen',
     sticky: true,
-    body: `<p class="hint" style="margin:0">Zum Beispiel nach einem Komplettservice: Haken an alles, was gemacht wurde. Nicht Gemachtes bleibt offen.</p>
+    body: `<p class="hint" style="margin:0">${mode === 'service' ? 'Haken an alles, was gemacht wurde. Daraus wird ein Eintrag im Serviceheft.' : 'Zum Beispiel nach einem Komplettservice: Haken an alles, was gemacht wurde. Nicht Gemachtes bleibt offen.'}</p>
       <div class="two"><div class="field"><label for="b-date">Datum</label><input id="b-date" name="date" type="date" value="${todayIso()}" max="${todayIso()}"></div>
       <div class="field"><label for="b-km">Kilometerstand</label><input id="b-km" name="km" inputmode="numeric" value="${km || ''}"></div></div>
       <div class="field"><label>Was wurde gemacht?</label><div class="tour-pick st-pick">${rows}</div></div>
-      <label class="check"><input type="checkbox" name="log" checked><span>Als „Komplettservice“ ins Serviceheft eintragen</span></label>
+      ${byField()}
+      <label class="check"><input type="checkbox" name="log" checked><span>Als ${mode === 'service' ? '„Service“' : '„Komplettservice“'} ins Serviceheft eintragen</span></label>
       <div class="two"><div class="field"><label for="b-cost">Kosten in € (optional)</label><input id="b-cost" name="cost" inputmode="decimal"></div>
       <div class="field"><label for="b-note">Werkstatt / Notiz</label><input id="b-note" name="note" autocomplete="off"></div></div>`,
     async onSubmit(form) {
@@ -76,7 +81,7 @@ export function bulkDoneSheet({ raw, shown, km, saveMany, saveLog }) {
       const chosen = raw.filter((s) => ids.includes(s.id));
       await saveMany('services', chosen.map((s) => ({ ...s, lastDate: date, lastKm: kmVal })));
       if (el.log.checked) {
-        await saveLog({ date, km: kmVal, title: 'Komplettservice', category: 'Wartung', cost,
+        await saveLog({ date, km: kmVal, title: mode === 'service' ? 'Service' : 'Komplettservice', category: 'Wartung', cost, by: form.querySelector('input[name=by]:checked')?.value || null,
           note: [el.note.value.trim(), `Erledigt: ${chosen.map((s) => s.name).join(', ')}`].filter(Boolean).join(' · '), parts: [] });
       }
       toast(`${de(chosen.length)} Punkte eingetragen`);

@@ -119,3 +119,26 @@ test('Zündkerzen: alter Startwert 24.000 km wird auf 30.000 km gehoben, geände
   const own = base.map((d) => (d.key === 'plugs' ? { ...d, intervalKm: 20000 } : d));
   assert.equal(upgradeServices(own, 'wbx21').find((x) => x.key === 'plugs'), undefined);
 });
+
+test('Fällig-Seite: Kurztext, Gruppen und nächste Fälligkeit', async () => {
+  const { dueShort, planGroups, nextDueText, serviceStatus } = await import('../js/logic/services.js');
+  const today = new Date('2026-10-27T12:00:00');
+  const oil = { id: 'a', key: 'oil', intervalKm: 5500, intervalMonths: 12, lastKm: 140230, lastDate: '2026-08-26' };
+  const cool = { id: 'b', key: 'coolant', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-12-05' };
+  const hu = { id: 'c', key: 'hu', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2025-12-31' };
+  const plugs = { id: 'd', key: 'plugs', intervalKm: 30000, intervalMonths: null, lastKm: null, lastDate: null };
+  const brake = { id: 'e', key: 'brakefluid', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-01-01' };
+  assert.equal(dueShort(serviceStatus(oil, 142380, today)), 'in 3.350 km');
+  assert.equal(dueShort(serviceStatus(cool, 142380, today)), 'in 39 Tagen');
+  assert.equal(dueShort(serviceStatus(hu, 142380, today)), 'bis 12.2027');
+  assert.equal(dueShort(serviceStatus(plugs, 142380, today)), 'noch nicht eingetragen');
+  assert.equal(dueShort(serviceStatus(brake, 142380, today)), 'überfällig');
+  const g = planGroups([oil, cool, hu, plugs, brake], 142380, today);
+  assert.equal(g.next.s.key, 'brakefluid');
+  assert.deepEqual(g.then.map((x) => x.s.key), ['coolant', 'oil', 'hu']);
+  assert.deepEqual(g.unknown.map((x) => x.s.key), ['plugs']);
+  assert.equal(g.urgent.length, 2);
+  assert.equal(nextDueText(oil, { km: 140230, date: '2026-08-26' }), 'bei 145.730 km oder bis 08.2027');
+  assert.equal(nextDueText(hu, { km: null, date: '2025-12-31' }), 'bis 12.2027');
+  assert.equal(planGroups([], 0, today).next, null);
+});

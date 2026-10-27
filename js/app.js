@@ -9,7 +9,7 @@ import { vehicleCard, editVehicleSheet, photoFrameSheet, modsCard, modSheet, spe
 import { toast, closeSheet, openSheet } from './views/sheet.js';
 import { readPhoto } from './photo.js';
 import { tankenView, fuelSheet, setSub } from './views/tanken.js';
-import { wartungView, wartungTabs, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
+import { faelligView, alleView, eintraegeView, wartungTabs, serviceSheet, newServiceSheet, logSheet } from './views/wartung.js';
 import { guidesView, filterGuides, setGuideGroup, setGuideFuel, openGuide, forgetProgress } from './views/guides.js';
 import { guideSheet } from './views/guideEditor.js';
 import { GUIDES } from './data/guides.js';
@@ -27,12 +27,12 @@ import { startCard, bulkDoneSheet } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.47.2';
+const APP_VERSION = '0.48';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
   ['home', 'Home', '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'],
-  ['wartung', 'Wartung', '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/>'],
+  ['wartung', 'Serviceheft', '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/>'],
   ['tanken', 'Tanken', '<path d="M5 20V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15M4 20h11M5 10h9M14 8l3 3v6a1.5 1.5 0 0 0 3 0V9l-3-3"/>'],
   ['touren', 'Touren', '<path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/>'],
   ['mehr', 'Mehr', '<circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/>'],
@@ -47,23 +47,26 @@ let tab = (location.hash || '#home').slice(1);
 if (!TABS.some(([id]) => id === tab)) tab = 'home';
 
 let wsub = 'intervalle';
+let msub = '';
+
+/** Eintrag „Elektrik“ unter Mehr – nur sichtbar, wenn auf diesem Gerät eigene Plandaten geladen sind. */
+const elektrikCard = (w) => (w ? `<section class="sec"><button type="button" class="card link-card" data-msub="elektrik"><span><b>Elektrik</b><br><span class="faint">Fehlersuche, Kabel und Stromkarte · nur auf diesem Gerät</span></span><span aria-hidden="true">›</span></button></section>` : '');
 
 const VIEWS = {
   home: () => (showStart(state.vehicle, services(), currentKm()) ? startCard(state.vehicle, services(), currentKm()) : '') + (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
-  wartung: () => {
-    if (wsub === 'elektrik' && !state.wiring) wsub = 'intervalle';
-    return wartungTabs(wsub, !!state.wiring) + (wsub === 'anleitungen' ? guidesView(allGuides(), state.vehicle.engineFamily, state.vehicle.engineCode)
-      : wsub === 'elektrik' ? elektrikView(state.wiring) : wartungView(services(), state.log, currentKm(), state.vehicle?.engineFamily || null));
-  },
+  wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides(), state.vehicle.engineFamily, state.vehicle.engineCode)
+    : wsub === 'eintraege' ? eintraegeView(state.log)
+      : wsub === 'alle' ? alleView(services(), currentKm(), state.vehicle?.engineFamily || null)
+        : faelligView(services(), currentKm())),
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
-  mehr: () => costCard(state, currentKm()) + vehicleCard(state.vehicle) + specsCard(state.vehicle) + modsCard(state.vehicle)
+  mehr: () => (msub === 'elektrik' && state.wiring ? '<button type="button" class="back-link" data-msub="">‹ Zurück zu Mehr</button><h1 class="page-title">Elektrik</h1>' + elektrikView(state.wiring) : costCard(state, currentKm()) + vehicleCard(state.vehicle) + specsCard(state.vehicle) + elektrikCard(state.wiring) + modsCard(state.vehicle)
     + dataCard(state)
     + feedbackCard()
     + installCard()
     + gameCard()
     + aboutCard()
-    + `<p class="foot">T3 Hub · Version ${APP_VERSION} · Deine Daten bleiben auf diesem Gerät.</p>`,
+    + `<p class="foot">T3 Hub · Version ${APP_VERSION} · Deine Daten bleiben auf diesem Gerät.</p>`),
 };
 
 function render() {
@@ -88,6 +91,8 @@ function render() {
     ([id, label, icon]) =>
       `<button type="button" data-tab="${id}" ${tab === id ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg>${label}</button>`,
   ).join('');
+  // Das Cockpit gehört auf die Startseite; im Serviceheft und unter Elektrik zählt der Platz für den Inhalt.
+  document.getElementById('cockpit').hidden = tab === 'wartung' || (tab === 'mehr' && msub === 'elektrik');
   document.getElementById('view').innerHTML = (state.vehicle.demo ? demoBanner() : '') + VIEWS[tab]();
 }
 
@@ -109,6 +114,7 @@ document.addEventListener('click', (e) => {
   if (action && action.dataset.action === 'start-hide') { saveVehicle({ ...state.vehicle, startHidden: true }); toast('Ausgeblendet'); return; }
   if (action && action.dataset.action === 'start-level') { saveVehicle({ ...state.vehicle, experience: state.vehicle.experience === 'erfahren' ? 'neu' : 'erfahren' }); return; }
   if (action && action.dataset.action === 'bulk-done') { bulkDoneSheet({ raw: state.services, shown: services(), km: currentKm(), saveMany, saveLog: (x) => saveItem('log', x) }); return; }
+  if (action && action.dataset.action === 'service-done') { bulkDoneSheet({ raw: state.services, shown: services(), km: currentKm(), saveMany, saveLog: (x) => saveItem('log', x), mode: 'service' }); return; }
   if (action && action.dataset.action === 'add-mod') {
     modSheet(state.vehicle, null, saveVehicle);
     return;
@@ -152,7 +158,9 @@ document.addEventListener('click', (e) => {
     return;
   }
   const wsubBtn = e.target.closest('[data-wsub]');
-  if (wsubBtn) { wsub = wsubBtn.dataset.wsub; render(); return; }
+  if (wsubBtn) { wsub = wsubBtn.dataset.wsub; render(); window.scrollTo(0, 0); return; }
+  const msubBtn = e.target.closest('[data-msub]');
+  if (msubBtn) { msub = msubBtn.dataset.msub; render(); window.scrollTo(0, 0); return; }
   const elPart = e.target.closest('[data-el-part]');
   if (elPart) { setElPart(elPart.dataset.elPart); render(); return; }
   const elChip = e.target.closest('[data-el-chip]');
@@ -264,6 +272,7 @@ document.addEventListener('click', (e) => {
   if (!b) return;
   if (b.dataset.tab === 'touren' && b.closest('nav')) setOpenTour(null);
   tab = b.dataset.tab;
+  if (b.closest('nav')) { msub = ''; if (wsub === 'alle') wsub = 'intervalle'; }
   history.replaceState(null, '', '#' + tab);
   render();
   window.scrollTo(0, 0);
