@@ -134,7 +134,7 @@ export const startWire = (i) => { stack.length = 0; openWire(i); };
 /** Plandaten-Datei laden (kommt über „Backup wiederherstellen“ herein). */
 export function wiringFromObject(obj, saveWiring) {
   const check = checkWiring(obj);
-  if (!check.ok) { toast(check.error); return; }
+  if (!check.ok) { toast(check.error, 'err'); return; }
   openSheet({
     title: 'Plandaten laden?',
     submitLabel: 'Laden',

@@ -45,14 +45,14 @@ export function wireAttachments(form, logId, filesForLog) {
     for (const file of input.files) {
       try {
         if (file.type === 'application/pdf') {
-          if (file.size > MAX_PDF_BYTES) { toast('Die PDF ist größer als 8 MB'); continue; }
+          if (file.size > MAX_PDF_BYTES) { toast('Die PDF ist größer als 8 MB', 'err'); continue; }
           const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
           items.push({ kind, name: file.name, mime: 'application/pdf', data, isNew: true });
         } else {
           const data = await readPhoto(file, kind === 'receipt' ? 2200 : 1600, kind === 'receipt' ? 0.86 : 0.82);
           items.push({ kind, name: file.name || 'Foto', mime: 'image/jpeg', data, isNew: true });
         }
-      } catch { toast('Eine Datei konnte nicht gelesen werden'); }
+      } catch { toast('Eine Datei konnte nicht gelesen werden', 'err'); }
     }
     input.value = '';
     render();

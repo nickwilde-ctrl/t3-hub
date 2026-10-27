@@ -50,7 +50,7 @@ export async function createBackup(exportAll, markBackup, vehicleName) {
       return;
     }
   } catch (err) {
-    if (err && err.name === 'AbortError') { toast('Backup abgebrochen'); return; }
+    if (err && err.name === 'AbortError') { toast('Backup abgebrochen', 'info'); return; }
   }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -66,11 +66,11 @@ export async function createBackup(exportAll, markBackup, vehicleName) {
 
 export async function restoreFromFile(file, restoreAll, saveWiring) {
   let obj;
-  try { obj = JSON.parse(await file.text()); } catch { toast('Die Datei konnte nicht gelesen werden'); return; }
+  try { obj = JSON.parse(await file.text()); } catch { toast('Die Datei konnte nicht gelesen werden', 'err'); return; }
   // Plandaten-Datei: wird zusätzlich geladen, ersetzt nichts
   if (obj && obj.format === WIRING_FORMAT && saveWiring) { wiringFromObject(obj, saveWiring); return; }
   const check = checkBackup(obj);
-  if (!check.ok) { toast(check.error); return; }
+  if (!check.ok) { toast(check.error, 'err'); return; }
   const c = check.counts;
   const v = obj.vehicles[0];
   openSheet({
@@ -88,7 +88,7 @@ export async function restoreFromFile(file, restoreAll, saveWiring) {
 
 export async function roadTripFromFile(file, importRoadTrip) {
   let parsed;
-  try { parsed = fromRoadTrip(await file.text()); } catch (err) { toast(err.message || 'Die Datei konnte nicht gelesen werden'); return; }
+  try { parsed = fromRoadTrip(await file.text()); } catch (err) { toast(err.message || 'Die Datei konnte nicht gelesen werden', 'err'); return; }
   const tourList = parsed.tours.map((t) => `<label class="check"><input type="checkbox" name="tour" value="${esc(t.ref)}" checked><span>${esc(t.name)}<br><span class="faint">${fmtDate(t.from)} – ${fmtDate(t.to)} · ${de(t.endKm - t.startKm)} km</span></span></label>`).join('');
   openSheet({
     title: 'Aus Road Trip übernehmen',

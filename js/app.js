@@ -27,7 +27,7 @@ import { startCard, bulkDoneSheet } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.49';
+const APP_VERSION = '0.50';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -111,7 +111,7 @@ document.addEventListener('click', (e) => {
   }
   if (action && action.dataset.action === 'open-game') { openGame(); return; }
   if (action && action.dataset.action === 'set-km') { kmSheet(currentKm(), setKmNow); return; }
-  if (action && action.dataset.action === 'start-hide') { saveVehicle({ ...state.vehicle, startHidden: true }); toast('Ausgeblendet'); return; }
+  if (action && action.dataset.action === 'start-hide') { saveVehicle({ ...state.vehicle, startHidden: true }); toast('Ausgeblendet', 'info'); return; }
   if (action && action.dataset.action === 'start-level') { saveVehicle({ ...state.vehicle, experience: state.vehicle.experience === 'erfahren' ? 'neu' : 'erfahren' }); return; }
   if (action && action.dataset.action === 'bulk-done') { bulkDoneSheet({ raw: state.services, shown: services(), km: currentKm(), saveMany, saveLog: (x) => saveItem('log', x) }); return; }
   if (action && action.dataset.action === 'service-done') { bulkDoneSheet({ raw: state.services, shown: services(), km: currentKm(), saveMany, saveLog: (x) => saveItem('log', x), mode: 'service' }); return; }
@@ -295,7 +295,7 @@ document.addEventListener('change', async (e) => {
     await saveVehicle({ ...state.vehicle, photo });
     toast('Foto gespeichert');
   } catch {
-    toast('Das Foto konnte nicht gelesen werden');
+    toast('Das Foto konnte nicht gelesen werden', 'err');
   }
 });
 

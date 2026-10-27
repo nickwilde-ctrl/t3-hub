@@ -2,19 +2,25 @@
 import { esc } from '../format.js';
 
 let toastTimer;
-export function toast(msg) {
+let toastCount = 0;
+/**
+ * Kurze Rückmeldung unten. kind: 'ok' (Standard, mit Haken), 'info' (ohne Haken), 'err' (rot).
+ * Längere Texte bleiben länger stehen.
+ */
+export function toast(msg, kind = 'ok') {
   let el = document.getElementById('toast');
   if (!el) {
     el = document.createElement('div');
     el.id = 'toast';
-    el.className = 'toast';
-    el.setAttribute('role', 'status');
     document.body.appendChild(el);
   }
+  toastCount += 1;
+  el.className = 'toast toast-' + kind;
+  el.setAttribute('role', kind === 'err' ? 'alert' : 'status');
   el.textContent = msg;
   el.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (el.hidden = true), 1800);
+  toastTimer = setTimeout(() => (el.hidden = true), Math.min(6000, 2600 + msg.length * 40));
 }
 
 export function closeSheet() {
@@ -66,10 +72,19 @@ export function openSheet({ title, body, submitLabel = 'Speichern', onSubmit, on
     if (confirmed && Date.now() - warnedAt < 700) return;
     busy = true;
     submitBtn.disabled = true;
+    // Dauert es länger (z. B. viele Fotos), sieht man, dass etwas passiert.
+    const label = submitBtn.textContent;
+    const slow = setTimeout(() => { submitBtn.textContent = 'Bitte warten …'; }, 400);
+    const toastsBefore = toastCount;
     let res;
     try {
       res = await onSubmit(form, { confirmed });
+    } catch (err) {
+      console.error(err);
+      res = 'Das hat nicht geklappt. Bitte nochmal versuchen.';
     } finally {
+      clearTimeout(slow);
+      submitBtn.textContent = label;
       busy = false;
       submitBtn.disabled = false;
     }
@@ -84,6 +99,8 @@ export function openSheet({ title, body, submitLabel = 'Speichern', onSubmit, on
     }
     if (res) { errEl.className = 'err'; errEl.textContent = res; return; }
     closeSheet();
+    // Jedes Speichern meldet sich – falls das Formular nicht schon selbst etwas gesagt hat.
+    if (toastCount === toastsBefore && (submitLabel === 'Speichern' || submitLabel === 'Eintragen')) toast('Gespeichert');
   });
   if (onReady) onReady(form);
   return form;

@@ -145,17 +145,17 @@ export function showSetup(create, demo) {
     if (a === 'back') { read(root); step = Math.max(0, step - 1); draw(root); return; }
     if (a === 'next') {
       const err = read(root);
-      if (err) { toast(err); return; }
+      if (err) { toast(err, 'err'); return; }
       if (step < 3) { step += 1; draw(root); return; }
       b.disabled = true;
       try {
         await create({ ...data, family: data.family || null, engine: engineText(data.family, data.code) });
         step = 4; draw(root);
-      } catch (err2) { b.disabled = false; toast('Speichern hat nicht geklappt'); console.error(err2); }
+      } catch (err2) { b.disabled = false; toast('Speichern hat nicht geklappt', 'err'); console.error(err2); }
       return;
     }
     if (a === 'close') closeSetup();
-    if (a === 'demo') { b.disabled = true; try { await demo(); closeSetup(); } catch (err3) { b.disabled = false; toast('Das hat nicht geklappt'); console.error(err3); } }
+    if (a === 'demo') { b.disabled = true; try { await demo(); closeSetup(); } catch (err3) { b.disabled = false; toast('Das hat nicht geklappt', 'err'); console.error(err3); } }
   });
   // Kennbuchstabe eingetippt → passende Bauart gleich auswählen
   root.addEventListener('input', (e) => {
@@ -166,7 +166,7 @@ export function showSetup(create, demo) {
   root.addEventListener('change', async (e) => {
     if (e.target.id !== 'su-photo' || !e.target.files?.[0]) return;
     data.name = root.querySelector('#su-name')?.value.trim() ?? data.name;
-    try { data.photo = await readPhoto(e.target.files[0]); draw(root); } catch { toast('Das Foto konnte nicht gelesen werden'); }
+    try { data.photo = await readPhoto(e.target.files[0]); draw(root); } catch { toast('Das Foto konnte nicht gelesen werden', 'err'); }
   });
 }
 

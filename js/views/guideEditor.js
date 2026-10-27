@@ -77,7 +77,7 @@ export function guideSheet(guide, { services = [], save, remove, onSaved, onRemo
         const rm = e.target.closest('[data-remove]');
         if (rm) {
           const row = rm.closest('[data-val],[data-step-row]');
-          if (row.matches('[data-step-row]') && steps.children.length === 1) { toast('Mindestens ein Schritt bleibt'); return; }
+          if (row.matches('[data-step-row]') && steps.children.length === 1) { toast('Mindestens ein Schritt bleibt', 'info'); return; }
           row.remove(); renumber(); return;
         }
         const up = e.target.closest('[data-up]'), down = e.target.closest('[data-down]');
