@@ -187,6 +187,6 @@ function checkLine(c) {
   if (c.state === 'none') return '<p class="hint cons-check"><span class="lamp" style="background:var(--muted)"></span>Ab vier Volltankungen bewertet die App die letzte Tankung gegen den Schnitt deines Busses.</p>';
   const d = `${c.diff > 0 ? '+' : '−'}${de(Math.abs(c.diff), 0)}\u00a0%`;
   return c.state === 'high'
-    ? `<p class="hint cons-check"><span class="lamp" style="background:var(--amber)"></span>Letzte Tankung ${de(c.last, 1)} l/100 km – deutlich über deinem bisherigen Schnitt von ${de(c.base, 1)} (${d}). Einmal ist kein Grund zur Sorge (Dachlast, Autobahn, Stau). Bleibt es mehrmals so, lohnt ein Blick auf Reifendruck, Luftfilter und Lambdasonde.</p>`
+    ? `<p class="hint cons-check"><span class="lamp" style="background:var(--warn)"></span>Letzte Tankung ${de(c.last, 1)} l/100 km – deutlich über deinem bisherigen Schnitt von ${de(c.base, 1)} (${d}). Einmal ist kein Grund zur Sorge (Dachlast, Autobahn, Stau). Bleibt es mehrmals so, lohnt ein Blick auf Reifendruck, Luftfilter und Lambdasonde.</p>`
     : `<p class="hint cons-check"><span class="lamp" style="background:var(--ok)"></span>Letzte Tankung ${de(c.last, 1)} l/100 km – im üblichen Bereich deines Busses (Schnitt bisher ${de(c.base, 1)}, ${d}). Die Lampe im Cockpit wird orange, wenn eine Tankung mehr als 15 % darüber liegt.</p>`;
 }

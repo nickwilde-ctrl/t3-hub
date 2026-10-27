@@ -74,7 +74,7 @@ const maint = (due, soon, unknown) => {
 export function cockpit({ vehicle, km, avg, last, due, soon = 0, unknown, check = { state: 'none' } }) {
   const lamp = {
     ok: ['var(--ok)', `Letzte Tankung im üblichen Bereich (${check.diff != null ? (check.diff > 0 ? '+' : '−') + de(Math.abs(check.diff), 0) : ''} % zum bisherigen Schnitt)`],
-    high: ['var(--amber)', `Letzte Tankung ${check.diff != null ? de(check.diff, 0) : ''} % über dem bisherigen Schnitt`],
+    high: ['var(--warn)', `Letzte Tankung ${check.diff != null ? de(check.diff, 0) : ''} % über dem bisherigen Schnitt`],
     none: ['var(--muted)', 'Noch zu wenige Volltankungen für eine Bewertung'],
   }[check.state];
   const v = vehicle;

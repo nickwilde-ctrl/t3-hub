@@ -261,9 +261,6 @@ a.add{text-decoration:none}
 .pm-list button:active,.pm-list label:active{background:rgba(255,255,255,.06)}
 .pm-list input{position:absolute;width:1px;height:1px;opacity:0}
 .cons-check{display:flex;gap:8px;align-items:baseline;margin:12px 0 0}.cons-check .lamp{flex:none;transform:translateY(-1px)}
-.mod-st{font-size:var(--fs-small);font-weight:600;padding:3px 8px;border-radius:var(--r-pill);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
-.mod-eingetragen{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent)}
-.mod-offen{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 55%,transparent)}
 .sec-head .add{white-space:nowrap;flex:none}
 /* Verbaute Teile – 0.16 */
 .part-edit{border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin-bottom:10px;display:grid;gap:6px;background:color-mix(in srgb,var(--bg) 60%,transparent)}
@@ -526,8 +523,7 @@ body.in-setup{overflow:hidden}
 .btn.wide{display:block;width:100%;min-height:48px;font-size:16px;margin:0 0 18px}
 .muted-h{color:var(--muted);font-size:20px}
 .due-row{grid-template-columns:1fr auto}
-.due-row .r{font-size:var(--fs-body);color:var(--muted);white-space:nowrap}
-.due-row .r.due-soon{color:var(--warn)}.due-row .r.due-over{color:var(--bad)}
+.due-row .r{white-space:nowrap}
 .links{display:grid;gap:2px}
 .link-row{display:flex;justify-content:space-between;align-items:center;min-height:48px;background:none;border:0;border-bottom:1px solid var(--hair);color:var(--amber);font:600 16px var(--f-body);text-align:left;padding:0 2px;cursor:pointer}
 .link-row.quiet{color:var(--muted);font-weight:500;font-size:var(--fs-text)}

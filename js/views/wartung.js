@@ -28,7 +28,7 @@ export const wartungTabs = (sub) => `<h1 class="page-title">Serviceheft</h1>
 
 const DUE_CLS = { over: 'over', soon: 'soon', ok: 'ok' };
 const dueRow = ({ s, st }) => `<button type="button" class="row row-btn due-row" data-edit-service="${s.id}">
-  <div class="t">${esc(s.name)}</div><div class="r due-${DUE_CLS[st.state] || 'ok'}">${esc(dueShort(st))}</div></button>`;
+  <div class="t">${esc(s.name)}</div><div class="r"><span class="pill ${DUE_CLS[st.state] || 'ok'}">${esc(dueShort(st))}</span></div></button>`;
 
 /** Seite „Fällig“: der dringendste Punkt groß, die nächsten drei, Rest einen Tipp entfernt. */
 export function faelligView(services, km) {

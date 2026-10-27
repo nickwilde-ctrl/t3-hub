@@ -128,6 +128,8 @@ export const MOD_STATUS = [
   ['offen', 'Eintragung offen'],
   ['unklar', 'Unklar'],
 ];
+// gleiche Pillen wie bei den Wartungspunkten: eingetragen = ok, offen = bald, sonst neutral
+const MOD_PILL = { eingetragen: 'ok', offen: 'soon' };
 const statusLabel = (k) => (MOD_STATUS.find(([key]) => key === k) || MOD_STATUS[3])[1];
 
 export function modsCard(v) {
@@ -138,7 +140,7 @@ export function modsCard(v) {
       ? `<div class="card list">${mods.map((m) => `<button type="button" class="row row-btn" data-edit-mod="${m.id}">
           <div class="t">${esc(m.name)}<span class="tag">${esc(m.kind)}</span></div>
           <div class="s">${[m.date ? fmtDate(m.date) : '', m.note ? esc(m.note) : ''].filter(Boolean).join(' · ') || '&nbsp;'}</div>
-          <div class="r"><span class="mod-st mod-${esc(m.status)}">${statusLabel(m.status)}</span></div></button>`).join('')}</div>
+          <div class="r"><span class="pill ${MOD_PILL[m.status] || 'unk'}">${statusLabel(m.status)}</span></div></button>`).join('')}</div>
         ${open ? `<p class="hint">${open === 1 ? 'Eine Eintragung ist' : open + ' Eintragungen sind'} noch offen – an den nächsten TÜV-Termin denken.</p>` : ''}`
       : '<div class="card soon-card"><h3>Noch keine Anbauten</h3><p>Lichtleiste, Dachträger, Markise, Fahrwerk, Standheizung … Hier hältst du fest, was an deinem Bus verändert wurde und ob es eingetragen ist.</p></div>'}
   </section>`;
