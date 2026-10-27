@@ -20,7 +20,7 @@ export function dataCard(state) {
   return `<section class="sec"><div class="sec-head"><h2>Daten</h2></div>
     <div class="card list">
       <button type="button" class="row row-btn" data-action="backup"><div class="t">Backup erstellen</div><div class="s">${lastText(state.lastBackup)} Die Datei am besten in iCloud Drive sichern.</div><div class="r"><span class="chip">Sichern</span></div></button>
-      <label class="row row-btn file-row"><div class="t">Backup wiederherstellen</div><div class="s">Ersetzt alle Daten auf diesem Gerät durch die Backup-Datei.</div><div class="r"><span class="chip">Datei</span></div><input type="file" id="restore-in" accept=".json,application/json"></label>
+      <label class="row row-btn file-row"><div class="t">Backup wiederherstellen</div><div class="s">Ersetzt alle Daten auf diesem Gerät durch die Backup-Datei.</div><div class="r"><span class="chip">Datei</span></div><input type="file" id="restore-in"></label>
       <label class="row row-btn file-row"><div class="t">Aus Road Trip übernehmen</div><div class="s">CSV-Export der App Road Trip einlesen. Doppelte Tankungen werden übersprungen.</div><div class="r"><span class="chip">CSV</span></div><input type="file" id="roadtrip-in" accept=".csv,text/csv,text/plain"></label>
     </div>
     <p class="hint">Deine Daten liegen nur auf diesem Gerät. Ohne Backup sind sie weg, wenn das iPhone verloren geht oder Safari die Website-Daten löscht.</p></section>`;

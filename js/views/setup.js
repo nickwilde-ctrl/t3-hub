@@ -28,7 +28,7 @@ function welcome() {
     <div class="su-actions">
       <button type="button" class="btn su-next" data-su="start">Bus einrichten</button>
       <button type="button" class="btn ghost" data-su="demo">Erst mal ausprobieren</button>
-      <label class="btn ghost su-restore">Backup wiederherstellen<input type="file" id="restore-in" accept="application/json,.json" hidden></label>
+      <label class="btn ghost su-restore">Backup wiederherstellen<input type="file" id="restore-in" hidden></label>
     </div>`;
 }
 
