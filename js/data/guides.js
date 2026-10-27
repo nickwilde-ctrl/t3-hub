@@ -94,7 +94,9 @@ export const GUIDES = [
       { k: 'Kerze DJ – grüne Zündspule (bis 7/87)', v: 'Bosch W 7 DTC / Beru 14-7DTU / Champion N7 BYC · Abstand 0,7–0,9 mm', check: true, codes: ['DJ'] },
       { k: 'Kerze DJ – graue Zündspule (ab 8/87)', v: 'Bosch W 5 DCO / Beru 14-5DUO / Champion N6 YCX · Abstand 0,7–0,8 mm', check: true, codes: ['DJ'] },
       { k: 'Zündspule unklar?', v: 'Farbe des Aufklebers an der Zündspule ansehen; im Zweifel Fachwerkstatt fragen', check: true, codes: ['DF', 'DG', 'DJ'] },
-      { k: 'Anzugsmoment', v: '25 Nm (T3-Pedia nennt 20 Nm)', check: true },
+      { k: 'Anzugsmoment', v: '25 Nm für alle Zündkerzen (T3-Pedia nennt 20 Nm)', check: true },
+      { k: 'Wechselintervall', v: 'alle 30.000 km im Rahmen der Wartung (Longlife-Kerzen); prüfen nur bei Zündungsstörungen', check: true },
+      { k: 'Zündfolge Wasserboxer', v: '1–4–3–2 – Stecker in dieser Reihenfolge aufstecken', check: true },
       { k: 'Ohne Drehmomentschlüssel', v: 'neue Kerze nach Anlage +90°, gebrauchte +30°', check: false, src: 'T3-Pedia (VW-Leitfaden)' },
     ],
     warnings: [

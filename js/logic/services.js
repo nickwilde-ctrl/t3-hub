@@ -12,12 +12,13 @@ export const SOON_DAYS = 45;
  * Version 4: Sicherheits-Prüfpunkte. Prüfintervall „15.000 km oder jährlich“ nach dem Wartungsplan in
  * „Jetzt helfe ich mir selbst“ (Bremsanlage, Lenkungsspiel, Spurstangenköpfe, Traggelenke, Undichtigkeiten).
  * Kraftstoffschläuche erneuern (5 Jahre) ist kein Werkswert, sondern Empfehlung von T3-Fachleuten.
+ * Version 5: Zündkerzen alle 30.000 km laut „So wird’s gemacht“ (Wartungsarbeiten an der Zündanlage, S. 216).
  */
-export const DEFAULTS_VERSION = 4;
+export const DEFAULTS_VERSION = 5;
 export const DEFAULT_SERVICES = [
   { key: 'hu', name: 'Hauptuntersuchung (HU)', intervalKm: null, intervalMonths: 24, hint: 'Fälligkeit steht auf der Plakette und im Fahrzeugschein.' },
   { key: 'oil', name: 'Ölwechsel + Ölfilter', intervalKm: 5500, intervalMonths: 12, hint: '4,5 l mit Filter, Öl nach VW 501 01 oder 500 00 – keine Longlife-Öle (503 00/506 00).' },
-  { key: 'plugs', name: 'Zündkerzen', intervalKm: 24000, intervalMonths: null, hint: '' },
+  { key: 'plugs', name: 'Zündkerzen', intervalKm: 30000, intervalMonths: null, hint: 'Longlife-Kerzen: wechseln im Rahmen der Wartung, prüfen nur bei Zündungsstörungen. Anzugsmoment 25 Nm.' },
   { key: 'ignition', name: 'Verteilerkappe, Verteilerfinger, Zündkabel', intervalKm: 48000, intervalMonths: null, hint: 'Kabel nur, wenn nötig.' },
   { key: 'timing', name: 'Zündzeitpunkt prüfen', intervalKm: 30000, intervalMonths: null, hint: 'Sollwert für deinen Motor: siehe Anleitung oder Sollwerte unter „Mehr“.' },
   { key: 'airfilter', name: 'Luftfilter wechseln', intervalKm: 30000, intervalMonths: null, hint: 'Alle 15.000 km reinigen.' },
@@ -41,7 +42,7 @@ export const NOT_IN_SERVICE = ['hu', 'fuelhoses-new'];
 
 /** Bisherige Platzhalter (Version 1), damit unveränderte Einträge auf die neuen Werte gehoben werden können. */
 export const OLD_DEFAULTS = {
-  oil: [[7500, 12]], plugs: [[15000, 24]], brakefluid: [[null, 24]], coolant: [[null, 36]], hu: [[null, 24]],
+  oil: [[7500, 12]], plugs: [[15000, 24], [24000, null]], brakefluid: [[null, 24]], coolant: [[null, 36]], hu: [[null, 24]],
   // Version 2 (GoWesty) → Version 3 (Wartungsplan „Jetzt helfe ich mir selbst“, 26.10.2026)
   fuelfilter: [[20000, null], [48000, null]], airfilter: [[48000, null]],
 };
@@ -117,8 +118,8 @@ const GW = 'Empfehlung der T3-Fachwerkstatt GoWesty.';
 export const ORIGIN = {
   hu: { src: 'gesetz', basis: 'Gesetzlich vorgeschrieben.' },
   oil: { src: 'empfehlung', basis: 'Empfehlung der T3-Fachwerkstatt GoWesty – bewusst kürzer als ab Werk.', werk: '7.500 km (bis 7/85) bzw. 15.000 km oder jährlich (ab 8/85)' },
-  plugs: { src: 'empfehlung', basis: GW, werk: null },
-  ignition: { src: 'empfehlung', basis: GW, werk: null },
+  plugs: { src: 'plan', basis: 'Laut Handbuch „So wird’s gemacht“ (Wartungsarbeiten an der Zündanlage).' },
+  ignition: { src: 'empfehlung', basis: GW, werk: 'kein Wechselintervall – die Zündanlage gilt laut Handbuch als wartungsfrei; Verteilerkappe, Läufer und Anschlüsse bei der Wartung prüfen' },
   timing: { src: 'plan', basis: JH },
   airfilter: { src: 'plan', basis: JH },
   fuelfilter: { src: 'plan', basis: JH },

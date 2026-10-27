@@ -100,7 +100,7 @@ test('Herkunft der Intervalle: Wartungsplan, Empfehlung, gesetzlich, eigenes', a
   assert.match(oil.werk, /15\.000/);
   assert.equal(intervalOrigin(def('oil', 'diesel'), 'diesel').kind, 'plan');
   assert.equal(intervalOrigin(def('hu'), 'wbx21').kind, 'gesetz');
-  assert.equal(intervalOrigin(def('plugs'), 'wbx21').werk, null); // noch nicht geprüft
+  assert.equal(intervalOrigin(def('plugs'), 'wbx21').kind, 'plan'); // seit 0.47 laut Handbuch
   const changed = intervalOrigin({ ...def('oil'), intervalKm: 7500 }, 'wbx21');
   assert.equal(changed.kind, 'eigen');
   assert.match(changed.basis, /5\.500 km/);
@@ -108,4 +108,14 @@ test('Herkunft der Intervalle: Wartungsplan, Empfehlung, gesetzlich, eigenes', a
   // jeder Standardpunkt hat eine Herkunft
   for (const d of ALL_SERVICES) assert.ok(ORIGIN[d.key], d.key);
   assert.equal(intervalText({ intervalKm: 5500, intervalMonths: 12 }), 'alle 5.500 km oder alle 12 Monate');
+});
+
+test('Zündkerzen: alter Startwert 24.000 km wird auf 30.000 km gehoben, geänderter bleibt', async () => {
+  const { upgradeServices, servicesFor } = await import('../js/logic/services.js');
+  const base = servicesFor('wbx21').map((d) => ({ ...d }));
+  const old = base.map((d) => (d.key === 'plugs' ? { ...d, intervalKm: 24000, hint: '' } : d));
+  const up = upgradeServices(old, 'wbx21').find((x) => x.key === 'plugs');
+  assert.equal(up.intervalKm, 30000);
+  const own = base.map((d) => (d.key === 'plugs' ? { ...d, intervalKm: 20000 } : d));
+  assert.equal(upgradeServices(own, 'wbx21').find((x) => x.key === 'plugs'), undefined);
 });
