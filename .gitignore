@@ -1,0 +1,10 @@
+# Test-Screenshots und andere Bilder nicht ins öffentliche Repo
+*.png
+*.jpg
+*.jpeg
+!icons/*.png
+
+# Private Plandaten nie ins Repo
+*-Plandaten.json
+
+.DS_Store
