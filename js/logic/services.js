@@ -187,11 +187,17 @@ export function serviceStatus(s, currentKm, today = new Date()) {
 }
 
 /**
+ * Zu welchen Wartungspunkten gehört ein Serviceheft-Eintrag? serviceKey = ein Punkt („Erledigt eintragen“),
+ * serviceKeys = mehrere (Sammel-Eintrag „Service eintragen“). Ältere Einträge haben beides nicht.
+ */
+export const entryServiceKeys = (entry) => [...new Set([entry?.serviceKey, ...(entry?.serviceKeys || [])].filter(Boolean))];
+
+/**
  * Letzter Stand eines Wartungspunkts: der jüngste Serviceheft-Eintrag zu diesem Punkt,
  * sonst der von Hand gesetzte Stand (z. B. „HU war im Oktober 2025“).
  */
 export function withLastDone(s, log) {
-  const entries = log.filter((l) => l.serviceKey === s.key && l.date)
+  const entries = log.filter((l) => entryServiceKeys(l).includes(s.key) && l.date)
     .sort((a, b) => a.date.localeCompare(b.date) || (a.km || 0) - (b.km || 0));
   const e = entries[entries.length - 1];
   if (e && (!s.lastDate || e.date >= s.lastDate)) return { ...s, lastKm: e.km ?? s.lastKm, lastDate: e.date, lastFromLog: true };

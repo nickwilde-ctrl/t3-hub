@@ -15,6 +15,11 @@ const TEXT = {
   rest: ['Der Rest ist unbekannt? Ganz normal.', 'Bei einem gebrauchten T3 weiß das kaum jemand. Lass beim nächsten Werkstattbesuch einen Komplettservice machen (Inspektion mit allen Flüssigkeiten und Filtern) und trag danach alles auf einmal ein.', { action: 'bulk-done', label: 'Alles auf einmal eintragen' }],
 };
 
+/** Unter Mehr: die ausgeblendete Einstiegskarte wieder holen. Nur sichtbar, solange sie ausgeblendet ist. */
+export const startRestoreCard = (vehicle) => (vehicle && !vehicle.demo && vehicle.startHidden
+  ? `<section class="sec"><button type="button" class="card link-card" data-action="start-show"><span><b>Einstiegshilfe wieder anzeigen</b><br><span class="faint">Die Karte „So fängst du an“ auf der Startseite</span></span><span aria-hidden="true">›</span></button></section>`
+  : '');
+
 /** Karte für die Startseite. services = Wartungspunkte mit letztem Stand. */
 export function startCard(vehicle, services, km) {
   const exp = experienceOf(vehicle);
@@ -83,10 +88,12 @@ export function bulkDoneSheet({ raw, shown, km, saveMany, saveLog, mode = 'unkno
       const cost = el.cost.value.trim() ? parseNumber(el.cost.value) : null;
       if (cost != null && !(cost >= 0)) return 'Die Kosten sind keine gültige Zahl.';
       const chosen = raw.filter((s) => ids.includes(s.id));
-      await saveMany('services', chosen.map((s) => ({ ...s, lastDate: date, lastKm: kmVal })));
       if (el.log.checked) {
+        // Der Eintrag merkt sich seine Wartungspunkte: Stand und „nächstes Mal“ kommen aus ihm, Löschen oder Ändern wirkt auf die Punkte.
         await saveLog({ date, km: kmVal, title: mode === 'service' ? 'Service' : 'Komplettservice', category: 'Wartung', cost, by: form.querySelector('input[name=by]:checked')?.value || null,
-          note: [el.note.value.trim(), `Erledigt: ${chosen.map((s) => s.name).join(', ')}`].filter(Boolean).join(' · '), parts: [] });
+          serviceKeys: chosen.map((s) => s.key), note: [el.note.value.trim(), `Erledigt: ${chosen.map((s) => s.name).join(', ')}`].filter(Boolean).join(' · '), parts: [] });
+      } else {
+        await saveMany('services', chosen.map((s) => ({ ...s, lastDate: date, lastKm: kmVal })));
       }
       toast(`${de(chosen.length)} Punkte eingetragen`);
     },

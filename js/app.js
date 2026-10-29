@@ -25,11 +25,11 @@ import { aboutCard } from './views/about.js';
 import { feedbackCard, feedbackSheet } from './views/feedback.js';
 import { openStromkarte } from './views/stromkarte.js';
 import { kmSheet } from './views/km.js';
-import { startCard, bulkDoneSheet } from './views/start.js';
+import { startCard, bulkDoneSheet, startRestoreCard } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.54';
+const APP_VERSION = '0.55';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -71,6 +71,7 @@ const VIEWS = {
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
   mehr: () => (msub === 'elektrik' && state.wiring ? '<button type="button" class="back-link" data-msub="">‹ Zurück zu Mehr</button><h1 class="page-title">Elektrik</h1>' + elektrikView(state.wiring) : costCard(state, currentKm()) + vehicleCard(state.vehicle) + specsCard(state.vehicle) + elektrikCard(state.wiring) + modsCard(state.vehicle)
+    + startRestoreCard(state.vehicle)
     + dataCard(state)
     + feedbackCard()
     + installCard()
@@ -103,7 +104,7 @@ function render() {
   ).join('');
   // Das Cockpit gehört auf die Startseite; im Serviceheft und unter Elektrik zählt der Platz für den Inhalt.
   document.getElementById('cockpit').hidden = tab === 'wartung' || (tab === 'mehr' && msub === 'elektrik');
-  document.getElementById('view').innerHTML = (state.vehicle.demo ? demoBanner() : '') + VIEWS[tab]();
+  document.getElementById('view').innerHTML = (state.vehicle.demo && tab !== 'wartung' ? demoBanner() : '') + VIEWS[tab]();
 }
 
 /** Hinweis, solange der Beispielbus aktiv ist. */
@@ -121,6 +122,7 @@ document.addEventListener('click', (e) => {
   }
   if (action && action.dataset.action === 'open-game') { openGame(); return; }
   if (action && action.dataset.action === 'set-km') { kmSheet(currentKm(), setKmNow); return; }
+  if (action && action.dataset.action === 'start-show') { saveVehicle({ ...state.vehicle, startHidden: false }); toast('Einstiegshilfe wieder da – auf der Startseite', 'info'); return; }
   if (action && action.dataset.action === 'start-hide') { saveVehicle({ ...state.vehicle, startHidden: true }); toast('Ausgeblendet', 'info'); return; }
   if (action && action.dataset.action === 'start-level') { saveVehicle({ ...state.vehicle, experience: state.vehicle.experience === 'erfahren' ? 'neu' : 'erfahren' }); return; }
   if (action && action.dataset.action === 'bulk-done') { bulkDoneSheet({ raw: state.services, shown: services(), km: currentKm(), saveMany, saveLog: (x) => saveItem('log', x) }); return; }

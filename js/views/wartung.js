@@ -1,6 +1,6 @@
 // Reiter „Serviceheft“ (intern: wartung): Fällig, Alle Wartungspunkte, Einträge, Formulare.
 import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
-import { serviceStatus, isSafety, intervalText, intervalOrigin, dueShort, planGroups, nextDueText } from '../logic/services.js';
+import { serviceStatus, isSafety, intervalText, intervalOrigin, dueShort, planGroups, nextDueText, entryServiceKeys } from '../logic/services.js';
 import { parseNumber } from '../logic/fuel.js';
 import { checkEntryKm } from '../logic/km.js';
 import { GUIDES } from '../data/guides.js';
@@ -206,7 +206,7 @@ export function newServiceSheet(saveService) {
 export function logSheet(entry, { km, saveLog, removeLog, services, prefill, filesForLog, syncFiles }) {
   const edit = !!entry;
   const e = entry || { date: todayIso(), km, title: '', category: 'Reparatur', cost: '', note: '', ...(prefill || {}) };
-  const linked = edit && e.serviceKey ? services.find((s) => s.key === e.serviceKey) : null;
+  const linked = edit ? entryServiceKeys(e).map((k) => services.find((s) => s.key === k)).filter(Boolean) : [];
   let readParts = () => [];
   let att = null;
   openSheet({
@@ -221,7 +221,8 @@ export function logSheet(entry, { km, saveLog, removeLog, services, prefill, fil
       <div class="field"><label for="l-cost">Kosten in €</label><input id="l-cost" name="cost" inputmode="decimal" value="${e.cost ? String(e.cost).replace('.', ',') : ''}" placeholder="leer = Summe der Teile"></div>
       ${byField(e.by || '')}
       <div class="field"><label for="l-note">Notiz</label><input id="l-note" name="note" value="${esc(e.note || '')}" placeholder="Werkstatt, Auffälligkeiten …"></div>
-      ${linked ? `<p class="hint" style="margin:0">Gehört zum Wartungspunkt „${esc(linked.name)}“.${nextDueText(linked, e) ? ` Nächstes Mal fällig ${esc(nextDueText(linked, e))}.` : ''}</p>` : ''}
+      ${linked.length === 1 ? `<p class="hint" style="margin:0">Gehört zum Wartungspunkt „${esc(linked[0].name)}“.${nextDueText(linked[0], e) ? ` Nächstes Mal fällig ${esc(nextDueText(linked[0], e))}.` : ''}</p>`
+        : linked.length ? `<div class="hint"><p style="margin:0 0 4px">Gehört zu ${linked.length} Wartungspunkten. Nächstes Mal fällig:</p><ul class="g-list">${linked.map((s) => `<li>${esc(s.name)}${nextDueText(s, e) ? ': ' + esc(nextDueText(s, e)) : ''}</li>`).join('')}</ul></div>` : ''}
       ${edit ? '<button type="button" class="danger-link" id="l-del">Eintrag löschen</button>' : ''}`,
     onReady(form) {
       readParts = wireParts(form);

@@ -171,3 +171,19 @@ test('Startseite: nur fällige Punkte, sonst der nächste', async () => {
   assert.equal(none.next, null);
   assert.equal(none.unknown, 1);
 });
+
+test('Sammel-Eintrag: der Stand kommt aus dem Eintrag, Löschen nimmt ihn wieder weg', async () => {
+  const { withLastDone, entryServiceKeys } = await import('../js/logic/services.js');
+  const oil = { key: 'oil', lastDate: null, lastKm: null };
+  const plugs = { key: 'plugs', lastDate: '2025-01-10', lastKm: 100000 };
+  const sammel = { id: 'x', date: '2026-10-20', km: 142000, serviceKeys: ['oil', 'plugs'] };
+  assert.deepEqual(entryServiceKeys(sammel), ['oil', 'plugs']);
+  assert.deepEqual(entryServiceKeys({ serviceKey: 'hu' }), ['hu']);
+  assert.deepEqual(entryServiceKeys({ serviceKey: 'hu', serviceKeys: ['hu', 'oil'] }), ['hu', 'oil'], 'ohne Doppelte');
+  assert.deepEqual(entryServiceKeys({ title: 'alt' }), [], 'ältere Einträge haben keinen Wartungspunkt');
+  assert.equal(withLastDone(oil, [sammel]).lastDate, '2026-10-20');
+  assert.equal(withLastDone(plugs, [sammel]).lastKm, 142000);
+  assert.equal(withLastDone(plugs, [{ ...sammel, date: '2026-10-21', km: 143000 }]).lastKm, 143000, 'Änderung wirkt sofort');
+  assert.equal(withLastDone(oil, []).lastDate, null, 'ohne den gelöschten Eintrag ist der Punkt wieder offen');
+  assert.equal(withLastDone(plugs, []).lastKm, 100000, 'und der frühere Stand gilt wieder');
+});
