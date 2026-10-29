@@ -2,6 +2,7 @@
 // Dazu „Alles auf einmal eintragen“, z. B. nach einem Komplettservice.
 import { esc, de, todayIso } from '../format.js';
 import { parseNumber } from '../logic/fuel.js';
+import { checkEntryKm } from '../logic/km.js';
 import { experienceOf, startSteps, unknownServices } from '../logic/start.js';
 import { openSheet, toast } from './sheet.js';
 import { NOT_IN_SERVICE, serviceStatus } from '../logic/services.js';
@@ -68,7 +69,7 @@ export function bulkDoneSheet({ raw, shown, km, saveMany, saveLog, mode = 'unkno
       <label class="check"><input type="checkbox" name="log" checked><span>Als ${mode === 'service' ? '„Service“' : '„Komplettservice“'} ins Serviceheft eintragen</span></label>
       <div class="two"><div class="field"><label for="b-cost">Kosten in € (optional)</label><input id="b-cost" name="cost" inputmode="decimal"></div>
       <div class="field"><label for="b-note">Werkstatt / Notiz</label><input id="b-note" name="note" autocomplete="off"></div></div>`,
-    async onSubmit(form) {
+    async onSubmit(form, { confirmed }) {
       const el = form.elements;
       const ids = [...form.querySelectorAll('input[name=svc]:checked')].map((x) => x.value);
       if (!ids.length) return 'Bitte mindestens einen Punkt ankreuzen.';
@@ -76,6 +77,9 @@ export function bulkDoneSheet({ raw, shown, km, saveMany, saveLog, mode = 'unkno
       if (!date) return 'Bitte ein Datum eintragen.';
       const kmVal = el.km.value.trim() ? Math.round(parseNumber(el.km.value, 'km')) : null;
       if (kmVal != null && !(kmVal >= 0)) return 'Der Kilometerstand ist keine gültige Zahl.';
+      const chk = checkEntryKm(el.km.value, { current: km, date, today: todayIso() });
+      if (chk.error) return chk.error;
+      if (chk.warnings && !confirmed) return { warnings: chk.warnings };
       const cost = el.cost.value.trim() ? parseNumber(el.cost.value) : null;
       if (cost != null && !(cost >= 0)) return 'Die Kosten sind keine gültige Zahl.';
       const chosen = raw.filter((s) => ids.includes(s.id));

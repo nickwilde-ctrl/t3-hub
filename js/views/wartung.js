@@ -2,6 +2,7 @@
 import { de, eur, eurExact, esc, fmtDate, todayIso } from '../format.js';
 import { serviceStatus, isSafety, intervalText, intervalOrigin, dueShort, planGroups, nextDueText } from '../logic/services.js';
 import { parseNumber } from '../logic/fuel.js';
+import { checkEntryKm } from '../logic/km.js';
 import { GUIDES } from '../data/guides.js';
 import { guideForService } from '../logic/guides.js';
 import { partsEditor, wireParts, partsList, partsTotal } from './parts.js';
@@ -146,7 +147,7 @@ export function serviceSheet(service, raw, { km, family = null, saveService, sav
         del.textContent = 'Wirklich löschen? Nochmal tippen';
       };
     },
-    async onSubmit(form) {
+    async onSubmit(form, { confirmed }) {
       const el = form.elements;
       if (mode === 'interval') {
         const ikm = el.intervalKm.value.trim() ? parseNumber(el.intervalKm.value, 'km') : null;
@@ -160,6 +161,9 @@ export function serviceSheet(service, raw, { km, family = null, saveService, sav
       const kmVal = el.km.value.trim() ? parseNumber(el.km.value, 'km') : null;
       if (!date) return 'Bitte ein Datum eintragen.';
       if (kmVal != null && !(kmVal >= 0)) return 'Der Kilometerstand ist keine gültige Zahl.';
+      const chk = checkEntryKm(el.km.value, { current: km, date, today: todayIso() });
+      if (chk.error) return chk.error;
+      if (chk.warnings && !confirmed) return { warnings: chk.warnings };
       if (el.onlyState.checked) {
         await saveService({ ...raw, lastDate: date, lastKm: kmVal != null ? Math.round(kmVal) : null });
         toast('Stand gespeichert');
@@ -229,13 +233,16 @@ export function logSheet(entry, { km, saveLog, removeLog, services, prefill, fil
         del.textContent = 'Wirklich löschen? Nochmal tippen';
       };
     },
-    async onSubmit(form) {
+    async onSubmit(form, { confirmed }) {
       const el = form.elements;
       const title = el.title.value.trim();
       if (!title) return 'Bitte kurz beschreiben, was gemacht wurde.';
       if (!el.date.value) return 'Bitte ein Datum eintragen.';
       const kmVal = el.km.value.trim() ? parseNumber(el.km.value, 'km') : null;
       if (kmVal != null && !(kmVal >= 0)) return 'Der Kilometerstand ist keine gültige Zahl.';
+      const chk = checkEntryKm(el.km.value, { current: km, date: el.date.value, today: todayIso(), edit });
+      if (chk.error) return chk.error;
+      if (chk.warnings && !confirmed) return { warnings: chk.warnings };
       const parts = readParts();
       const cost = el.cost.value.trim() ? parseNumber(el.cost.value) : partsTotal(parts);
       if (!(cost >= 0)) return 'Die Kosten sind keine gültige Zahl.';
