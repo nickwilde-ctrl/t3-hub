@@ -1,5 +1,12 @@
-// „Über T3 Hub“: Datenschutz kurz erklärt, Haftungshinweis, Quellen und Lizenzen.
-// Impressum und vollständige Datenschutzerklärung folgen, bevor die App öffentlich geteilt wird.
+// „Über T3 Hub“: Datenschutz kurz erklärt, Datenschutzerklärung, Impressum, Haftungshinweis, Quellen und Lizenzen.
+// Die Angaben zum Anbieter stehen nur hier oben. Diese Datei und die Live-Seite sind öffentlich.
+
+export const ANBIETER = {
+  name: 'Niklaas Max Wilde',
+  strasse: 'Hannoversche Straße 1',
+  ort: '10115 Berlin',
+  mail: 'nick.wilde@ymail.com',
+};
 
 export function aboutCard() {
   return `<section class="sec"><div class="sec-head"><h2>Über T3 Hub</h2></div>
@@ -14,6 +21,21 @@ export function aboutCard() {
         </ul>
         <p>Den Standort fragt die App nur, wenn du „Hier stehen wir“ antippst. Es gibt keine Werbung, kein Tracking und keine Analyse-Werkzeuge. Schriften liegen in der App selbst.</p>
         <p>Weil die Daten nur hier liegen: Mach regelmäßig ein Backup (unter „Daten“). Wenn du die App löschst oder den Browser-Speicher leerst, sind sie sonst weg.</p>
+      </details>
+      <details id="impressum"><summary>Impressum</summary>
+        <p><b>Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG)</b></p>
+        <p>${ANBIETER.name}<br>${ANBIETER.strasse}<br>${ANBIETER.ort}</p>
+        <p><b>Kontakt:</b> <a href="mailto:${ANBIETER.mail}">${ANBIETER.mail}</a></p>
+        <p>T3 Hub ist ein privates, nicht kommerzielles Projekt.</p>
+      </details>
+      <details id="datenschutz"><summary>Datenschutzerklärung</summary>
+        <p><b>Verantwortlich</b> ist ${ANBIETER.name}, ${ANBIETER.strasse}, ${ANBIETER.ort}, <a href="mailto:${ANBIETER.mail}">${ANBIETER.mail}</a>.</p>
+        <p><b>Deine Eingaben.</b> Fahrzeugdaten, Tankungen, Serviceheft, Fotos, Rechnungen und Touren speichert die App ausschließlich im Speicher deines Geräts (Browser-Datenbank). Sie werden nicht an uns oder an einen Server übertragen. Wir haben keinen Zugriff darauf und können sie nicht wiederherstellen. Löschen kannst du sie jederzeit selbst, zum Beispiel über die App-Einstellungen deines Geräts oder indem du die App entfernst.</p>
+        <p><b>Laden der App.</b> Die App wird über GitHub Pages ausgeliefert (GitHub Inc., USA). Dabei verarbeitet GitHub technisch notwendige Daten wie deine IP-Adresse. Weitere Informationen stehen in der Datenschutzerklärung von GitHub.</p>
+        <p><b>Karten und Ortssuche.</b> Zeigst du bei Touren Karten oder Stellplätze an, werden Kartenbilder von OpenStreetMap geladen (OpenStreetMap Foundation, Großbritannien). Dabei wird deine IP-Adresse übertragen. Bei der Ortssuche und beim Benennen eines Stellplatzes gehen der eingegebene Suchbegriff oder die Koordinaten an den Dienst Nominatim von OpenStreetMap. Öffnest du einen Stellplatz in Apple Karten, gilt dafür die Datenschutzerklärung von Apple. Diese Verbindungen entstehen nur, wenn du die jeweilige Funktion benutzt.</p>
+        <p><b>Standort.</b> Die App fragt deinen Standort nur, wenn du „Hier stehen wir“ antippst. Er wird auf deinem Gerät verarbeitet und nur für die Ortssuche (siehe oben) weitergegeben.</p>
+        <p><b>Was es nicht gibt.</b> Keine Konten, keine Cookies zu Werbe- oder Analysezwecken, kein Tracking und keine Werbung. Die Schriften liegen in der App selbst, es werden keine Schriften von Drittanbietern nachgeladen.</p>
+        <p><b>Deine Rechte.</b> Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung deiner personenbezogenen Daten sowie auf Widerspruch. Da die App deine Eingaben nicht an uns übermittelt, können wir nur Anfragen zu Daten beantworten, die wir selbst haben, etwa deine Nachrichten an die oben genannte E-Mail-Adresse. Du kannst dich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren, zum Beispiel bei der Berliner Beauftragten für Datenschutz und Informationsfreiheit.</p>
       </details>
       <details><summary>Anleitungen – bitte lesen</summary>
         <p>Die Anleitungen sind eine Hilfe für erfahrene Schrauber, kein Ersatz für ein Reparaturhandbuch oder eine Werkstatt. Werte sind gekennzeichnet: „geprüft“ (mit einem Reparaturhandbuch abgeglichen), „laut …“ (aus der genannten Quelle) oder „ungeprüft“.</p>
