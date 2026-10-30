@@ -3,6 +3,7 @@ import { state, load, createVehicle, createDemo, resetAll, onChange, currentKm, 
 import { requestPersistence } from './db.js';
 import { fuelStats, consumptionCheck } from './logic/fuel.js';
 import { serviceStatus, vehicleStatus } from './logic/services.js';
+import { engineFamilyOf } from './logic/vehicle.js';
 import { cockpit } from './views/cockpit.js';
 import { homeView } from './views/home.js';
 import { vehicleCard, editVehicleSheet, photoFrameSheet, modsCard, modSheet, specsCard } from './views/vehicle.js';
@@ -29,7 +30,7 @@ import { startCard, bulkDoneSheet, startRestoreCard } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.58';
+const APP_VERSION = '0.59';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -64,9 +65,9 @@ const elektrikCard = (w) => (w ? `<section class="sec"><button type="button" cla
 
 const VIEWS = {
   home: () => (showStart(state.vehicle, services(), currentKm()) ? startCard(state.vehicle, services(), currentKm()) : '') + (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
-  wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides(), state.vehicle.engineFamily, state.vehicle.engineCode)
+  wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides(), engineFamilyOf(state.vehicle), state.vehicle.engineCode)
     : wsub === 'eintraege' ? eintraegeView(state.log)
-      : wsub === 'alle' ? alleView(services(), currentKm(), state.vehicle?.engineFamily || null)
+      : wsub === 'alle' ? alleView(services(), currentKm(), engineFamilyOf(state.vehicle || {}))
         : faelligView(services(), currentKm())),
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
@@ -153,7 +154,7 @@ document.addEventListener('click', (e) => {
   }
   const wOps = {
     km: currentKm(),
-    family: state.vehicle?.engineFamily || null,
+    family: engineFamilyOf(state.vehicle || {}),
     services: services(),
     saveService: (x) => saveItem('services', x),
     removeService: (id) => deleteItem('services', id),
@@ -192,7 +193,7 @@ document.addEventListener('click', (e) => {
   // Anleitung öffnen; „Ändern“ führt in den Editor und danach zurück in die gespeicherte Anleitung
   const showGuide = (id) => openGuide(id, {
     guides: allGuides(),
-    engineFamily: state.vehicle.engineFamily || null,
+    engineFamily: engineFamilyOf(state.vehicle),
     code: state.vehicle.engineCode || '',
     onClose: render,
     onEdit: (g) => editGuide(g),

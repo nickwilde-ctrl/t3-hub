@@ -5,6 +5,7 @@ import { STORE_NAMES } from './logic/backup.js';
 import { matchTours, fuelKey } from './logic/roadtrip.js';
 import { demoData } from './logic/demo.js';
 import { todayIso } from './format.js';
+import { modelText, engineFamilyOf } from './logic/vehicle.js';
 
 export const state = {
   vehicle: null,
@@ -30,19 +31,20 @@ async function firstVehicle() {
 
 /**
  * Fahrzeug aus der Einrichtung anlegen.
- * setup: { name, photo, year, family, code, engine, km, oilKm, oilDate }
+ * setup: { name, photo, year, family, code, gearbox, engine, km, oilKm, oilDate }
  */
 export async function createVehicle(setup) {
   const today = todayIso();
   const vehicle = {
     id: db.newId(),
     name: setup.name,
-    model: setup.year ? `VW T3 · Baujahr ${setup.year}` : 'VW T3',
+    model: modelText(setup.year),
     year: setup.year || null,
     plate: '',
     engine: setup.engine || '',
     engineFamily: setup.family || null,
     engineCode: setup.code || '',
+    gearbox: setup.gearbox || null,
     photo: setup.photo || null,
     experience: setup.experience === 'erfahren' ? 'erfahren' : 'neu',
     facts: [],
@@ -95,7 +97,7 @@ export async function load() {
   state.wiring = wiring[0] || null;
   state.lastBackup = (await db.getMeta('lastBackup')) || null;
   // Wartungspunkte auf die aktuellen Startwerte heben (fehlende ergänzen, unveränderte Platzhalter aktualisieren)
-  const upgrades = upgradeServices(state.services, state.vehicle.engineFamily).map((x) => ({ ...x, id: x.id || db.newId(), vehicleId: id }));
+  const upgrades = upgradeServices(state.services, engineFamilyOf(state.vehicle)).map((x) => ({ ...x, id: x.id || db.newId(), vehicleId: id }));
   if (upgrades.length) {
     await db.putMany('services', upgrades);
     state.services = await db.getByVehicle('services', id);

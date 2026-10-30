@@ -1,6 +1,7 @@
 // Erster Start: Begrüßung und Einrichtung in drei kurzen Schritten.
 import { esc, todayIso } from '../format.js';
-import { ENGINE_FAMILIES, familyForCode, engineText } from '../data/engines.js';
+import { ENGINE_FAMILIES, GEARBOXES, familyForCode, engineText } from '../data/engines.js';
+import { parseYear } from '../logic/vehicle.js';
 import { parseNumber } from '../logic/fuel.js';
 import { readPhoto } from '../photo.js';
 import { toast } from './sheet.js';
@@ -54,7 +55,8 @@ function step2() {
     <div class="su-opts" role="radiogroup" aria-label="Motor">${ENGINE_FAMILIES.map(fam).join('')}
       <label class="su-opt"><input type="radio" name="su-fam" value="" ${!data.family ? 'checked' : ''}><span><b>Weiß ich nicht</b><small>Kein Problem – du kannst es später in der Fahrzeugakte ergänzen.</small></span></label></div>
     <div class="field"><label for="su-code">Motorkennbuchstaben (optional)</label><input id="su-code" value="${esc(data.code)}" placeholder="z. B. MV" autocapitalize="characters" autocomplete="off" maxlength="3">
-      <p class="hint" style="margin:0">Stehen am Motorgehäuse eingeschlagen, oft auch im Serviceheft oder auf dem Datenaufkleber.</p></div>`;
+      <p class="hint" style="margin:0">Stehen am Motorgehäuse eingeschlagen, oft auch im Serviceheft oder auf dem Datenaufkleber.</p></div>
+    <div class="field"><label for="su-gear">Getriebe (optional)</label><select id="su-gear"><option value="">weiß ich nicht</option>${GEARBOXES.map((g) => `<option value="${g.id}" ${data.gearbox === g.id ? 'selected' : ''}>${esc(g.label)}</option>`).join('')}</select></div>`;
 }
 
 function step3() {
@@ -101,9 +103,10 @@ function read(root) {
     data.experience = root.querySelector('[name=su-exp]:checked')?.value || 'neu';
   }
   if (step === 2) {
-    const y = v('su-year');
-    data.year = y ? parseInt(y, 10) : null;
-    if (y && !(data.year >= 1979 && data.year <= 1992)) return 'Der T3 wurde von 1979 bis 1992 gebaut (Syncro und Südafrika auch länger). Bitte das Baujahr prüfen oder leer lassen.';
+    const py = parseYear(v('su-year'));
+    if (py.error) return py.error;
+    data.year = py.year;
+    data.gearbox = v('su-gear');
     data.code = v('su-code').toUpperCase();
     data.family = root.querySelector('[name=su-fam]:checked')?.value || '';
     // Kennbuchstabe passt zu einer Bauart? Dann die Bauart danach richten, wenn keine gewählt ist.
@@ -127,7 +130,7 @@ function read(root) {
  */
 export function showSetup(create, demo) {
   if (document.getElementById('setup-root')) return;
-  data = { name: '', experience: 'neu', photo: null, year: null, family: '', code: '', km: null, oilKm: null, oilDate: null };
+  data = { name: '', experience: 'neu', photo: null, year: null, family: '', code: '', gearbox: '', km: null, oilKm: null, oilDate: null };
   step = 0;
   const root = document.createElement('div');
   root.id = 'setup-root';

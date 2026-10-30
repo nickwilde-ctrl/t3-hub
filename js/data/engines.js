@@ -8,6 +8,14 @@ export const ENGINE_FAMILIES = [
   { id: 'diesel', label: 'Diesel / Turbodiesel 1,6 / 1,7 l', fuel: 'Diesel', codes: ['CS', 'KY', 'JX'], hint: 'Saug- und Turbodiesel' },
 ];
 
+/** Getriebe für die Fahrzeugidentität. Leer = „weiß ich nicht“. Syncro ist kein Getriebe und kommt nicht hierher. */
+export const GEARBOXES = [
+  { id: 'manual', label: 'Schaltgetriebe' },
+  { id: 'auto', label: 'Automatik' },
+];
+export const GEARBOX_UNKNOWN = 'Nicht eingetragen';
+export const gearboxById = (id) => GEARBOXES.find((g) => g.id === id) || null;
+
 export const familyById = (id) => ENGINE_FAMILIES.find((f) => f.id === id) || null;
 
 /** Familie aus einem Motorkennbuchstaben ableiten (z. B. „mv“ → wbx21). */

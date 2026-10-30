@@ -2,21 +2,29 @@
 import { esc, fmtDate, todayIso } from '../format.js';
 import { openSheet, closeSheet, toast } from './sheet.js';
 import { newId } from '../db.js';
-import { ENGINE_FAMILIES, engineLabel, engineText } from '../data/engines.js';
+import { ENGINE_FAMILIES, GEARBOXES, GEARBOX_UNKNOWN, engineText } from '../data/engines.js';
+import { vehicleIdentity, modelText, parseYear, yearFromModelText } from '../logic/vehicle.js';
 import { specsFor, SOURCE_NAMES } from '../data/specs.js';
 
 /** Vorschläge für freie Felder, angelehnt an den Fahrzeugschein (Zulassungsbescheinigung Teil I). */
 export const FACT_SUGGESTIONS = [
-  'Erstzulassung', 'FIN', 'Farbe', 'Aufbau', 'Hubraum', 'Leistung', 'Kraftstoff',
+  'Erstzulassung', 'FIN', 'Farbe', 'Aufbau', 'Hubraum', 'Leistung',
   'Höchstgeschwindigkeit', 'Leergewicht', 'Zul. Gesamtgewicht', 'Anhängelast', 'Reifen', 'Maße (L × B × H)', 'Bemerkungen',
 ];
 
 export function vehicleCard(v) {
+  const id = vehicleIdentity(v);
+  // Ältere Fahrzeuge ohne Bauart und Kennbuchstaben zeigen weiter ihren alten Motor-Text
+  const oldEngine = id.family || id.code ? '' : String(v.engine || '').trim();
   const base = [
     ['Name', v.name],
-    ['Modell', v.model],
+    ['Modell', id.model],
+    ['Baujahr', id.year || 'Nicht eingetragen'],
     ['Kennzeichen', v.plate],
-    ['Motor', engineLabel(v)],
+    ['Motor', id.family ? id.family.label : oldEngine],
+    ['Motorkennbuchstabe', id.code],
+    ['Kraftstoff', id.fuel],
+    ['Getriebe', id.gearboxLabel || GEARBOX_UNKNOWN],
   ].filter(([, val]) => val);
   const rows = [...base, ...v.facts.filter((f) => f.k || f.v).map((f) => [f.k, f.v])];
   return `<section class="sec"><div class="sec-head"><h2>Fahrzeugakte</h2><button type="button" class="add" data-action="edit-vehicle">Bearbeiten</button></div>
@@ -34,18 +42,25 @@ function factRow(k = '', v = '', i = 0) {
 
 export function editVehicleSheet(vehicle, save) {
   const v = vehicle;
+  const id = vehicleIdentity(v);
+  // Baujahr: gespeichert, sonst als Vorschlag aus dem alten Modelltext
+  const suggested = id.year ? null : yearFromModelText(v.model);
+  const yearValue = id.year ?? suggested;
+  const yearSuggested = !id.year && !!suggested;
   const facts = v.facts.length ? v.facts : FACT_SUGGESTIONS.slice(0, 6).map((k) => ({ k, v: '' }));
   openSheet({
     title: 'Fahrzeugakte bearbeiten',
     body: `
       <div class="field"><label for="v-name">Name</label><input id="v-name" name="name" value="${esc(v.name)}" placeholder="z. B. Peanut" autocomplete="off"></div>
-      <div class="field"><label for="v-model">Modell und Baujahr</label><input id="v-model" name="model" value="${esc(v.model)}" placeholder="z. B. VW T3 · Baujahr 1985"></div>
+      <div class="field"><label for="v-year">Baujahr (optional)</label><input id="v-year" name="year" inputmode="numeric" value="${yearValue ?? ''}" placeholder="z. B. 1985" maxlength="4" autocomplete="off">
+        ${yearSuggested ? '<p class="hint" style="margin:0">Aus dem bisherigen Text übernommen. Gespeichert wird es erst mit „Speichern“.</p>' : ''}</div>
       <div class="field"><label for="v-plate">Kennzeichen</label><input id="v-plate" name="plate" value="${esc(v.plate)}" placeholder="B AB 1234 H" autocapitalize="characters" autocomplete="off"></div>
       <p class="hint" style="margin:0">Kennzeichen mit Leerzeichen eingeben, so wie es auf dem Schild steht. Ein H für Oldtimer einfach ans Ende.</p>
       <div class="two">
-        <div class="field"><label for="v-fam">Motor-Bauart</label><select id="v-fam" name="engineFamily"><option value="">weiß ich nicht</option>${ENGINE_FAMILIES.map((f) => `<option value="${f.id}" ${f.id === v.engineFamily ? 'selected' : ''}>${esc(f.label)}</option>`).join('')}</select></div>
+        <div class="field"><label for="v-fam">Motor-Bauart</label><select id="v-fam" name="engineFamily"><option value="">weiß ich nicht</option>${ENGINE_FAMILIES.map((f) => `<option value="${f.id}" ${f.id === id.familyId ? 'selected' : ''}>${esc(f.label)}</option>`).join('')}</select></div>
         <div class="field"><label for="v-code">Kennbuchstaben</label><input id="v-code" name="engineCode" value="${esc(v.engineCode || '')}" placeholder="z. B. MV" autocapitalize="characters" autocomplete="off" maxlength="3"></div>
       </div>
+      <div class="field"><label for="v-gear">Getriebe</label><select id="v-gear" name="gearbox"><option value="">weiß ich nicht</option>${GEARBOXES.map((g) => `<option value="${g.id}" ${g.id === id.gearbox ? 'selected' : ''}>${esc(g.label)}</option>`).join('')}</select></div>
       <div class="field"><label for="v-tank">Tankinhalt in Litern</label><input id="v-tank" name="tankLiters" inputmode="numeric" value="${v.tankLiters ?? 60}" placeholder="60"></div>
       <div class="field"><label>Weitere Daten</label><div id="facts" class="facts-edit">${facts.map((f, i) => factRow(f.k, f.v, i)).join('')}</div>
         <button type="button" class="add" id="add-fact" style="justify-self:start">+ Feld hinzufügen</button></div>
@@ -66,10 +81,14 @@ export function editVehicleSheet(vehicle, save) {
       const facts = [...form.querySelectorAll('[data-fact]')]
         .map((row) => ({ k: row.querySelector('[name=fk]').value.trim(), v: row.querySelector('[name=fv]').value.trim() }))
         .filter((f) => f.k && f.v);
+      const py = parseYear(form.elements['year'].value);
+      if (py.error) return py.error;
       await save({
         ...v,
         name,
-        model: form.elements['model'].value.trim(),
+        year: py.year,
+        model: modelText(py.year),
+        gearbox: form.elements['gearbox'].value || null,
         plate: form.elements['plate'].value.trim().toUpperCase().replace(/\s+/g, ' '),
         engineFamily: form.elements['engineFamily'].value || null,
         engineCode: form.elements['engineCode'].value.trim().toUpperCase(),

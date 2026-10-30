@@ -34,7 +34,7 @@ Wer eigene Schaltplan-Daten besitzt, kann sie auf dem Gerät laden und bekommt K
 | `js/app.js` | Navigation und Klick-Verarbeitung |
 | `js/nav.js` | Zurück-Taste für Formulare und Vollbild-Fenster |
 | `js/db.js`, `js/store.js` | Speicherung (IndexedDB) und Daten des aktiven Fahrzeugs |
-| `js/logic/` | Rechenlogik ohne Browser (Verbrauch, Wartungsstatus, Kilometer, Backup, Navigation …) |
+| `js/logic/` | Rechenlogik ohne Browser (Verbrauch, Wartungsstatus, Kilometer, Backup, Navigation, Fahrzeugidentität …) |
 | `js/data/` | Anleitungen, Sollwerte je Motor-Kennbuchstabe, Motorfamilien, Fehlersuche |
 | `js/views/` | Bildschirm-Bausteine |
 | `fonts/`, `vendor/leaflet/` | Schriften und Kartenbibliothek, lokal eingebunden (beim Start keine externen Verbindungen) |
@@ -59,3 +59,8 @@ Regeln:
 
 Die aktuelle Version steht unten auf der Seite „Mehr“.
 Live: https://nickwilde-ctrl.github.io/t3-hub/ · Plan und Entscheidungen liegen im Claude-Projekt „Vw T3 App“.
+
+### Bekannte offene Punkte
+
+- **Getriebeöl:** Der Hinweis bei „Getriebeöl“ (API GL4, SAE 75W-90) gilt nur für Schaltgetriebe. Das Getriebe steht seit 0.59 in der Fahrzeugakte (`gearbox`), der Hinweis richtet sich aber noch nicht danach. Das wird separat gelöst.
+- **Syncro** ist kein Getriebe und kommt später gegebenenfalls als eigene Fahrzeugeigenschaft.

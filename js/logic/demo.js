@@ -31,6 +31,7 @@ export function demoData(today = iso(new Date())) {
       engine: 'Wasserboxer 2,1 l · MV',
       engineFamily: 'wbx21',
       engineCode: 'MV',
+      gearbox: 'manual',
       photo: null,
       facts: [{ k: 'Farbe', v: 'Marsalarot' }, { k: 'Reifen', v: '185 R 14 C' }],
       mods: [{ name: 'Dachträger', kind: 'Anbau', status: 'frei', date: '', note: 'mit Alu-Kiste' }],

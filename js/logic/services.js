@@ -25,7 +25,7 @@ export const DEFAULT_SERVICES = [
   { key: 'fuelfilter', name: 'Kraftstofffilter', intervalKm: 30000, intervalMonths: null, hint: '' },
   { key: 'brakefluid', name: 'Bremsflüssigkeit', intervalKm: null, intervalMonths: 24, hint: 'DOT 4, unabhängig von den Kilometern.' },
   { key: 'coolant', name: 'Kühlmittel spülen und erneuern', intervalKm: null, intervalMonths: 24, hint: 'G11 (VW TL 774 C) oder G12 (VW TL 774 D) – nie mischen, auf die Norm achten, nicht auf die Farbe. Mit destilliertem Wasser.' },
-  { key: 'gearoil', name: 'Getriebeöl', intervalKm: 48000, intervalMonths: null, hint: 'Schaltgetriebe: API GL4, SAE 75W-90.' },
+  { key: 'gearoil', name: 'Getriebeöl', intervalKm: 48000, intervalMonths: null, hint: 'Schaltgetriebe: API GL4, SAE 75W-90.' }, // offen: gilt nur für Schaltgetriebe, noch nicht nach vehicleIdentity().gearbox getrennt
   // Sicherheits-Prüfpunkte (Version 4)
   { key: 'brakecheck', name: 'Bremsen prüfen (Schläuche, Leitungen, Beläge)', intervalKm: 15000, intervalMonths: 12, safety: true, hint: 'Bremsschläuche: Risse, Scheuerstellen, Aufquellen beim Treten? Dann tauschen. Leitungen auf Rost, Beläge auf Stärke. Die Beläge vorne laut Handbuch schon alle 7.500 km ansehen.' },
   { key: 'steering', name: 'Lenkung und Achsgelenke prüfen', intervalKm: 15000, intervalMonths: 12, safety: true, hint: 'Lenkungsspiel, Spurstangenköpfe, Traggelenke und ihre Manschetten. Spiel oder gerissene Manschette: bald in die Werkstatt – das betrifft die Lenkung.' },
