@@ -264,3 +264,14 @@ test('Andere Fehlerfälle in der Elektrik funktionieren weiter', () => {
   assert.match(mv, /data-action="open-diagnose"/);
   for (const id of ['blinker', 'anlasser', 'wischer']) assert.match(mv, new RegExp(`data-el-fault="${id}"`));
 });
+
+test('Diagnose vorzeitig beenden: Protokoll bleibt, Diagnose läuft nicht mehr', () => {
+  const mid = run([...GRUND, 'Z1:keiner', ['Z2:keiner']]);
+  const ended = abandon(mid);
+  assert.equal(ended.status, 'abandoned');
+  assert.deepEqual(ended.history, mid.history);
+  const text = summaryText(summary(T, ended));
+  assert.match(text, /vorzeitig beendet, ohne Ergebnis/);
+  assert.match(text, /Kein Zündfunke festgestellt/);
+  assert.ok(!/Ergebnis:/.test(text));
+});

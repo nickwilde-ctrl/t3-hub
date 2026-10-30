@@ -1,7 +1,7 @@
 {
   "name": "t3-hub",
   "private": true,
-  "version": "0.60.0",
+  "version": "0.61.0",
   "type": "module",
   "description": "T3 Hub – digitales Bordbuch für den VW T3. Ohne Build-Schritt, ohne Abhängigkeiten.",
   "scripts": {

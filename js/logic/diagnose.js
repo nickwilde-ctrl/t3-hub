@@ -215,7 +215,7 @@ export function summaryText(sm, formatDate = (d) => d) {
   const list = (head, items) => { if (items.length) { L.push('', head, ...items.map((x) => '- ' + x)); } };
   L.push(`T3 Hub – Diagnoseprotokoll`, sm.title, `Datum: ${formatDate(sm.date)}`, `Fahrzeug: ${identityText(sm.identity)}`);
   if (sm.result) L.push('', `Ergebnis: ${sm.result.title}`, sm.result.text, ...(sm.result.notThis.length ? sm.result.notThis.map((t) => 'Nicht tun: ' + t) : []));
-  else L.push('', sm.status === 'abandoned' ? 'Diagnose nicht beendet.' : 'Diagnose läuft noch.');
+  else L.push('', sm.status === 'abandoned' ? 'Diagnose vorzeitig beendet, ohne Ergebnis.' : 'Diagnose läuft noch.');
   list('Geprüft', sm.checked.map((c) => c.text));
   list('Maßnahmen', sm.actions.map((c) => c.text));
   list('Messwerte', sm.measurements.map((m) => `${m.label}: ${m.value}`));

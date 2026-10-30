@@ -39,7 +39,7 @@ function protocolHtml(sm) {
   const tone = { ok: '✓ ', issue: '! ', neutral: '' };
   return `<div class="dx-proto">
     <p class="g-meta">${esc(fmtDate(sm.date))} · ${esc(identityText(sm.identity))}</p>
-    ${sm.result ? sec('Ergebnis', `<p><b>${esc(sm.result.title)}</b></p><p>${esc(sm.result.text)}</p>${sm.result.notThis.length ? list(sm.result.notThis.map((t) => 'Nicht tun: ' + t)) : ''}`) : sec('Stand', `<p>${sm.status === 'abandoned' ? 'Diese Diagnose wurde nicht beendet.' : 'Diese Diagnose läuft noch.'}</p>`)}
+    ${sm.result ? sec('Ergebnis', `<p><b>${esc(sm.result.title)}</b></p><p>${esc(sm.result.text)}</p>${sm.result.notThis.length ? list(sm.result.notThis.map((t) => 'Nicht tun: ' + t)) : ''}`) : sec('Stand', `<p>${sm.status === 'abandoned' ? 'Diese Diagnose wurde vorzeitig beendet, ohne Ergebnis.' : 'Diese Diagnose läuft noch.'}</p>`)}
     ${sec('Geprüft', sm.checked.length ? list(sm.checked.map((c) => tone[c.tone] + c.text)) : '')}
     ${sec('Maßnahmen', sm.actions.length ? list(sm.actions.map((c) => c.text)) : '')}
     ${sec('Messwerte', sm.measurements.length ? list(sm.measurements.map((m) => `${m.label}: ${m.value}${m.source === 'C' ? ' (nur gespeichert, nicht bewertet)' : ''}`)) : '')}
@@ -95,10 +95,10 @@ export function openDiagnose(ctx, { resume = false } = {}) {
         <div class="g-box g-danger"><h3>Sicherheit zuerst</h3>${list(['Arbeite nur, wenn du dir den Handgriff zutraust. Bei Unsicherheit: Werkstatt.', 'Kraftstoff ist hochentzündlich, die Zündanlage führt Hochspannung. Jede Prüfung nennt ihre eigenen Hinweise.', 'Unter dem Fahrzeug nie nur mit dem Wagenheber arbeiten.'])}</div>
         <div class="g-box"><h3>So arbeitet die Diagnose</h3><p>${esc(tree.rule)} Wenn eine Prüfung nicht möglich ist, bleibt sie offen und wird im Protokoll gezeigt.</p></div>
         <div class="dx-actions">
-          ${running ? '<button type="button" class="btn" id="dx-resume">Diagnose fortsetzen</button><button type="button" class="btn ghost" id="dx-new">Neu beginnen</button>' : '<button type="button" class="btn" id="dx-new">Diagnose starten</button>'}
+          ${running ? '<button type="button" class="btn" id="dx-resume">Diagnose fortsetzen</button><button type="button" class="btn ghost" id="dx-new">Neu beginnen</button><button type="button" class="btn ghost" id="dx-stop">Diagnose beenden</button>' : '<button type="button" class="btn" id="dx-new">Diagnose starten</button>'}
         </div>`;
     }
-    const pastHtml = past.length ? `<div class="g-box"><h3>Frühere Protokolle</h3><div class="list">${past.map((s) => `<button type="button" class="row row-btn" data-dx-open="${esc(s.id)}"><div class="t">${esc(fmtDate(s.date))}</div><div class="s">${esc(s.result ? tree.nodes[s.result]?.title || '' : s.status === 'abandoned' ? 'nicht beendet' : '')}</div></button>`).join('')}</div></div>` : '';
+    const pastHtml = past.length ? `<div class="g-box"><h3>Frühere Protokolle</h3><div class="list">${past.map((s) => `<button type="button" class="row row-btn" data-dx-open="${esc(s.id)}"><div class="t">${esc(fmtDate(s.date))}</div><div class="s">${esc(s.result ? tree.nodes[s.result]?.title || '' : s.status === 'abandoned' ? 'vorzeitig beendet' : '')}</div></button>`).join('')}</div></div>` : '';
     body(`<div class="eyebrow">Diagnose</div><h2 class="g-title">${esc(tree.title)}</h2>${main}${pastHtml}`);
     const nw = root.querySelector('#dx-new');
     if (nw) nw.onclick = async () => {
@@ -109,9 +109,23 @@ export function openDiagnose(ctx, { resume = false } = {}) {
       await persist(startSession(tree, identity, { id: newId(), vehicleId: ctx.vehicleId, today: ctx.today() }));
       show();
     };
+    wireEnd(root.querySelector('#dx-stop'), () => running);
     const rs = root.querySelector('#dx-resume');
     if (rs) rs.onclick = () => { session = running; show(); };
     root.querySelectorAll('[data-dx-open]').forEach((b) => { b.onclick = () => { viewing = mine().find((s) => s.id === b.dataset.dxOpen); view = 'protocol'; show(); }; });
+  };
+
+  // Diagnose vorzeitig beenden: das Protokoll bleibt, die Diagnose zählt nicht mehr als laufend
+  const wireEnd = (btn, target) => {
+    if (!btn) return;
+    btn.onclick = async () => {
+      if (!btn.dataset.armed) { btn.dataset.armed = '1'; btn.textContent = 'Wirklich beenden? Das Protokoll bleibt erhalten.'; return; }
+      const done = abandon(target());
+      await persist(done);
+      viewing = session;
+      view = 'protocol';
+      show();
+    };
   };
 
   const goBackOne = async () => { await persist(goBack(tree, session)); reasonUnclear = false; show(); };
@@ -160,6 +174,7 @@ export function openDiagnose(ctx, { resume = false } = {}) {
       <div class="dx-block"><h3>Was ist dabei herausgekommen?</h3>${answers}<p class="err" id="dx-err" role="alert"></p>
         <button type="button" class="btn ghost dx-ans" id="dx-np">Prüfung nicht möglich</button></div>
       <details class="g-box"><summary><h3>Ich weiß nicht, wie das geht</h3></summary><p>${node.help ? esc(node.help) + ' Eine ausführliche Hilfeseite folgt in einer späteren Version.' : 'Dazu gibt es noch keine Hilfe.'} Wenn du dir den Handgriff nicht zutraust, wähle „Prüfung nicht möglich“.</p></details>
+      <button type="button" class="btn ghost dx-ans" id="dx-stop">Diagnose beenden</button>
       <details class="g-box dx-tech"><summary><h3>Technische Angaben</h3></summary><p>Knoten ${esc(node.id)} · Quellenstatus ${esc(node.source)}${node.source === 'A' ? ' (für die Entscheidungsgrenze freigegeben)' : node.source === 'B' ? ' (dokumentiert, noch nicht am Original geprüft)' : node.source === 'C' ? ' (nie als Entscheidungsgrenze verwenden)' : ' (qualitative Prüfung)'}</p></details>`,
       { back: session.history.length > 0 });
     const read = () => {
@@ -184,6 +199,7 @@ export function openDiagnose(ctx, { resume = false } = {}) {
       show();
     }; });
     root.querySelector('#dx-np').onclick = () => { view = 'reason'; reasonUnclear = false; show(); };
+    wireEnd(root.querySelector('#dx-stop'), () => session);
     root.querySelector('[data-dx-guide]')?.addEventListener('click', (e) => ctx.openGuide(e.currentTarget.dataset.dxGuide));
     root.querySelector('[data-dx-log]')?.addEventListener('click', (e) => ctx.openLog({ title: e.currentTarget.dataset.dxLog, category: 'Wartung' }));
     const back = root.querySelector('#dx-back');
@@ -197,7 +213,9 @@ export function openDiagnose(ctx, { resume = false } = {}) {
       ${reasonUnclear ? `<div class="g-box"><h3>Noch einmal versuchen?</h3><p>${node.help ? esc(node.help) + ' Eine ausführliche Hilfeseite folgt in einer späteren Version.' : 'Lies die Schritte noch einmal in Ruhe durch.'}</p></div>
         <div class="dx-actions"><button type="button" class="btn" id="dx-retry">Prüfung wiederholen</button><button type="button" class="btn ghost" id="dx-open">Offen lassen und weiter</button></div>`
         : `<div class="dx-block"><h3>Was ist der Grund?</h3>${NOT_POSSIBLE_REASONS.map((r) => `<button type="button" class="btn ghost dx-ans" data-dx-reason="${r.id}">${esc(r.label)}</button>`).join('')}</div>
-        <div class="dx-actions"><button type="button" class="btn ghost" id="dx-retry">Doch versuchen</button></div>`}`);
+        <div class="dx-actions"><button type="button" class="btn ghost" id="dx-retry">Doch versuchen</button></div>`}
+      <button type="button" class="btn ghost dx-ans" id="dx-stop">Diagnose beenden</button>`);
+    wireEnd(root.querySelector('#dx-stop'), () => session);
     const retry = root.querySelector('#dx-retry');
     if (retry) retry.onclick = () => { view = 'node'; reasonUnclear = false; show(); };
     const leave = async (reason) => { await persist(markNotPossible(tree, session, reason)); view = 'node'; reasonUnclear = false; show(); };
