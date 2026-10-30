@@ -8,3 +8,6 @@
 *-Plandaten.json
 
 .DS_Store
+
+# Arbeitsdokumente (PDF) gehören nicht ins öffentliche Repository
+*.pdf
