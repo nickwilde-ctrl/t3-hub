@@ -2,9 +2,9 @@
 
 export const BACKUP_FORMAT = 't3hub-backup';
 export const BACKUP_VERSION = 1;
-export const STORE_NAMES = ['vehicles', 'fuels', 'services', 'log', 'tours', 'files', 'guides', 'wiring'];
+export const STORE_NAMES = ['vehicles', 'fuels', 'services', 'log', 'tours', 'files', 'guides', 'wiring', 'diagnoses'];
 /** Listen, die in älteren Backups noch fehlen dürfen. */
-const OPTIONAL = ['files', 'guides', 'wiring'];
+const OPTIONAL = ['files', 'guides', 'wiring', 'diagnoses'];
 
 export function buildBackup(data, now = new Date()) {
   return {

@@ -2,11 +2,12 @@
 // Jeder Datensatz außer dem Fahrzeug selbst trägt eine vehicleId – so sind später mehrere Fahrzeuge möglich.
 
 const DB_NAME = 't3hub';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 // files: Fotos und Rechnungen (große Daten getrennt, damit Listen schnell bleiben)
 // guides: eigene Anleitungen
 // wiring: eigene Plandaten (Kabel aus dem Stromlaufplan), nur auf diesem Gerät
-export const STORES = ['vehicles', 'fuels', 'services', 'log', 'tours', 'files', 'guides', 'wiring'];
+// diagnoses: Diagnoseprotokolle der geführten Diagnose (laufende und beendete)
+export const STORES = ['vehicles', 'fuels', 'services', 'log', 'tours', 'files', 'guides', 'wiring', 'diagnoses'];
 
 let dbPromise = null;
 
@@ -41,6 +42,9 @@ export function openDb() {
       }
       if (e.oldVersion < 4) {
         db.createObjectStore('wiring', { keyPath: 'id' }).createIndex('vehicleId', 'vehicleId');
+      }
+      if (e.oldVersion < 5) {
+        db.createObjectStore('diagnoses', { keyPath: 'id' }).createIndex('vehicleId', 'vehicleId');
       }
     };
     r.onsuccess = () => resolve(r.result);

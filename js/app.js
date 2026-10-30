@@ -3,7 +3,11 @@ import { state, load, createVehicle, createDemo, resetAll, onChange, currentKm, 
 import { requestPersistence } from './db.js';
 import { fuelStats, consumptionCheck } from './logic/fuel.js';
 import { serviceStatus, vehicleStatus } from './logic/services.js';
-import { engineFamilyOf } from './logic/vehicle.js';
+import { todayIso } from './format.js';
+import { engineFamilyOf, vehicleIdentity } from './logic/vehicle.js';
+import { appliesTo } from './logic/diagnose.js';
+import { MV_NO_START } from './data/diagnosen/mv-no-start.js';
+import { diagnoseCard, diagnoseRunningCard, openDiagnose } from './views/diagnose.js';
 import { cockpit } from './views/cockpit.js';
 import { homeView } from './views/home.js';
 import { vehicleCard, editVehicleSheet, photoFrameSheet, modsCard, modSheet, specsCard } from './views/vehicle.js';
@@ -30,7 +34,7 @@ import { startCard, bulkDoneSheet, startRestoreCard } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.59';
+const APP_VERSION = '0.60';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -64,14 +68,14 @@ const pushNav = () => {
 const elektrikCard = (w) => (w ? `<section class="sec"><button type="button" class="card link-card" data-msub="elektrik"><span><b>Elektrik</b><br><span class="faint">Fehlersuche, Kabel und Stromkarte · nur auf diesem Gerät</span></span><span aria-hidden="true">›</span></button></section>` : '');
 
 const VIEWS = {
-  home: () => (showStart(state.vehicle, services(), currentKm()) ? startCard(state.vehicle, services(), currentKm()) : '') + (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
+  home: () => (showStart(state.vehicle, services(), currentKm()) ? startCard(state.vehicle, services(), currentKm()) : '') + (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + diagnoseRunningCard(MV_NO_START, state.diagnoses) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
   wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides(), engineFamilyOf(state.vehicle), state.vehicle.engineCode)
     : wsub === 'eintraege' ? eintraegeView(state.log)
       : wsub === 'alle' ? alleView(services(), currentKm(), engineFamilyOf(state.vehicle || {}))
         : faelligView(services(), currentKm())),
   tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
-  mehr: () => (msub === 'elektrik' && state.wiring ? '<button type="button" class="back-link" data-msub="">‹ Zurück zu Mehr</button><h1 class="page-title">Elektrik</h1>' + elektrikView(state.wiring) : costCard(state, currentKm()) + vehicleCard(state.vehicle) + specsCard(state.vehicle) + elektrikCard(state.wiring) + modsCard(state.vehicle)
+  mehr: () => (msub === 'elektrik' && state.wiring ? '<button type="button" class="back-link" data-msub="">‹ Zurück zu Mehr</button><h1 class="page-title">Elektrik</h1>' + elektrikView(state.wiring, { diagnose: appliesTo(MV_NO_START, vehicleIdentity(state.vehicle)).ok }) : costCard(state, currentKm()) + diagnoseCard(MV_NO_START, vehicleIdentity(state.vehicle), state.diagnoses) + vehicleCard(state.vehicle) + specsCard(state.vehicle) + elektrikCard(state.wiring) + modsCard(state.vehicle)
     + startRestoreCard(state.vehicle)
     + dataCard(state)
     + feedbackCard()
@@ -210,6 +214,22 @@ document.addEventListener('click', (e) => {
     onSaved: (row) => { render(); showGuide(row.id); },
     onRemoved: render,
   });
+  // Geführte Diagnose: Inhalt in js/data/diagnosen/, Ablauf in js/logic/diagnose.js
+  if (action && action.dataset.action === 'open-diagnose') {
+    closeSheet();
+    openDiagnose({
+      tree: MV_NO_START,
+      identity: vehicleIdentity(state.vehicle),
+      vehicleId: state.vehicle.id,
+      sessions: () => state.diagnoses,
+      save: (s) => saveItem('diagnoses', s),
+      today: todayIso,
+      openGuide: showGuide,
+      openLog: (prefill) => logSheet(null, { ...wOps, prefill }),
+      onClose: render,
+    }, { resume: action.dataset.resume === '1' });
+    return;
+  }
   if (guideBtn) {
     closeSheet();
     showGuide(guideBtn.dataset.openGuide);

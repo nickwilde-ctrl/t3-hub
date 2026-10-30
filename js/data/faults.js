@@ -1,4 +1,5 @@
 // Fehlersuche Elektrik: eigene Texte, allgemeines T3-Wissen. Sicherungsnummern laut Relaisplatte (Modelljahr 1991).
+// Beim MV (2,1 l, Digifant) ersetzt die geführte Diagnose (js/data/diagnosen/) den Eintrag „pumpe“; bei anderen Motoren bleibt er.
 // q = Suchbegriff, mit dem die passenden Kabel aus den eigenen Plandaten gezeigt werden.
 
 export const FAULTS = [

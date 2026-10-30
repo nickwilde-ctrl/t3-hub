@@ -17,6 +17,7 @@ export const state = {
   tours: [],
   guides: [], // eigene Anleitungen
   wiring: null, // eigene Plandaten (Elektrik), nur auf diesem Gerät
+  diagnoses: [], // Diagnoseprotokolle (geführte Diagnose)
 };
 
 const listeners = new Set();
@@ -91,8 +92,8 @@ export async function load() {
   if (!state.vehicle) { emit(); return; }
   const id = state.vehicle.id;
   let wiring;
-  [state.fuels, state.services, state.log, state.tours, state.guides, wiring] = await Promise.all(
-    ['fuels', 'services', 'log', 'tours', 'guides', 'wiring'].map((n) => db.getByVehicle(n, id)),
+  [state.fuels, state.services, state.log, state.tours, state.guides, wiring, state.diagnoses] = await Promise.all(
+    ['fuels', 'services', 'log', 'tours', 'guides', 'wiring', 'diagnoses'].map((n) => db.getByVehicle(n, id)),
   );
   state.wiring = wiring[0] || null;
   state.lastBackup = (await db.getMeta('lastBackup')) || null;

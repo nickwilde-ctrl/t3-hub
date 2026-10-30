@@ -5,6 +5,7 @@
 const LAYERS = [
   ['#sheet-root', (el, closeSheet) => closeSheet()],
   ['#guide-root', (el) => el.querySelector('#g-close')?.click()],
+  ['#dx-root', (el) => (el.querySelector('#dx-back') || el.querySelector('#dx-close'))?.click()],
   ['#el-root', (el) => el.querySelector('#el-back')?.click()],
   ['#map-full', (el) => el.querySelector('#map-close')?.click()],
   ['#sk-root', (el) => el.querySelector('#sk-close')?.click()],

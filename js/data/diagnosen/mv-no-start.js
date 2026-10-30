@@ -1,0 +1,722 @@
+// Diagnosebaum „Motor dreht, springt nicht an“ für VW T3, 2,1-l-Wasserboxer, Kennbuchstabe MV, Digifant.
+// Fachliche Grundlage: „T3 Hub – Diagnosebaum MV Digifant“ (Entwurf zur fachlichen Prüfung, 30.10.2026).
+// Hier stehen nur Inhalte. Ablauf und Oberfläche sind in js/logic/diagnose.js und js/views/diagnose.js.
+//
+// Quellenstatus je Knoten (source):
+//   A = für die Entscheidungsgrenze freigegeben · B = dokumentiert, noch nicht am MV-Originalleitfaden geprüft (vorläufig)
+//   C = nie als Entscheidungsgrenze verwenden · Q = qualitative Prüfung ohne Zahlenwert
+// Werte mit Status C (Kraftstoffdruck, Zündspulenwiderstand) werden nie bewertet, nur gespeichert.
+// Ein Endknoten, der ein Bauteil als wahrscheinlich nennt (likely), hat Voraussetzungen (requires).
+
+const is = (node, answer) => ({ node, is: answer });
+const ANY_FINGER = { any: [is('Z3a', 'dreht'), is('Z6c', 'dreht')] };
+
+export const MV_NO_START = {
+  id: 'mv-no-start',
+  version: 1,
+  title: 'Motor dreht, springt nicht an',
+  intro: 'Wir grenzen jetzt Schritt für Schritt ein, warum dein T3 nicht startet. Du siehst immer nur eine Prüfung. Die nächste ergibt sich aus deiner Antwort.',
+  scope: { model: 'VW T3', familyId: 'wbx21', code: 'MV' },
+  scopeText: 'VW T3 · 2,1 l Wasserboxer · Kennbuchstabe MV · Digifant',
+  start: 'G1',
+  rule: 'T3 Hub rät kein Bauteil zum Tauschen. Erst wenn die Prüfungen ein Bauteil eingrenzen, wird es genannt – und auch dann nur als wahrscheinlich.',
+  areas: {
+    G: { label: 'Grundcheck' },
+    Z: {
+      label: 'Zündanlage',
+      safety: [
+        'Die Zündanlage erzeugt Hochspannung. Prüfgeräte nur bei Zündung AUS anschließen.',
+        'Beim Anlassen keine Hochspannungsteile berühren. Keine Zündkerze in der Hand gegen Masse halten.',
+        'Kein Funke in der Nähe von Kraftstoff oder Kraftstoffdampf.',
+        'Abstand zu Riemen, Riemenscheiben und Lüfter. Anlassen durch eine zweite Person, immer nur wenige Sekunden.',
+      ],
+    },
+    K: {
+      label: 'Kraftstoff',
+      safety: [
+        'Kraftstoff ist hochentzündlich und steht unter Druck. Nicht rauchen, keine Funken, keine offene Flamme, Feuerlöscher bereit.',
+        'Keine Leitung am heißen Motor öffnen. Austretenden Kraftstoff auffangen.',
+        'Unter dem Fahrzeug nur arbeiten, wenn es auf Rädern, Rampen oder Unterstellböcken steht – nie nur auf dem Wagenheber.',
+        'Bei sichtbarem Leck: STOPP, nicht weiter starten.',
+      ],
+    },
+    E: { label: 'Einspritzung' },
+    M: { label: 'Mechanik' },
+  },
+  flags: {
+    startRpmUnclear: 'Die Startdrehzahl war unklar. Zu langsames Durchdrehen kann Zünd- und Einspritzbefunde verfälschen, die Befunde gelten unter Vorbehalt.',
+    tankWasEmpty: 'Der Tank war leer oder fast leer (wichtig für Pumpe, Filter und Verschmutzung).',
+    tankUnknown: 'Die Kraftstoffmenge ist unbekannt geblieben.',
+    recentWork: 'Vor dem Fehler wurde am Fahrzeug gearbeitet. Der bearbeitete Bereich ist Priorität, aber noch kein Beweis.',
+  },
+  // Bauteile, die der Baum nie ohne Prüfkette als Ursache nennt. „Noch nicht nachgewiesen“ im Protokoll.
+  suspects: [
+    { id: 'hallgeber', label: 'Hallgeber defekt' },
+    { id: 'zuendspule', label: 'Zündspule defekt' },
+    { id: 'steuergeraet', label: 'Steuergerät defekt' },
+    { id: 'pumpe', label: 'Kraftstoffpumpe defekt' },
+    { id: 'ventile', label: 'Einspritzventile defekt' },
+    { id: 'regler', label: 'Kraftstoffdruckregler defekt' },
+  ],
+  nodes: {
+    // ---------- 1. Grundcheck ----------
+    G1: {
+      id: 'G1', area: 'G', source: 'Q', title: 'Dreht der Motor normal durch?', short: 'Motor dreht normal durch',
+      where: 'Fahrersitz, beim Startversuch (Geräusch von hinten)', tools: [],
+      how: ['Mache einen Startversuch von höchstens einigen Sekunden.', 'Klingt das Durchdrehen zügig und gleichmäßig wie bei einem normalen Start?'],
+      help: 'Normal ist zügig und gleichmäßig. Langsam, nur Klicken oder gar nichts ist nicht normal.',
+      answers: [
+        { id: 'normal', label: 'Dreht normal durch', meaning: 'Der Anlasser arbeitet. Weiter mit der Suche.', next: 'G2', tone: 'ok', log: 'Motor dreht normal durch' },
+        { id: 'schwach', label: 'Dreht langsam, nur Klicken oder gar nicht', meaning: 'Dann passt dieser Diagnoseweg nicht.', next: 'END_G1_STARTER', tone: 'issue', log: 'Motor dreht nicht normal durch' },
+        { id: 'unsicher', label: 'Bin unsicher', meaning: 'Wir machen weiter, merken uns aber, dass die Startdrehzahl unklar war.', next: 'G2', flags: ['startRpmUnclear'], tone: 'neutral', log: 'Startdrehzahl unklar' },
+      ],
+      fallback: [{ to: 'G2' }],
+    },
+    G2: {
+      id: 'G2', area: 'G', source: 'Q', title: 'Ist genug Kraftstoff im Tank?', short: 'Kraftstoffmenge im Tank',
+      where: 'Tankanzeige und deine eigenen Tankdaten', tools: [],
+      how: ['Lies die Anzeige ab und vergleiche sie mit der letzten bekannten Tankmenge.', 'Verlasse dich nicht blind auf die Tankanzeige allein.'],
+      answers: [
+        { id: 'genug', label: 'Sicher genug', meaning: 'Der Tank ist kein Grund.', next: 'G3', tone: 'ok', log: 'Genug Kraftstoff im Tank' },
+        { id: 'leer', label: 'Fast leer oder Anzeige unzuverlässig', meaning: 'Erst nachfüllen, dann noch einmal starten.', next: 'F_G2', tone: 'issue', log: 'Tank fast leer oder Anzeige unzuverlässig' },
+        { id: 'unbekannt', label: 'Weiß ich nicht', meaning: 'Die Kraftstoffmenge bleibt offen und wird später noch einmal gefragt.', next: 'G3', flags: ['tankUnknown'], tone: 'neutral', log: 'Kraftstoffmenge unbekannt' },
+      ],
+      fallback: [{ to: 'G3' }],
+    },
+    F_G2: {
+      id: 'F_G2', area: 'G', kind: 'action', source: 'Q', title: 'Kraftstoff nachfüllen und starten', short: 'Nachgefüllt und neu gestartet',
+      where: 'Tankstelle oder Kanister', tools: ['Kraftstoff'], safety: ['Nicht rauchen, keine Funken, keine offene Flamme.'],
+      how: ['Fülle Kraftstoff nach.', 'Mache einen neuen Startversuch.'],
+      answers: [
+        { id: 'laeuft', label: 'Motor springt an', meaning: 'Dann fehlte Kraftstoff.', next: 'END_G2_RUNS', tone: 'ok', log: 'Nachgefüllt, Motor sprang an' },
+        { id: 'nicht', label: 'Motor springt nicht an', meaning: 'Wir suchen weiter. Wir merken uns, dass der Tank leer war.', next: 'G3', flags: ['tankWasEmpty'], tone: 'neutral', log: 'Nachgefüllt, Motor sprang nicht an' },
+      ],
+      fallback: [{ to: 'G3' }],
+    },
+    G3: {
+      id: 'G3', area: 'G', source: 'Q', title: 'Batteriespannung notieren', short: 'Batteriespannung',
+      where: 'Batteriepole', tools: ['Multimeter'],
+      how: ['Zündung AUS.', 'Multimeter auf Gleichspannung (V DC, bei Handwahl 20-V-Bereich).', 'Schwarz an den Minuspol, Rot an den Pluspol. Wert ablesen.'],
+      target: 'Kein Grenzwert. Der Wert ist nur ein Vergleichswert für spätere Messungen.',
+      help: 'Multimeter einstellen und die Pole erkennen.',
+      inputs: [{ id: 'v', label: 'Batteriespannung', logLabel: 'Batterie (Ruhe)', unit: 'V', kind: 'number' }],
+      answers: [
+        { id: 'notiert', label: 'Wert eingetragen', meaning: 'Der Wert dient später als Vergleich.', next: 'G4', tone: 'neutral', log: 'Batteriespannung notiert' },
+        { id: 'nicht', label: 'Nicht gemessen', meaning: 'Kein Problem, es fehlt nur der Vergleichswert.', next: 'G4', tone: 'neutral', log: 'Batteriespannung nicht gemessen' },
+      ],
+      fallback: [{ to: 'G4' }],
+    },
+    G4: {
+      id: 'G4', area: 'G', source: 'Q', title: 'Sichtprüfung und letzte Arbeiten', short: 'Sichtprüfung Motorraum',
+      where: 'Motorraum', tools: ['Taschenlampe'],
+      safety: ['Zündung AUS, Motor kalt oder abgekühlt.', 'Bei Kraftstoffgeruch kein Licht mit offener Flamme, keine Funken.'],
+      how: [
+        'Nur schauen und vorsichtig am Stecker rütteln, nichts abziehen.',
+        'Stecker am Verteiler (Hallgeber), an der Zündspule, an den Einspritzventilen, am Luftmengenmesser und am Kühlmittel-Temperaturgeber.',
+        'Masseleitungen am Motor: fest, nicht abgerissen, nicht stark korrodiert.',
+        'Zündkabel fest auf Kappe und Kerzen.',
+        'Kraftstoffleitungen: Geruch, feuchte Stellen, Tropfen.',
+        'Biss- oder Scheuerspuren an Kabeln.',
+        'Wurde vor dem Fehler am Fahrzeug gearbeitet? Wenn ja: wo?',
+      ],
+      help: 'Wo sitzen diese Stecker am Wasserboxer? Eine Bilderhilfe folgt.',
+      inputs: [{ id: 'arbeit', label: 'Falls gearbeitet wurde: wo?', logLabel: 'Zuletzt gearbeitet an', kind: 'text' }],
+      answers: [
+        { id: 'ok', label: 'Alles unauffällig', meaning: 'Weiter mit der Zündung.', next: 'Z1', tone: 'ok', log: 'Sichtprüfung unauffällig' },
+        { id: 'lose', label: 'Loser Stecker, lose Masse oder loses Kabel gefunden', meaning: 'Sachgerecht befestigen und neu starten.', next: 'F_G4', tone: 'issue', log: 'Loser Stecker, Masse oder Kabel gefunden' },
+        { id: 'leck', label: 'Kraftstoff-Leck', meaning: 'STOPP. Nicht weiter starten.', next: 'END_G4_LEAK', tone: 'issue', log: 'Kraftstoff-Leck gesehen' },
+        { id: 'arbeiten', label: 'Kürzlich wurde am Fahrzeug gearbeitet', meaning: 'Der bearbeitete Bereich bekommt Vorrang. Das ist eine Priorität, kein Beweis.', next: 'Z1', flags: ['recentWork'], tone: 'neutral', log: 'Kürzlich Arbeiten am Fahrzeug' },
+      ],
+      fallback: [{ to: 'Z1' }],
+    },
+    F_G4: {
+      id: 'F_G4', area: 'G', kind: 'action', source: 'Q', title: 'Befestigen und neu starten', short: 'Befestigt und neu gestartet',
+      where: 'Stelle, an der du etwas Loses gefunden hast', tools: [],
+      safety: ['Zündung AUS beim Befestigen.'],
+      how: ['Befestige den gefundenen Stecker, die Masse oder das Kabel sachgerecht.', 'Mache einen Startversuch.'],
+      answers: [
+        { id: 'laeuft', label: 'Motor springt an', meaning: 'Der Befund wird im Protokoll festgehalten.', next: 'END_G4_FIXED', tone: 'ok', log: 'Befestigt, Motor sprang an' },
+        { id: 'nicht', label: 'Motor springt nicht an', meaning: 'Wir suchen weiter mit der Zündung.', next: 'Z1', tone: 'neutral', log: 'Befestigt, Motor sprang nicht an' },
+      ],
+      fallback: [{ to: 'Z1' }],
+    },
+
+    // ---------- 2. Zündanlage ----------
+    Z1: {
+      id: 'Z1', area: 'Z', source: 'Q', level: 'basic', title: 'Zündfunken prüfen', short: 'Zündfunke an einer Kerze',
+      where: 'Motorraum → ein Zündkabel am Zündkerzenstecker', tools: ['Kfz-Zündfunkenprüfer (mit Massekabel)', 'zweite Person zum Anlassen'],
+      safety: ['Nur einen Zündfunkenprüfer verwenden. Keine improvisierte offene Funkenstrecke, keine Kerze in der Hand gegen Masse halten.'],
+      how: [
+        'Zündung AUS.',
+        'Einen Kerzenstecker abziehen (am Stecker, nicht am Kabel). Prüfer laut Herstelleranleitung zwischen Stecker und Kerze bzw. mit Massekabel an Motormasse anschließen.',
+        'Prüfer so ablegen, dass er nicht an bewegliche Teile kommt.',
+        'Zweite Person startet wenige Sekunden.',
+        'Prüferlampe bzw. Funkenstrecke beobachten. Zündung AUS.',
+      ],
+      target: 'Regelmäßiger Funke im Takt.',
+      help: 'Zündfunkenprüfer anschließen und Kerzenstecker richtig abziehen.',
+      answers: [
+        { id: 'funke', label: 'Funke regelmäßig', meaning: 'Hochspannung erreicht diesen Zylinder. Nicht belegt: Zündzeitpunkt, Funkenstärke unter Kompression, andere Zylinder.', next: 'K1', tone: 'ok', log: 'Zündfunke an einer Kerze vorhanden' },
+        { id: 'schwach', label: 'Funke schwach oder unregelmäßig', meaning: 'Wir vergleichen direkt an der Zündspule.', next: 'Z2', tone: 'issue', log: 'Zündfunke schwach oder unregelmäßig' },
+        { id: 'keiner', label: 'Kein Funke', meaning: 'Wir vergleichen direkt an der Zündspule.', next: 'Z2', tone: 'issue', log: 'Kein Zündfunke festgestellt' },
+      ],
+      fallback: [{ to: 'K1' }],
+    },
+    Z2: {
+      id: 'Z2', area: 'Z', source: 'Q', level: 'basic', title: 'Kommt Hochspannung direkt aus der Zündspule?', short: 'Funke am Mittelkabel (Zündspule)',
+      where: 'Mittleres Zündkabel (Klemme 4, von der Spule zur Verteilerkappe)', tools: ['Kfz-Zündfunkenprüfer mit Massekabel', 'zweite Person'],
+      safety: ['Nur Zündfunkenprüfer, keine offene Funkenstrecke.'],
+      how: [
+        'Zündung AUS.',
+        'Mittleres Kabel aus der Verteilerkappe ziehen. Die Spulenseite bleibt stecken.',
+        'Kabelende in den Prüfer, Prüfer an Motormasse.',
+        'Kurz anlassen lassen und beobachten.',
+      ],
+      target: 'Funke vorhanden ja oder nein. „Kein Funke“ schließt das Kabel Klemme 4 mit ein: Spule, Ansteuerung, Versorgung oder dieses Kabel.',
+      help: 'Welches ist das mittlere Kabel? Eine Bilderhilfe folgt.',
+      answers: [
+        { id: 'funke', label: 'Funke vorhanden', meaning: 'Der Fehler liegt hinter der Spule, in der Hochspannungsverteilung.', next: 'Z3a', tone: 'ok', log: 'Funke direkt an der Zündspule vorhanden' },
+        { id: 'keiner', label: 'Kein Funke', meaning: 'Der Fehler liegt bei der Hochspannungserzeugung oder davor.', next: 'Z4', tone: 'issue', log: 'Kein Funke direkt an der Zündspule' },
+      ],
+      fallback: [{ to: 'Z4' }],
+    },
+    Z3a: {
+      id: 'Z3a', area: 'Z', source: 'Q', title: 'Dreht der Verteilerfinger beim Anlassen?', short: 'Verteilerfinger dreht',
+      where: 'Verteiler', tools: ['Taschenlampe', 'Zündfunkenprüfer', 'zweite Person'],
+      safety: ['Motor abgekühlt.', 'Beim Anlassen mit abgenommener Kappe steckt das Mittelkabel im geerdeten Funkenprüfer, nie lose.'],
+      how: ['Verteilerkappe abnehmen.', 'Kurz anlassen lassen und den Finger beobachten.'],
+      help: 'Verteilerkappe abnehmen und Kriechspuren erkennen.',
+      answers: [
+        { id: 'dreht', label: 'Finger dreht sich', meaning: 'Der Verteilerantrieb ist in Ordnung. Weiter mit Kappe und Finger.', next: 'Z3b', tone: 'ok', log: 'Verteilerfinger dreht beim Anlassen' },
+        { id: 'nicht', label: 'Finger dreht sich nicht', meaning: 'Dann dreht auch der Hallgeber nicht. Hallgeber und Steuergerät sind dann nicht verdächtig.', next: 'END_M3', tone: 'issue', log: 'Verteilerfinger dreht nicht' },
+      ],
+      fallback: [{ to: 'END_OPEN' }],
+    },
+    Z3b: {
+      id: 'Z3b', area: 'Z', source: 'Q', title: 'Verteilerkappe und Finger ansehen', short: 'Verteilerkappe und Finger',
+      where: 'Verteilerkappe und Verteilerfinger, von innen', tools: ['Taschenlampe'],
+      how: ['Innen auf Risse, Brandspuren, Kriechspuren, Feuchtigkeit und Korrosion schauen.'],
+      answers: [
+        { id: 'ok', label: 'Nichts Auffälliges', meaning: 'Weiter mit den Zündkabeln.', next: 'Z3c', tone: 'ok', log: 'Verteilerkappe und Finger unauffällig' },
+        { id: 'schaden', label: 'Sichtbarer Schaden', meaning: 'Der Schaden ist der Nachweis. Das Teil wird erneuert.', next: 'F_Z3_PART', tone: 'issue', log: 'Schaden an Verteilerkappe oder Finger' },
+      ],
+      fallback: [{ to: 'END_OPEN' }],
+    },
+    Z3c: {
+      id: 'Z3c', area: 'Z', source: 'Q', title: 'Zündkabel ansehen', short: 'Zündkabel',
+      where: 'Zündkabel zwischen Verteilerkappe und Kerzen', tools: ['Taschenlampe'],
+      how: ['Sitz an Kappe und Kerzen, Risse, Feuchtigkeit, Marderschaden.', 'Reihenfolge der Kabel: nicht vertauscht? Zündfolge 1-4-3-2.'],
+      target: 'Zündfolge 1-4-3-2 (vorläufig, noch nicht am Original geprüft). Widerstandswerte der Kabel sind ungeklärt, deshalb keine Messung als Grenze.',
+      answers: [
+        { id: 'ok', label: 'Nichts Auffälliges', meaning: 'Weiter mit den Zündkerzen.', next: 'Z3d', tone: 'ok', log: 'Zündkabel unauffällig' },
+        { id: 'schaden', label: 'Sichtbarer Schaden', meaning: 'Der Schaden ist der Nachweis. Das Kabel wird erneuert.', next: 'F_Z3_PART', tone: 'issue', log: 'Schaden an einem Zündkabel' },
+        { id: 'vertauscht', label: 'Kabel vertauscht', meaning: 'Zuordnung nach Leitfaden prüfen, nicht blind umstecken.', next: 'F_Z3_CABLE', tone: 'issue', log: 'Zündkabel vertauscht' },
+      ],
+      fallback: [{ to: 'END_OPEN' }],
+    },
+    Z3d: {
+      id: 'Z3d', area: 'Z', source: 'Q', title: 'Zündkerzen ansehen', short: 'Zündkerzen',
+      where: 'Zündkerzen an den Zylinderköpfen', tools: ['Zündkerzenschlüssel', 'Taschenlampe'],
+      safety: ['Motor kalt. Kerzen einzeln herausnehmen, Kabel markieren.'],
+      how: ['Zustand ansehen: verrußt, nass, beschädigt, Elektroden in Ordnung?'],
+      target: 'Elektrodenabstand ca. 0,7 mm (vorläufig, noch nicht am Original geprüft).',
+      help: 'Zündkerzen am Wasserboxer aus- und einbauen und das Kerzenbild deuten.',
+      answers: [
+        { id: 'ok', label: 'Nichts Auffälliges', meaning: 'Im Verteilerweg ist nichts sichtbar.', next: 'END_Z3_NOTHING', tone: 'ok', log: 'Zündkerzen unauffällig' },
+        { id: 'schaden', label: 'Kerze beschädigt', meaning: 'Der Schaden ist der Nachweis. Die Kerze wird erneuert.', next: 'F_Z3_KERZE', tone: 'issue', log: 'Beschädigte Zündkerze' },
+      ],
+      fallback: [{ to: 'END_OPEN' }],
+    },
+    F_Z3_PART: {
+      id: 'F_Z3_PART', area: 'Z', kind: 'action', source: 'Q', title: 'Beschädigtes Teil erneuern', short: 'Beschädigtes Teil erneuert',
+      where: 'Verteilerkappe, Finger oder Zündkabel', tools: [], safety: ['Zündung AUS.'],
+      how: ['Erneuere das Teil mit sichtbarem Schaden.', 'Danach prüfen wir den Zündfunken noch einmal.'],
+      answers: [{ id: 'erneuert', label: 'Erneuert – Zündfunke noch einmal prüfen', meaning: 'Wir beginnen die Zündfunkenprüfung neu.', next: 'Z1', tone: 'neutral', log: 'Beschädigtes Teil erneuert' }],
+      fallback: [{ to: 'Z1' }],
+    },
+    F_Z3_CABLE: {
+      id: 'F_Z3_CABLE', area: 'Z', kind: 'action', source: 'Q', title: 'Kabelzuordnung prüfen', short: 'Kabelzuordnung geprüft',
+      where: 'Verteilerkappe und Kerzen', tools: [], safety: ['Zündung AUS.'],
+      how: ['Prüfe die Zuordnung der Kabel nach dem Reparaturleitfaden. Nicht blind umstecken.', 'Danach prüfen wir den Zündfunken noch einmal.'],
+      answers: [{ id: 'geprueft', label: 'Geprüft – Zündfunke noch einmal prüfen', meaning: 'Wir beginnen die Zündfunkenprüfung neu.', next: 'Z1', tone: 'neutral', log: 'Kabelzuordnung geprüft' }],
+      fallback: [{ to: 'Z1' }],
+    },
+    F_Z3_KERZE: {
+      id: 'F_Z3_KERZE', area: 'Z', kind: 'action', source: 'Q', title: 'Beschädigte Zündkerze erneuern', short: 'Zündkerze erneuert',
+      where: 'Zündkerzen an den Zylinderköpfen', tools: ['Zündkerzenschlüssel'], safety: ['Motor kalt, Zündung AUS.'],
+      how: ['Erneuere die beschädigte Kerze. In der App gibt es dafür eine Anleitung.', 'Danach prüfen wir den Zündfunken noch einmal.'],
+      guide: 'zuendkerzen', logTitle: 'Zündkerze erneuert',
+      answers: [{ id: 'erneuert', label: 'Erneuert – Zündfunke noch einmal prüfen', meaning: 'Wir beginnen die Zündfunkenprüfung neu.', next: 'Z1', tone: 'neutral', log: 'Beschädigte Zündkerze erneuert' }],
+      fallback: [{ to: 'Z1' }],
+    },
+    Z4: {
+      id: 'Z4', area: 'Z', source: 'B', level: 'basic', title: 'Versorgung der Zündspule prüfen (Klemme 15)', short: 'Versorgung Zündspule (Klemme 15)',
+      where: 'Zündspule, Anschluss mit der Bezeichnung „15“. Der Stecker bleibt aufgesteckt.', tools: ['Multimeter', 'dünne Messspitze', 'zweite Person (optional)'],
+      safety: ['Messspitze so anlegen, dass kein Kurzschluss entsteht.'],
+      how: [
+        'Multimeter auf V DC (20-V-Bereich).',
+        'Schwarz an blanke Motormasse oder Batterie-Minus, Rot an Klemme 15 der Spule.',
+        'Zündung EIN, Motor nicht starten. Wert ablesen.',
+        'Optional mit zweiter Person: während des Anlassens ablesen. Bleibt die Spannung da oder fällt sie auf null?',
+      ],
+      target: 'Etwa Batteriespannung bei Zündung EIN (vorläufig). Es gibt keinen belegten Grenzwert für die zulässige Abweichung. Die App zeigt deinen Batteriewert daneben.',
+      help: 'Klemme 15 an der Spule finden und die Messspitze ohne Kurzschluss anlegen.',
+      inputs: [{ id: 'v', label: 'Klemme 15, Zündung EIN', logLabel: 'Zündspule Klemme 15', unit: 'V', kind: 'number', compare: { node: 'G3', input: 'v', label: 'Batterie bei der Grundprüfung' } }],
+      answers: [
+        { id: 'ok', label: 'Etwa Batteriespannung, beim Anlassen bleibt sie', meaning: 'Die Versorgung ist da. Weiter mit dem Hallgeber.', next: 'Z5', tone: 'ok', log: 'Versorgung Zündspule vorhanden, auch beim Anlassen' },
+        { id: 'ok-ein', label: 'Etwa Batteriespannung bei Zündung EIN, beim Anlassen nicht gemessen', meaning: 'Die Versorgung ist bei Zündung EIN da. Beim Anlassen bleibt sie offen.', next: 'Z5', tone: 'ok', log: 'Versorgung Zündspule bei Zündung EIN vorhanden, beim Anlassen nicht geprüft' },
+        { id: 'fehlt', label: '0 V oder deutlich unter dem Batteriewert', meaning: 'Die Versorgung der Zündspule fehlt.', next: 'END_Z4', tone: 'issue', log: 'Versorgung Zündspule fehlt oder zu niedrig' },
+        { id: 'faellt', label: 'Spannung fällt nur beim Anlassen weg', meaning: 'Die Versorgung bricht beim Startvorgang weg.', next: 'END_Z4_START', tone: 'issue', log: 'Spannung Zündspule fällt beim Anlassen weg' },
+      ],
+      fallback: [{ to: 'Z5' }],
+    },
+    Z5: {
+      id: 'Z5', area: 'Z', source: 'A', level: 'basic', title: 'Spannungsversorgung des Hallgebers messen', short: 'Hallgeber-Versorgung',
+      where: 'Dreipoliger Stecker am Hallgeber (seitlich am Verteiler), kabelbaumseitig', tools: ['Multimeter', 'dünne Messspitzen'],
+      safety: ['Zündung AUS beim Abziehen und Aufstecken. Stecker am Stecker abziehen, nicht am Kabel.'],
+      how: [
+        'Zündung AUS. Stecker vom Hallgeber abziehen.',
+        'Multimeter auf V DC.',
+        'Messspitzen an die beiden äußeren Kontakte des kabelbaumseitigen Steckers. Der mittlere Kontakt bleibt frei.',
+        'Zündung EIN, Motor nicht starten. Wert ablesen. Bei einem Minuszeichen zählt der Betrag.',
+        'Zündung AUS, Stecker wieder fest aufstecken.',
+      ],
+      target: 'Mindestens 10 V zwischen den äußeren Kontakten, Zündung EIN, Stecker abgezogen.',
+      help: 'Hallgeberstecker finden, Kontakte nicht aufbiegen.',
+      suggest: { input: 'v', gte: 10, yes: 'ok', no: 'low' },
+      inputs: [{ id: 'v', label: 'Spannung zwischen den äußeren Kontakten', logLabel: 'Hallgeber-Versorgung', unit: 'V', kind: 'number' }],
+      answers: [
+        { id: 'ok', label: '10 V oder mehr', meaning: 'Die Versorgung erfüllt den VW-Sollwert. Belegt nicht, dass der Hallgeber ein Signal liefert.', next: 'Z6', tone: 'ok', log: 'Hallgeber-Versorgung in Ordnung (mindestens 10 V)' },
+        { id: 'low', label: 'Weniger als 10 V', meaning: 'Die Versorgung ist zu niedrig. Sie kommt vom Steuergerät.', next: 'END_Z5_LOW', tone: 'issue', log: 'Hallgeber-Versorgung zu niedrig (unter 10 V)' },
+      ],
+      fallback: [{ to: 'Z6' }],
+    },
+    Z6: {
+      id: 'Z6', area: 'Z', source: 'B', level: 'basic', title: 'Hallgeber-Signal beim Anlassen prüfen', short: 'Hallgeber-Signal',
+      where: 'Hallgeberstecker, aufgesteckt, Gummitülle zurückgeschoben, von hinten kontaktiert', tools: ['LED-Diodenprüflampe für Kfz-Elektronik (oder Prüf-LED mit Vorwiderstand)', 'Rückseiten-Prüfnadeln', 'Zündfunkenprüfer', 'zweite Person'],
+      safety: [
+        'Keine normale Glühlampen-Prüflampe: Sie zieht zu viel Strom für empfindliche Signalleitungen.',
+        'Das Mittelkabel (Klemme 4) in den geerdeten Zündfunkenprüfer stecken, damit die Spule nicht offen feuert.',
+      ],
+      how: [
+        'Zündung AUS.',
+        'Mittelkabel (Klemme 4) aus der Verteilerkappe ziehen und in den geerdeten Funkenprüfer stecken.',
+        'LED-Prüflampe zwischen den mittleren Kontakt (Signal) und einen äußeren Kontakt anschließen.',
+        'Zweite Person startet wenige Sekunden. LED beobachten.',
+      ],
+      target: 'Die LED flackert oder blinkt während des Anlassens. Welcher äußere Kontakt und welche LED-Polarität laut VW gelten, ist noch nicht eindeutig geklärt.',
+      help: 'Rückseitig kontaktieren. LED-Prüflampe und Glühlampe unterscheiden.',
+      answers: [
+        { id: 'led', label: 'LED flackert', meaning: 'Der Hallgeber liefert bei dieser Prüfung ein Schaltsignal.', next: 'Z7', tone: 'ok', log: 'Hallgeber liefert ein Signal (LED flackert)' },
+        { id: 'kein', label: 'LED dauerhaft an oder aus', meaning: 'Erst klären, ob der Verteilerfinger sich dreht, dann den Stecker prüfen.',
+          next: [{ when: is('Z3a', 'nicht'), to: 'END_M3' }, { when: { answered: 'Z3a' }, to: 'F_Z6_PLUG' }, { to: 'Z6c' }],
+          tone: 'issue', log: 'Kein Hallgeber-Signal (LED dauerhaft an oder aus)' },
+      ],
+      fallback: [{ to: 'E1' }],
+    },
+    Z6c: {
+      id: 'Z6c', area: 'Z', source: 'Q', title: 'Dreht der Verteilerfinger beim Anlassen?', short: 'Verteilerfinger dreht (bei Hallgeber-Prüfung)',
+      where: 'Verteiler', tools: ['Zündfunkenprüfer', 'zweite Person'],
+      safety: ['Motor abgekühlt.', 'Beim Anlassen mit abgenommener Kappe steckt das Mittelkabel im geerdeten Funkenprüfer, nie lose.'],
+      how: ['Verteilerkappe abnehmen.', 'Kurz anlassen lassen und den Finger beobachten.'],
+      answers: [
+        { id: 'dreht', label: 'Finger dreht sich', meaning: 'Dann prüfen wir den Stecker und wiederholen die Signalprüfung.', next: 'F_Z6_PLUG', tone: 'ok', log: 'Verteilerfinger dreht beim Anlassen' },
+        { id: 'nicht', label: 'Finger dreht sich nicht', meaning: 'Dann dreht auch der Hallgeber nicht.', next: 'END_M3', tone: 'issue', log: 'Verteilerfinger dreht nicht' },
+      ],
+      fallback: [{ to: 'END_Z6_OPEN' }],
+    },
+    F_Z6_PLUG: {
+      id: 'F_Z6_PLUG', area: 'Z', kind: 'action', source: 'B', title: 'Stecker prüfen und Signalprüfung wiederholen', short: 'Hallgeber-Stecker geprüft, Signal erneut geprüft',
+      where: 'Hallgeberstecker', tools: ['LED-Diodenprüflampe', 'Rückseiten-Prüfnadeln', 'zweite Person'],
+      safety: ['Keine Glühlampen-Prüflampe. Mittelkabel weiter im geerdeten Funkenprüfer.'],
+      how: ['Prüfe, ob der Stecker fest und sauber sitzt.', 'Wiederhole die Signalprüfung mit der LED-Prüflampe wie zuvor.'],
+      answers: [
+        { id: 'led', label: 'LED flackert jetzt', meaning: 'Der Hallgeber liefert ein Schaltsignal.', next: 'Z7', tone: 'ok', log: 'Nach Steckerprüfung: Hallgeber-Signal vorhanden' },
+        { id: 'kein', label: 'Weiter kein Signal', meaning: 'Kein Signal trotz Versorgung, drehendem Verteiler und geprüftem Stecker.', next: 'END_Z6_HALL', tone: 'issue', log: 'Nach Steckerprüfung weiter kein Hallgeber-Signal' },
+      ],
+      fallback: [{ to: 'END_Z6_OPEN' }],
+    },
+    Z7: {
+      id: 'Z7', area: 'Z', source: 'B', level: 'basic', title: 'Wird die Zündspule angesteuert? (Klemme 1)', short: 'Ansteuerung Zündspule (Klemme 1)',
+      where: 'Zündspule, Klemme 15 und Klemme 1, Stecker aufgesteckt', tools: ['LED-Diodenprüflampe', 'Rückseiten-Prüfnadeln', 'zweite Person'],
+      safety: ['Keine Glühlampen-Prüflampe. Das Mittelkabel bleibt im geerdeten Funkenprüfer.'],
+      how: [
+        'Zündung AUS. Mittelkabel weiter im geerdeten Funkenprüfer.',
+        'LED-Prüflampe zwischen Klemme 15 und Klemme 1 der Spule.',
+        'Zweite Person startet kurz. LED beobachten.',
+      ],
+      target: 'Die LED flackert beim Anlassen. Ob dieses Verfahren dem VW-Verfahren für den MV entspricht, ist noch nicht bestätigt.',
+      help: 'Rückseitig kontaktieren. LED-Prüflampe statt Glühlampe.',
+      answers: [
+        { id: 'led', label: 'LED flackert', meaning: 'Das Steuergerät schaltet die Spule.', next: 'Z8', tone: 'ok', log: 'Zündspule wird angesteuert (LED flackert)' },
+        { id: 'kein', label: 'LED flackert nicht', meaning: 'Hallsignal vorhanden, aber keine Ansteuerung der Spule.', next: 'END_Z7', tone: 'issue', log: 'Zündspule wird nicht angesteuert' },
+      ],
+      fallback: [{ when: { visited: 'E1' }, to: 'END_OPEN' }, { to: 'E1' }],
+    },
+    Z8: {
+      id: 'Z8', area: 'Z', source: 'B', level: 'basic', title: 'Zündspule als Ursache bestätigen', short: 'Zündspule gegengeprüft',
+      where: 'Mittleres Zündkabel (Klemme 4) und Zündspule mit Stecker', tools: ['bekannt gutes Zündkabel', 'Zündfunkenprüfer', 'zweite Person'],
+      safety: ['Nur Zündfunkenprüfer, keine offene Funkenstrecke.'],
+      how: [
+        'Zuerst das Mittelkabel ausschließen: Sichtprüfung und die Funkenprüfung wie zuvor, aber mit einem bekannt guten Kabel oder direkt am Spulendom.',
+        'Danach Spulenstecker und Klemmen auf Korrosion ansehen.',
+      ],
+      target: 'Kein Widerstandswert als Grenze: Die Widerstände der Spule sind nur durch ein Forumszitat belegt und werden nicht verwendet.',
+      answers: [
+        { id: 'kabel', label: 'Mit gutem Kabel kommt ein Funke', meaning: 'Das Mittelkabel war die Ursache.', next: 'F_Z8_CABLE', tone: 'issue', log: 'Mit bekannt gutem Kabel Funke vorhanden' },
+        { id: 'keiner', label: 'Weiter kein Funke', meaning: 'Alle Vorprüfungen sind bestanden. Die Spule ist wahrscheinlich die Ursache.', next: 'END_Z8_COIL', tone: 'issue', log: 'Weiter kein Funke trotz Versorgung, Signal und Ansteuerung' },
+      ],
+      fallback: [{ to: 'END_OPEN' }],
+    },
+    F_Z8_CABLE: {
+      id: 'F_Z8_CABLE', area: 'Z', kind: 'action', source: 'B', title: 'Mittelkabel erneuern', short: 'Mittelkabel erneuert',
+      where: 'Mittleres Zündkabel (Klemme 4)', tools: [], safety: ['Zündung AUS.'],
+      how: ['Erneuere das Mittelkabel.', 'Danach prüfen wir den Zündfunken noch einmal.'],
+      answers: [{ id: 'erneuert', label: 'Erneuert – Zündfunke noch einmal prüfen', meaning: 'Wir beginnen die Zündfunkenprüfung neu.', next: 'Z1', tone: 'neutral', log: 'Mittelkabel erneuert' }],
+      fallback: [{ to: 'Z1' }],
+    },
+
+    // ---------- 3. Kraftstoffversorgung ----------
+    K1: {
+      id: 'K1', area: 'K', source: 'Q', level: 'basic', title: 'Läuft die Kraftstoffpumpe?', short: 'Kraftstoffpumpe läuft',
+      where: 'Im Bereich der Pumpe unter dem Fahrzeug, nahe dem Tank', tools: ['zweite Person'],
+      safety: ['Nicht unter das Fahrzeug legen, solange es nur auf dem Wagenheber steht. Rampen oder Unterstellböcke verwenden.'],
+      how: ['Eine Person schaltet die Zündung EIN und startet danach kurz, die andere hört an der Pumpe.', 'Frage nur: Ist ein Laufgeräusch zu hören?'],
+      target: 'Am Pumpenrelais liegt bei Zündung EIN nur etwa 5 Sekunden Spannung an (vorläufig). Deshalb auch beim Anlassen hinhören.',
+      help: 'Wo sitzt die Pumpe, und wie klingt sie? Sicher unter dem Fahrzeug arbeiten.',
+      answers: [
+        { id: 'laeuft', label: 'Pumpe läuft', meaning: 'Nicht belegt sind Druck und Fördermenge.', next: 'K2', tone: 'ok', log: 'Kraftstoffpumpe läuft (Geräusch)' },
+        { id: 'still', label: 'Pumpe nicht hörbar', meaning: 'Wir prüfen, ob Spannung an der Pumpe ankommt.', next: 'K1a', tone: 'issue', log: 'Kraftstoffpumpe nicht hörbar' },
+      ],
+      fallback: [{ to: 'K2' }],
+    },
+    K1a: {
+      id: 'K1a', area: 'K', source: 'B', level: 'basic', title: 'Kommt Spannung an der Pumpe an?', short: 'Spannung an der Kraftstoffpumpe',
+      where: 'Elektrischer Anschluss an der Kraftstoffpumpe', tools: ['Multimeter', 'Rückseiten-Prüfnadeln', 'zweite Person'],
+      safety: [
+        'Unter dem Fahrzeug nur auf Rädern, Rampen oder Unterstellböcken – nie nur auf dem Wagenheber.',
+        'Kabel so führen, dass sie nicht an Rad oder Antrieb kommen.',
+        'Nicht unter dem Fahrzeug liegen, während gestartet wird: Messgerät ablegen und nach dem Startversuch ablesen oder eine Messleitungsverlängerung nutzen.',
+        'Keine Relaisüberbrückung als Standardschritt.',
+      ],
+      how: ['Multimeter auf V DC an die beiden Anschlüsse der Pumpe (Plus und Minus), Stecker aufgesteckt.', 'Zündung EIN bzw. kurz anlassen, Anzeige beobachten.'],
+      target: 'Batteriespannung, solange das Relais die Pumpe einschaltet (vorläufig). Kein belegter Grenzwert.',
+      inputs: [{ id: 'v', label: 'Spannung an der Pumpe', logLabel: 'Spannung an der Kraftstoffpumpe', unit: 'V', kind: 'number' }],
+      answers: [
+        { id: 'da', label: 'Spannung da, Pumpe läuft trotzdem nicht', meaning: 'Pumpe oder ihre Masse sind wahrscheinlich die Ursache.', next: 'END_K1A_PUMP', tone: 'issue', log: 'Spannung an der Pumpe vorhanden, Pumpe läuft nicht' },
+        { id: 'keine', label: 'Keine Spannung', meaning: 'Der Fehler liegt im Weg zur Pumpe, nicht in der Pumpe.', next: 'END_K1A_RELAY', tone: 'issue', log: 'Keine Spannung an der Pumpe' },
+      ],
+      fallback: [{ to: 'END_OPEN' }],
+    },
+    K2: {
+      id: 'K2', area: 'K', source: 'Q', level: 'basic', title: 'Zündkerzenbild nach Startversuchen', short: 'Zündkerzenbild (nass oder trocken)',
+      where: 'Zündkerzen an den Zylinderköpfen', tools: ['Zündkerzenschlüssel', 'Taschenlampe'],
+      safety: ['Motor kalt, Zündung AUS.', 'Kerzen nur einzeln herausnehmen, Kabel markieren.', 'Kraftstoffdampf: keine Funkenquelle in der Nähe.'],
+      how: ['Nach mehreren normalen Startversuchen eine oder zwei Kerzen herausdrehen und ansehen.'],
+      target: '„Nass“ beweist weder richtigen Druck noch richtige Menge. Auch ein überfetteter Motor startet nicht.',
+      help: 'Kerzen am Wasserboxer erreichen und trocken von nass unterscheiden.',
+      answers: [
+        { id: 'nass', label: 'Kerze feucht oder nass, riecht nach Kraftstoff', meaning: 'Kraftstoff erreicht den Zylinder. Wir suchen einen Hinweis auf Überfettung.', next: 'K4', tone: 'issue', log: 'Zündkerzen nass (Kraftstoffgeruch)' },
+        { id: 'trocken', label: 'Kerze trocken', meaning: 'Zu wenig oder keine Einspritzung wird wahrscheinlicher.', next: 'K3', tone: 'issue', log: 'Zündkerzen trocken' },
+        { id: 'unklar', label: 'Nicht eindeutig', meaning: 'Wir prüfen die Einspritzung.', next: 'E1', tone: 'neutral', log: 'Kerzenbild nicht eindeutig' },
+      ],
+      fallback: [{ to: 'K3' }],
+    },
+    K3: {
+      id: 'K3', area: 'K', source: 'B', level: 'advanced', title: 'Baut sich Kraftstoffdruck auf?', short: 'Kraftstoffdruck',
+      where: 'Kraftstoffzulauf zum Verteilerrohr der Einspritzventile (T-Stück oder Prüfanschluss)', tools: ['Kraftstoffdruck-Manometer mit passendem Adapter', 'Lappen', 'Auffangbehälter', 'Schutzbrille', 'kraftstoffbeständige Handschuhe'],
+      safety: [
+        'Höchste Sicherheitsstufe. Das System steht auch bei stehendem Motor unter Restdruck.',
+        'Nur am kalten Motor anschließen. Nach dem Test auf Dichtheit prüfen.',
+        'Anfänger: Werkstatt empfohlen.',
+      ],
+      how: ['Manometer einbauen.', 'Zündung EIN bzw. anlassen.', 'Ablesen: Steigt der Druck an und hält er sich?'],
+      target: 'Es gibt keinen festen Sollwert, weil die Quellen sich widersprechen. Die App wertet nur: baut sich Druck auf – ja oder nein. Dein Messwert wird im Protokoll gespeichert, aber nicht bewertet.',
+      help: 'Kraftstoffdruck messen. Mit Werkstatthinweis.',
+      inputs: [{ id: 'p', label: 'Gemessener Druck (wird nur gespeichert)', logLabel: 'Kraftstoffdruck', unit: 'bar', kind: 'number', source: 'C' }],
+      answers: [
+        { id: 'druck', label: 'Druck baut sich auf', meaning: 'Der Kraftstoff wird gefördert. Weiter mit der Einspritzung.', next: 'E1', tone: 'ok', log: 'Kraftstoffdruck baut sich auf' },
+        { id: 'kein', label: 'Kein oder kaum Druck', meaning: 'Kraftstoff wird nicht ausreichend gefördert.', next: [{ when: is('K1', 'laeuft'), to: 'END_K3_LOW' }, { to: 'END_K3_LOW_PUMP' }], tone: 'issue', log: 'Kein oder kaum Kraftstoffdruck' },
+      ],
+      fallback: [{ to: 'E1' }],
+    },
+    K4: {
+      id: 'K4', area: 'K', source: 'Q', level: 'basic', title: 'Hinweis auf Überfettung: Unterdruckschlauch am Druckregler', short: 'Unterdruckschlauch am Druckregler',
+      where: 'Unterdruckschlauch am Kraftstoffdruckregler (laut T3-Fachwiki im Rücklauf am Ansaugrohr; die Lage ist für die Hilfe noch per Bild zu bestätigen)', tools: [],
+      safety: ['Motor kalt, Zündung AUS.'],
+      how: ['Ziehe den Unterdruckschlauch vom Regler ab.', 'Sieh nach, ob Kraftstoff im Schlauch ist.'],
+      target: 'Der Schlauch ist trocken.',
+      help: 'Wo sitzt der Druckregler? Eine Bilderhilfe folgt.',
+      answers: [
+        { id: 'kraftstoff', label: 'Kraftstoff im Schlauch', meaning: 'Die Membran des Druckreglers ist wahrscheinlich undicht.', next: 'END_K4', tone: 'issue', log: 'Kraftstoff im Unterdruckschlauch des Druckreglers' },
+        { id: 'trocken', label: 'Schlauch trocken', meaning: 'Weiter mit der Kompression. Hinweis: Ein Temperatursignal kann die Gemischbildung beim Start beeinflussen (siehe Sensor-Sichtprüfung).', next: 'M1', tone: 'ok', log: 'Unterdruckschlauch am Druckregler trocken' },
+      ],
+      fallback: [{ to: 'M1' }],
+    },
+
+    // ---------- 4. Einspritzung ----------
+    E1: {
+      id: 'E1', area: 'E', source: 'B', level: 'basic', title: 'Werden die Einspritzventile angesteuert?', short: 'Ansteuerung der Einspritzventile',
+      where: 'Stecker eines Einspritzventils: Ventilseite abgezogen, Kabelbaumseite geprüft', tools: ['LED-Diodenprüflampe', 'zweite Person'],
+      safety: [
+        'Keine Glühlampen-Prüflampe.',
+        'Zündung AUS beim Anschließen. Bei abgezogenem Stecker spritzt dieses Ventil nicht. Trotzdem keine Funkenquelle an Kraftstoffteilen.',
+        'Abstand zu beweglichen Teilen.',
+      ],
+      how: [
+        'Zündung AUS. Stecker von einem Einspritzventil abziehen.',
+        'LED-Prüflampe in die beiden Kontakte des Kabelbaumsteckers stecken.',
+        'Zweite Person startet kurz. LED beobachten.',
+        'Flackert nichts: Prüflampe umpolen und wiederholen. Dann die anderen Ventilstecker ebenso.',
+        'Stecker wieder fest aufstecken.',
+      ],
+      target: 'Die LED flackert beim Anlassen.',
+      help: 'Ventilstecker lösen, ohne die alte Verriegelung zu brechen.',
+      answers: [
+        { id: 'led', label: 'LED flackert', meaning: 'Die Ansteuerung ist da. Das Steuergerät bekommt beim Anlassen auch ein verwertbares Drehzahlsignal. Über die Zündung sagt das nichts aus.', next: 'E2', tone: 'ok', log: 'Einspritzventile werden angesteuert (LED flackert)' },
+        { id: 'keine', label: 'Flackert an keinem Ventil', meaning: 'Keine Ansteuerung. Wir suchen den Grund.', next: 'E1a1', tone: 'issue', log: 'Keine Ansteuerung der Einspritzventile' },
+        { id: 'einzelne', label: 'Flackert nur an einzelnen Ventilen', meaning: 'Der Fehler liegt an den betroffenen Ventilen.', next: 'END_E1_SINGLE', tone: 'issue', log: 'Ansteuerung nur an einzelnen Einspritzventilen' },
+      ],
+      fallback: [{ to: 'E2' }],
+    },
+    E1a1: {
+      id: 'E1a1', area: 'E', source: 'B', level: 'basic', title: 'Versorgung der Einspritzventile messen', short: 'Versorgung der Einspritzventile',
+      where: 'Kabelbaumstecker eines Einspritzventils', tools: ['Multimeter', 'zweite Person (optional)'],
+      safety: ['Messspitzen ohne Kurzschluss anlegen. Keine Funkenquelle an Kraftstoffteilen.'],
+      how: ['Zündung EIN. Multimeter auf V DC, am Kabelbaumstecker eines Ventils gegen Masse messen.'],
+      target: 'Spannung liegt an, solange das Versorgungsrelais geschaltet ist (vorläufig, Pin- und Relaisangaben noch nicht am Stromlaufplan bestätigt).',
+      help: 'Multimeter einstellen, Messspitze sicher anlegen.',
+      inputs: [{ id: 'v', label: 'Spannung am Ventilstecker', logLabel: 'Versorgung Einspritzventile', unit: 'V', kind: 'number' }],
+      answers: [
+        { id: 'da', label: 'Spannung liegt an', meaning: 'Die Versorgung der Ventile ist da.', next: [{ when: { any: [{ visited: 'Z6' }, is('Z1', 'funke')] }, to: 'END_E1A_CTRL' }, { to: 'Z6' }], tone: 'ok', log: 'Versorgung der Einspritzventile vorhanden' },
+        { id: 'keine', label: 'Keine Spannung', meaning: 'Die Versorgung der Ventile fehlt.', next: 'END_E1A_SUPPLY', tone: 'issue', log: 'Keine Versorgung an den Einspritzventilen' },
+      ],
+      fallback: [{ to: 'END_OPEN' }],
+    },
+    E2: {
+      id: 'E2', area: 'E', source: 'B', level: 'basic', title: 'Einspritzventile messen', short: 'Widerstand der Einspritzventile',
+      where: 'Einspritzventile, Stecker abgezogen', tools: ['Multimeter (Ohm)'],
+      safety: ['Zündung AUS. Widerstand nie an Spannung messen.'],
+      how: ['Multimeter auf Ω (200-Ω-Bereich).', 'Messspitzen an die beiden Kontakte am Ventil.', 'Jedes Ventil messen und die Werte eintragen.'],
+      target: 'Ca. 15–20 Ω je Ventil (vorläufig, die Quellen weichen leicht ab). Die App wertet nur deutliche Ausreißer: Unterbrechung („OL“) oder Kurzschluss nahe 0 Ω.',
+      help: 'Widerstand messen (Ω-Bereich).',
+      inputs: [1, 2, 3, 4].map((n) => ({ id: 'v' + n, label: `Ventil ${n}`, logLabel: `Einspritzventil ${n}`, unit: 'Ω', kind: 'number' })),
+      answers: [
+        { id: 'ok', label: 'Alle im üblichen Bereich', meaning: 'Elektrisch unauffällig. Nicht belegt: Öffnen, Spritzbild, Menge.',
+          next: [{ when: { all: [is('K2', 'trocken'), is('K3', 'druck')] }, to: 'END_E2_VALVES' }, { when: { all: [is('K2', 'trocken'), { not: { answered: 'K3' } }] }, to: 'END_E2_PRESSOPEN' }, { to: 'E3' }],
+          tone: 'ok', log: 'Einspritzventile elektrisch unauffällig' },
+        { id: 'eins', label: 'Ein Ventil mit Unterbrechung oder Kurzschluss', meaning: 'Dieses Ventil ist auffällig und wird erneuert. Ob es allein den Nichtstart erklärt, ist damit nicht belegt.', next: 'E3', tone: 'issue', log: 'Ein Einspritzventil mit Unterbrechung oder Kurzschluss' },
+        { id: 'alle', label: 'Alle zeigen Unterbrechung', meaning: 'Eher ein Leitungs- oder Messfehler. Messung wiederholen, Stecker prüfen.', next: 'E2', tone: 'neutral', log: 'Alle Ventile zeigten Unterbrechung, Messung wird wiederholt' },
+      ],
+      fallback: [{ to: 'E3' }],
+    },
+    E3: {
+      id: 'E3', area: 'E', source: 'B', level: 'basic', title: 'Sensoren ansehen (Anfängerstufe)', short: 'Sichtprüfung Sensoren und Ansaugschlauch',
+      where: 'Luftmengenmesser (Stauklappe), Kühlmittel-Temperaturgeber, Ansaugschlauch', tools: ['Taschenlampe'],
+      safety: ['Zündung AUS. Keine Einstellschrauben am Luftmengenmesser verdrehen.'],
+      how: [
+        'Ansaugschlauch zwischen Luftmengenmesser und Drosselklappe auf Risse und abgerutschte Schellen prüfen.',
+        'Stauklappe von Hand vorsichtig bewegen: frei beweglich, kein Haken.',
+        'Stecker an Luftmengenmesser und Temperaturgeber fest?',
+      ],
+      target: 'Messungen am Steuergerätestecker gehören zur fortgeschrittenen Stufe und sind noch nicht freigegeben. Sie sind in dieser Version nicht enthalten.',
+      help: 'Sichtprüfung. Nichts verstellen.',
+      answers: [
+        { id: 'befund', label: 'Mechanischer Befund (Riss, Klappe klemmt, Stecker lose)', meaning: 'Beheben und neu starten.', next: 'F_E3', tone: 'issue', log: 'Mechanischer Befund an Sensor oder Ansaugschlauch' },
+        { id: 'ok', label: 'Unauffällig', meaning: 'Weiter mit der Kompression.', next: 'M1', tone: 'ok', log: 'Sensoren und Ansaugschlauch unauffällig' },
+      ],
+      fallback: [{ to: 'M1' }],
+    },
+    F_E3: {
+      id: 'F_E3', area: 'E', kind: 'action', source: 'B', title: 'Befund beheben und neu starten', short: 'Befund an Sensor oder Ansaugschlauch behoben',
+      where: 'Stelle mit dem mechanischen Befund', tools: [], safety: ['Zündung AUS beim Beheben.'],
+      how: ['Behebe den Befund (Schlauch, Schelle, Klappe, Stecker).', 'Mache einen Startversuch.'],
+      answers: [
+        { id: 'laeuft', label: 'Motor springt an', meaning: 'Der Befund wird im Protokoll festgehalten.', next: 'END_E3_FIXED', tone: 'ok', log: 'Befund behoben, Motor sprang an' },
+        { id: 'nicht', label: 'Motor springt nicht an', meaning: 'Weiter mit der Kompression.', next: 'M1', tone: 'neutral', log: 'Befund behoben, Motor sprang nicht an' },
+      ],
+      fallback: [{ to: 'M1' }],
+    },
+
+    // ---------- 5. Mechanik ----------
+    M1: {
+      id: 'M1', area: 'M', source: 'B', level: 'advanced', title: 'Kompression messen', short: 'Kompression',
+      where: 'Alle vier Zylinder, Zündkerzenbohrungen', tools: ['Kompressionsprüfer für Benziner (Adapter passend zum Kerzengewinde)', 'Zündkerzenschlüssel', 'Zündfunkenprüfer', 'zweite Person'],
+      safety: [
+        'Zündung und Einspritzung deaktivieren, damit kein Funke und kein Kraftstoff austritt: Mittelkabel (Klemme 4) in den geerdeten Funkenprüfer, Einspritzventilstecker abziehen.',
+        'Abstand zu beweglichen Teilen.',
+      ],
+      how: [
+        'Alle Kerzen heraus. Prüfer in einen Zylinder.',
+        'Gaspedal ganz durchtreten (Drosselklappe offen). Anlassen, bis der Zeiger nicht mehr steigt. Wert notieren.',
+        'Alle Zylinder gleich messen.',
+      ],
+      target: 'Ca. 10–13 bar (vorläufig). Die zulässige Differenz zwischen den Zylindern ist ungeklärt. Bei einem Nichtstarter ist nur eine Kaltmessung möglich, das Ergebnis gilt mit Vorbehalt.',
+      help: 'Kompression messen.',
+      inputs: [1, 2, 3, 4].map((n) => ({ id: 'z' + n, label: `Zylinder ${n}`, logLabel: `Kompression Zylinder ${n}`, unit: 'bar', kind: 'number' })),
+      answers: [
+        { id: 'ok', label: 'Alle Zylinder im Bereich', meaning: 'Die Mechanik ist unauffällig.', next: [{ when: { flag: 'recentWork' }, to: 'END_M2' }, { to: 'END_ALL_CLEAR' }], tone: 'ok', log: 'Kompression aller Zylinder im Bereich' },
+        { id: 'niedrig', label: 'Mehrere oder alle Zylinder sehr niedrig', meaning: 'Mechanischer Befund.', next: 'END_M1_LOW', tone: 'issue', log: 'Kompression mehrerer Zylinder sehr niedrig' },
+        { id: 'einer', label: 'Ein Zylinder auffällig', meaning: 'Befund notieren. Das erklärt den Nichtstart nicht zwingend.', next: [{ when: { flag: 'recentWork' }, to: 'END_M2' }, { to: 'END_ALL_CLEAR' }], tone: 'issue', log: 'Kompression eines Zylinders auffällig' },
+      ],
+      fallback: [{ when: { flag: 'recentWork' }, to: 'END_M2' }, { to: 'END_OPEN' }],
+    },
+
+    // ---------- Endknoten ----------
+    END_G1_STARTER: {
+      id: 'END_G1_STARTER', end: true, kind: 'redirect', source: 'Q', title: 'Dieser Diagnoseweg passt nicht',
+      text: 'Der Motor dreht nicht normal durch. Hier geht es um „Motor dreht, springt nicht an“. Ein Weg für „Motor dreht nicht / Anlasserproblem“ ist noch nicht in der App. Bitte keine Zünd- oder Einspritzprüfung machen.',
+    },
+    END_G2_RUNS: {
+      id: 'END_G2_RUNS', end: true, kind: 'done', source: 'Q', title: 'Motor läuft wieder',
+      text: 'Der Motor ist nach dem Nachfüllen angesprungen. Beobachte künftig Kraftstoffmenge und Anzeige.',
+    },
+    END_G4_LEAK: {
+      id: 'END_G4_LEAK', end: true, kind: 'stop', source: 'Q', title: 'Stopp: Kraftstoff-Leck',
+      text: 'Nicht weiter starten. Erst das Leck beheben, dann kann die Suche weitergehen.',
+    },
+    END_G4_FIXED: {
+      id: 'END_G4_FIXED', end: true, kind: 'done', source: 'Q', title: 'Motor läuft wieder',
+      text: 'Der Motor ist nach dem Befestigen des losen Teils angesprungen. Der Befund steht im Protokoll.',
+    },
+    END_Z3_NOTHING: {
+      id: 'END_Z3_NOTHING', end: true, kind: 'result', source: 'Q', title: 'Hochspannung erreicht die Kerze nicht, Ursache nicht sichtbar',
+      text: 'Die Hochspannung kommt an der Zündspule an, erreicht aber die Kerze nicht. Im Verteilerweg ist nichts Sichtbares zu finden.',
+      next: ['Widerstandsprüfung nach Leitfaden (Sollwerte sind noch offen) oder Werkstatt'],
+    },
+    END_M3: {
+      id: 'END_M3', end: true, kind: 'result', source: 'Q', title: 'Verteilerantrieb prüfen',
+      text: 'Der Verteilerfinger dreht sich nicht. Dann fehlen Zündfunke und Drehzahlsignal zusammen. Hallgeber und Steuergerät sind dann nicht verdächtig.',
+      next: ['Verteilerantrieb prüfen (sitzt der Verteiler fest im Motor? Antrieb beschädigt?). Werkstatt empfohlen.'],
+    },
+    END_Z4: {
+      id: 'END_Z4', end: true, kind: 'result', provisional: true, source: 'B', title: 'Versorgung der Zündspule fehlt',
+      text: 'Der Fehler liegt im Versorgungsweg: Steckverbindung an der Spule, Leitung, Sicherung oder Relais, Zündanlassschalter.',
+      notThis: ['Zündspule nicht tauschen.'],
+      next: ['Versorgungsweg prüfen. Das braucht den Stromlaufplan Nr. 79 und ist in der App noch nicht ausgearbeitet.'],
+    },
+    END_Z4_START: {
+      id: 'END_Z4_START', end: true, kind: 'result', provisional: true, source: 'B', title: 'Versorgung der Zündspule bricht beim Anlassen weg',
+      text: 'Bei Zündung EIN ist Spannung da, beim Anlassen fällt sie weg. Der Fehler liegt in der Versorgung während des Startvorgangs: Steckverbindung, Leitung, Sicherung oder Relais, Zündanlassschalter.',
+      notThis: ['Zündspule nicht tauschen.'],
+      next: ['Versorgungsweg prüfen. Das braucht den Stromlaufplan Nr. 79 und ist in der App noch nicht ausgearbeitet.'],
+    },
+    END_Z5_LOW: {
+      id: 'END_Z5_LOW', end: true, kind: 'result', provisional: true, source: 'A', title: 'Hallgeber-Versorgung zu niedrig',
+      text: 'Die Versorgung des Hallgebers liegt unter 10 V. Sie kommt vom Steuergerät.',
+      notThis: ['Hallgeber nicht tauschen.'],
+      next: ['Leitungen zwischen Hallgeber und Steuergerät prüfen', 'Versorgung des Steuergeräts prüfen (Pin 13/14, noch nicht freigegeben)'],
+    },
+    END_Z6_HALL: {
+      id: 'END_Z6_HALL', end: true, kind: 'result', provisional: true, source: 'B', title: 'Hallgeber als Ursache wahrscheinlich',
+      text: 'Es kommt kein Signal vom Hallgeber, obwohl seine Versorgung stimmt, der Verteiler sich dreht und der Stecker geprüft ist. Der Hallgeber ist wahrscheinlich die Ursache. Ein Austausch ist durch diese Prüfkette begründet, bewiesen ist der Defekt noch nicht.',
+      likely: ['hallgeber'],
+      requires: [is('Z5', 'ok'), ANY_FINGER],
+      elseEnd: 'END_Z6_OPEN',
+    },
+    END_Z6_OPEN: {
+      id: 'END_Z6_OPEN', end: true, kind: 'open', source: 'B', title: 'Hallgeber nicht beurteilbar',
+      text: 'Es gibt keine Aussage über den Hallgeber, weil die Voraussetzungen nicht geprüft sind: Versorgung des Hallgebers (mindestens 10 V) und drehender Verteilerfinger.',
+      next: ['Fehlende Prüfungen nachholen oder in der Werkstatt durchführen lassen'],
+    },
+    END_Z7: {
+      id: 'END_Z7', end: true, kind: 'result', provisional: true, source: 'B', title: 'Hallsignal da, Zündspule wird nicht angesteuert',
+      text: 'Der Hallgeber liefert ein Signal, aber die Spule wird nicht angesteuert. Als Gegencheck hilft die Einspritzansteuerung: Flackern dort die Impulse, verarbeitet das Steuergerät das Drehzahlsignal, und die Zündendstufe oder ihre Leitung wird wahrscheinlicher.',
+      notThis: ['Zündspule nicht tauschen.', 'Steuergerät erst nach den folgenden Prüfungen verdächtigen.'],
+      next: ['Leitung Klemme 1 ↔ Steuergeräte-Pin 25 prüfen (Durchgang, Zündung AUS, Steuergerätestecker ab)', 'Steuergeräteversorgung Pin 13/14 prüfen', 'Pin-Angaben sind noch nicht am Stromlaufplan bestätigt'],
+    },
+    END_Z8_COIL: {
+      id: 'END_Z8_COIL', end: true, kind: 'result', provisional: true, source: 'B', title: 'Zündspule als Ursache wahrscheinlich',
+      text: 'Versorgung, Hallsignal und Ansteuerung sind in Ordnung, und trotzdem entsteht keine Hochspannung. Die Zündspule ist wahrscheinlich die Ursache. Ein Austausch ist durch die Prüfkette begründet, bewiesen ist der Defekt noch nicht.',
+      likely: ['zuendspule'],
+      requires: [is('Z2', 'keiner'), { any: [is('Z4', 'ok'), is('Z4', 'ok-ein')] }, is('Z5', 'ok'), { any: [is('Z6', 'led'), is('F_Z6_PLUG', 'led')] }, is('Z7', 'led')],
+      elseEnd: 'END_OPEN',
+    },
+    END_K1A_PUMP: {
+      id: 'END_K1A_PUMP', end: true, kind: 'result', provisional: true, source: 'B', title: 'Pumpe oder ihre Masse wahrscheinlich',
+      text: 'Die Pumpe bekommt Spannung und läuft trotzdem nicht. Pumpe oder ihre Masse sind wahrscheinlich die Ursache.',
+      next: ['Vor einem Tausch Masseanschluss und Stecker der Pumpe prüfen'],
+      likely: ['pumpe'],
+      requires: [is('K1a', 'da')],
+      elseEnd: 'END_OPEN',
+    },
+    END_K1A_RELAY: {
+      id: 'END_K1A_RELAY', end: true, kind: 'result', provisional: true, source: 'B', title: 'Fehler im Weg zur Pumpe',
+      text: 'An der Pumpe kommt keine Spannung an. Der Fehler liegt im Ansteuerweg: Kraftstoffpumpenrelais, Ansteuerung durch das Steuergerät, Sicherung oder Leitung.',
+      notThis: ['Pumpe nicht tauschen.', 'Keine Relaisüberbrückung als Standardschritt.'],
+      next: ['Relais und Ansteuerweg prüfen. Das muss für den Euro-MV am Stromlaufplan Nr. 79 bestätigt werden und ist in der App noch nicht ausgearbeitet.'],
+    },
+    END_K3_LOW: {
+      id: 'END_K3_LOW', end: true, kind: 'result', provisional: true, source: 'B', title: 'Kraftstoff wird nicht ausreichend gefördert',
+      text: 'Trotz laufender Pumpe baut sich kaum Druck auf.',
+      notThis: ['Keine Teile auf Verdacht tauschen.'],
+      next: ['Prüfbereiche: Filter, Leitungen, Fördermenge der Pumpe, Druckregler, Tankversorgung (nach leerem Tank: Verschmutzung)'],
+    },
+    END_K3_LOW_PUMP: {
+      id: 'END_K3_LOW_PUMP', end: true, kind: 'result', provisional: true, source: 'B', title: 'Kaum Kraftstoffdruck, Pumpe nicht bestätigt',
+      text: 'Es baut sich kaum Druck auf. Weil das Laufen der Pumpe nicht bestätigt ist, bleibt offen, ob die Förderung oder die Pumpe ausfällt.',
+      notThis: ['Keine Teile auf Verdacht tauschen.'],
+      next: ['Pumpenlauf klären (Geräusch, Spannung an der Pumpe)', 'Prüfbereiche: Filter, Leitungen, Fördermenge, Druckregler, Tankversorgung'],
+    },
+    END_K4: {
+      id: 'END_K4', end: true, kind: 'result', provisional: false, source: 'Q', title: 'Druckregler-Membran wahrscheinlich undicht',
+      text: 'Im Unterdruckschlauch des Druckreglers ist Kraftstoff. Die Membran des Reglers ist wahrscheinlich undicht.',
+      next: ['Bestätigung durch eine Druckprüfung empfohlen'],
+    },
+    END_E1_SINGLE: {
+      id: 'END_E1_SINGLE', end: true, kind: 'result', provisional: true, source: 'B', title: 'Einzelne Ventile werden nicht angesteuert',
+      text: 'Nicht alle Einspritzventile bekommen Ansteuerung.',
+      next: ['Leitung und Stecker der betroffenen Ventile prüfen'],
+    },
+    END_E1A_SUPPLY: {
+      id: 'END_E1A_SUPPLY', end: true, kind: 'result', provisional: true, source: 'B', title: 'Versorgung der Einspritzventile fehlt',
+      text: 'An den Ventilsteckern liegt keine Spannung an. Der Fehler liegt in der Versorgung: Relais, Leitung oder Sicherung.',
+      notThis: ['Ventile nicht tauschen.'],
+      next: ['Versorgungsweg prüfen. Das braucht den Stromlaufplan Nr. 79 und ist in der App noch nicht ausgearbeitet.'],
+    },
+    END_E1A_CTRL: {
+      id: 'END_E1A_CTRL', end: true, kind: 'result', provisional: true, source: 'B', title: 'Versorgung da, aber keine Ansteuerung der Ventile',
+      text: 'Die Ventile haben Spannung, werden aber nicht angesteuert.',
+      notThis: ['Steuergerät erst nach den folgenden Prüfungen verdächtigen.', 'Ventile nicht tauschen.'],
+      next: ['Gesamtwiderstand Ventile und Leitung prüfen (Steuergeräte-Pin 12 ↔ Relais 87)', 'Steuergeräteversorgung Pin 13/14 prüfen', 'Pin-Angaben sind noch nicht am Stromlaufplan bestätigt'],
+    },
+    END_E2_VALVES: {
+      id: 'END_E2_VALVES', end: true, kind: 'result', provisional: true, source: 'B', title: 'Ventile mechanisch verdächtig',
+      text: 'Die Ventile sind elektrisch in Ordnung, die Kerzen waren trocken, und der Kraftstoffdruck baut sich auf. Mechanisch sind die Ventile verdächtig (verklebt).',
+      next: ['Spritzbild und Menge prüfen lassen: Werkstatt oder Fachbetrieb für Ventilreinigung'],
+      likely: ['ventile'],
+      requires: [is('K2', 'trocken'), is('K3', 'druck')],
+      elseEnd: 'END_OPEN',
+    },
+    END_E2_PRESSOPEN: {
+      id: 'END_E2_PRESSOPEN', end: true, kind: 'open', source: 'B', title: 'Diagnose offen: Kraftstoffdruck fehlt noch',
+      text: 'Die Kerzen waren trocken, aber der Kraftstoffdruck ist nicht geprüft. Ohne ihn lässt sich nicht weitersuchen.',
+      next: ['Kraftstoffdruck prüfen lassen, bevor weiter gesucht wird'],
+    },
+    END_E3_FIXED: {
+      id: 'END_E3_FIXED', end: true, kind: 'done', source: 'B', title: 'Motor läuft wieder',
+      text: 'Der Motor ist nach dem Beheben des Befundes an Sensor oder Ansaugschlauch angesprungen. Der Befund steht im Protokoll.',
+    },
+    END_M1_LOW: {
+      id: 'END_M1_LOW', end: true, kind: 'result', provisional: true, source: 'B', title: 'Mechanischer Befund: Kompression niedrig',
+      text: 'Mehrere oder alle Zylinder haben sehr niedrige Kompression. Bei einem Nichtstarter ist nur eine Kaltmessung möglich, das Ergebnis gilt mit Vorbehalt.',
+      next: ['Weitere Eingrenzung (Druckverlusttest, Ventiltrieb) in der Werkstatt'],
+    },
+    END_M2: {
+      id: 'END_M2', end: true, kind: 'result', provisional: true, source: 'B', title: 'Verdacht auf falsche Verteilerstellung nach Arbeiten',
+      text: 'Es wurde vor dem Fehler am Fahrzeug gearbeitet, und sonst ist nichts aufgefallen. Ein Verdacht auf falsche Verteilerstellung bleibt. Das ist ein Verdacht und kein Beweis.',
+      notThis: ['Den Verteiler nicht ohne belegtes Verfahren verdrehen.'],
+      next: ['Grundeinstellung nach Leitfaden prüfen lassen'],
+    },
+    END_ALL_CLEAR: {
+      id: 'END_ALL_CLEAR', end: true, kind: 'open', source: 'Q', title: 'Keine Ursache eingegrenzt',
+      text: 'Mit den Prüfungen dieser App ist keine Ursache eingegrenzt. Die App erfindet keine. Weitere Diagnose in der Werkstatt. Das Protokoll mit allen Messwerten und offenen Punkten kannst du mitnehmen.',
+      next: ['Weitere Diagnose in der Werkstatt'],
+    },
+    END_OPEN: {
+      id: 'END_OPEN', end: true, kind: 'open', source: 'Q', title: 'Diagnose offen',
+      text: 'Es konnten nicht alle nötigen Prüfungen gemacht werden. Deshalb ist keine Ursache eingegrenzt. Im Protokoll siehst du, was geprüft ist und was noch offen ist.',
+      next: ['Die offenen Prüfungen in einer Werkstatt durchführen lassen oder mit passendem Werkzeug nachholen'],
+    },
+  },
+};

@@ -156,6 +156,17 @@ img{max-width:100%}
 .vstatus p{margin:4px 0 0;color:var(--muted)}
 .vstatus .vs-note{font-size:var(--fs-meta)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.dx-intro{margin:0;font-size:var(--fs-text)}
+.dx-block h3,.dx-h{font-size:var(--fs-small);color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.dx-block p{margin:0}
+.dx-steps{margin:0;padding-left:22px;display:grid;gap:6px}
+.dx-ans{display:block;width:100%;min-height:var(--tap);margin:12px 0 2px;text-align:left;white-space:normal}
+.dx-mean{margin:0 0 4px;font-size:var(--fs-meta);color:var(--muted)}
+.dx-actions{display:grid;gap:10px}
+.dx-prov{margin:0;color:var(--warn)}
+.dx-sum{padding:12px 14px}
+.dx-proto{display:grid;gap:12px}
+#dx-root~#sheet-root .scrim{z-index:50}
 .soon-card{padding:20px 16px;display:grid;gap:8px}
 .soon-card h3{font-size:22px}
 .soon-card p{margin:0;color:var(--muted)}

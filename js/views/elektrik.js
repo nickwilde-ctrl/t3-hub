@@ -45,15 +45,15 @@ const results = () => {
 let current = {};
 
 /** Der Elektrik-Reiter. wiring = gespeicherte Plandaten. */
-export function elektrikView(wiring) {
+export function elektrikView(wiring, { diagnose = false } = {}) {
   current = wiring || {};
   wires = current.wires || [];
   const hasMap = !!current.map;
   const seg = `<div class="seg${hasMap ? ' three' : ''}"><button type="button" data-el-part="fehler" aria-pressed="${part === 'fehler'}">Fehlersuche</button><button type="button" data-el-part="kabel" aria-pressed="${part === 'kabel'}">${hasMap ? 'Kabel' : 'Kabel suchen'}</button>${hasMap ? '<button type="button" data-action="open-stromkarte" aria-pressed="false">Karte</button>' : ''}</div>`;
   const noMap = hasMap ? '' : '<p class="hint">Die Stromkarte fehlt noch. Lade die neue Plandaten-Datei (mit Karte) noch einmal über Mehr → Daten → „Backup wiederherstellen“.</p>';
   if (part === 'fehler') {
-    return `<section class="sec">${seg}${noMap}<div class="label">Was ist los?</div><div class="card list">${FAULTS.map((f) => `<button type="button" class="row row-btn el-row" data-el-fault="${f.id}">
-        <span class="el-ico"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[f.icon] || ''}</svg></span><div class="t">${esc(f.title)}</div><div class="s">${esc(f.short)}</div></button>`).join('')}</div>
+    return `<section class="sec">${seg}${noMap}<div class="label">Was ist los?</div><div class="card list">${FAULTS.map((f) => (f.id === 'pumpe' && diagnose ? `<button type="button" class="row row-btn el-row" data-action="open-diagnose"><span class="el-ico"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON.fuel}</svg></span><div class="t">Motor dreht, springt nicht an</div><div class="s">Geführte Diagnose, Schritt für Schritt</div></button>` : `<button type="button" class="row row-btn el-row" data-el-fault="${f.id}">
+        <span class="el-ico"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[f.icon] || ''}</svg></span><div class="t">${esc(f.title)}</div><div class="s">${esc(f.short)}</div></button>`)).join('')}</div>
       <div class="card el-pad"><div class="label">Multimeter in 30 Sekunden</div>
         <p><b>Strom da?</b> Auf 20 V Gleichspannung stellen. Schwarz an Masse (blankes Metall), Rot an das Kabel. Um 12 V heißt: Strom kommt an.</p>
         <p><b>Kabel heil?</b> Auf Durchgang (Piepser) stellen, Kabel an beiden Enden abklemmen, beide Enden messen. Piept es, ist es heil.</p></div></section>`;
