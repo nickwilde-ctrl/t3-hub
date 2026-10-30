@@ -65,13 +65,14 @@ export function plateTag(plate) {
 
 const WRENCH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/></svg>';
 
-/** Wartungsanzeige: Rot nur bei überfällig, Gelb wenn bald etwas fällig wird. */
-const maint = (due, soon, unknown) => {
-  const [color, n, word, label] = due ? ['var(--bad)', due, 'fällig', `${due} überfällig`] : soon ? ['var(--warn)', soon, 'bald', `${soon} bald fällig`] : ['var(--ok)', 0, 'fällig', 'nichts fällig'];
+/** Wartungsanzeige: die Lampe zeigt den Fahrzeugstatus (Grün/Gelb/Rot, wie auf der Startseite), die Zahl die überfälligen bzw. bald fälligen Punkte. */
+const maint = (due, soon, unknown, level = 'green') => {
+  const color = { green: 'var(--ok)', yellow: 'var(--warn)', red: 'var(--bad)' }[level];
+  const [n, word, label] = due ? [due, 'fällig', `${due} überfällig`] : soon ? [soon, 'bald', `${soon} bald fällig`] : [0, 'fällig', 'nichts fällig'];
   return `<span class="lamp" style="background:${color}" role="img" aria-label="${label}"></span>${n} <small>${word}</small> · ${unknown} <small>offen</small>`;
 };
 
-export function cockpit({ vehicle, km, avg, last, due, soon = 0, unknown, check = { state: 'none' } }) {
+export function cockpit({ vehicle, km, avg, last, due, soon = 0, unknown, level = 'green', check = { state: 'none' } }) {
   const lamp = {
     ok: ['var(--ok)', `Letzte Tankung im üblichen Bereich (${check.diff != null ? (check.diff > 0 ? '+' : '−') + de(Math.abs(check.diff), 0) : ''} % zum bisherigen Schnitt)`],
     high: ['var(--warn)', `Letzte Tankung ${check.diff != null ? de(check.diff, 0) : ''} % über dem bisherigen Schnitt`],
@@ -90,7 +91,7 @@ export function cockpit({ vehicle, km, avg, last, due, soon = 0, unknown, check 
       <div class="readouts">
         <button type="button" class="ro odo-btn" data-action="set-km" aria-label="Tachostand ${de(km)} km – antippen zum Eintragen"><div class="k">Tachostand <span class="odo-edit" aria-hidden="true">✎</span></div><div class="odo">${digits}</div></button>
         <div class="ro"><div class="k">Ø Verbrauch</div><div class="v"><span class="lamp" style="background:${lamp[0]}" title="${esc(lamp[1])}" role="img" aria-label="${esc(lamp[1])}"></span>${avg != null ? de(avg, 1) : '–'} <small>l/100 km</small></div></div>
-        <div class="ro"><div class="k">Wartung</div><div class="v">${maint(due, soon, unknown)}</div></div>
+        <div class="ro"><div class="k">Wartung</div><div class="v">${maint(due, soon, unknown, level)}</div></div>
       </div>
     </div>`;
 }

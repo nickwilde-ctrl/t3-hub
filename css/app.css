@@ -150,6 +150,12 @@ html{-webkit-text-size-adjust:100%}
 body{-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
 img{max-width:100%}
 [hidden]{display:none!important}
+.vstatus{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;padding:16px}
+.vstatus .lamp{width:14px;height:14px;margin:6px 0 0;background:currentColor}
+.vstatus h3{font-size:22px;margin:0}
+.vstatus p{margin:4px 0 0;color:var(--muted)}
+.vstatus .vs-note{font-size:var(--fs-meta)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .soon-card{padding:20px 16px;display:grid;gap:8px}
 .soon-card h3{font-size:22px}
 .soon-card p{margin:0;color:var(--muted)}

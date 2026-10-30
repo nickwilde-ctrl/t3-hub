@@ -2,7 +2,7 @@
 import { state, load, createVehicle, createDemo, resetAll, onChange, currentKm, saveVehicle, saveItem, saveMany, deleteItem, saveWiring, removeWiring, setKmNow, filesForLog, syncFiles, deleteLog, services, exportAll, markBackup, restoreAll, importRoadTrip } from './store.js';
 import { requestPersistence } from './db.js';
 import { fuelStats, consumptionCheck } from './logic/fuel.js';
-import { serviceStatus } from './logic/services.js';
+import { serviceStatus, vehicleStatus } from './logic/services.js';
 import { cockpit } from './views/cockpit.js';
 import { homeView } from './views/home.js';
 import { vehicleCard, editVehicleSheet, photoFrameSheet, modsCard, modSheet, specsCard } from './views/vehicle.js';
@@ -29,7 +29,7 @@ import { startCard, bulkDoneSheet, startRestoreCard } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.57';
+const APP_VERSION = '0.58';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -97,6 +97,7 @@ function render() {
     due: st.filter((x) => x.state === 'over').length,
     soon: st.filter((x) => x.state === 'soon').length,
     unknown: st.filter((x) => x.state === 'unknown').length,
+    level: vehicleStatus(services(), km).level,
   });
   document.getElementById('tabs').innerHTML = TABS.map(
     ([id, label, icon]) =>

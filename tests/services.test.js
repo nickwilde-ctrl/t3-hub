@@ -204,3 +204,54 @@ test('Vorwarnschwelle: bald fällig ab 500 km oder 30 Tagen, was zuerst kommt', 
   // beides: der zuerst erreichte Wert zählt
   assert.equal(serviceStatus({ intervalKm: 5000, intervalMonths: 12, lastKm: 1000 - 5000 + 400, lastDate: '2026-10-27' }, 1000, today).state, 'soon');
 });
+
+test('Fahrzeugstatus: Grün, Gelb, Rot aus den Wartungsdaten', async () => {
+  const { vehicleStatus, servicesFor, priorityOf } = await import('../js/logic/services.js');
+  const today = new Date('2026-10-27T12:00:00');
+  const mk = (key, o = {}) => ({ id: key, key, name: key, intervalKm: null, intervalMonths: 12, lastKm: null, lastDate: null, ...o });
+  const fresh = (key, o) => mk(key, { lastDate: '2026-09-01', ...o });                // nichts fällig
+  const late = (key, o) => mk(key, { lastDate: '2024-01-01', intervalMonths: 12, ...o }); // lange überfällig
+  const lvl = (list) => vehicleStatus(list, 100000, today).level;
+  // 1 + 2: nichts fällig, nur bald fällig → Grün
+  assert.equal(lvl([fresh('oil'), fresh('hu', { intervalMonths: 24 })]), 'green');
+  const soonOil = mk('oil', { intervalKm: 5500, intervalMonths: null, lastKm: 100000 - 5500 + 420 });
+  const g = vehicleStatus([soonOil], 100000, today);
+  assert.equal(g.level, 'green');
+  assert.match(g.text, /in 420 km/);
+  // 3 + 4: normale Punkte → Gelb, auch mehrere
+  assert.equal(lvl([late('airfilter')]), 'yellow');
+  const y = vehicleStatus([late('airfilter'), late('plugs'), late('gearoil'), late('oil')], 100000, today);
+  assert.equal(y.level, 'yellow');
+  assert.equal(y.text, '4 Wartungspunkte sind fällig.');
+  // 5 + 6: kritischer Punkt → Rot, auch zusammen mit normalen
+  const r = vehicleStatus([late('steering')], 100000, today);
+  assert.equal(r.level, 'red');
+  assert.equal(r.text, 'Lenkung und Achsgelenke müssen geprüft werden.');
+  assert.match(r.note, /nicht, dass etwas kaputt ist/);
+  assert.doesNotMatch(r.text + r.note, /nicht fahren|nicht gefahren|fahrbereit/i);
+  assert.equal(lvl([late('airfilter'), late('steering')]), 'red');
+  // 7 + 8: HU bis einen Monat überfällig → Gelb, danach Rot (Fälligkeit hier 2026-10-01 bzw. 2026-09-20)
+  const hu = (lastDate) => mk('hu', { intervalMonths: 24, lastDate });
+  assert.equal(lvl([hu('2024-10-01')]), 'yellow', '26 Tage überfällig');
+  assert.equal(lvl([hu('2024-09-27')]), 'yellow', 'genau ein Monat');
+  const huRed = vehicleStatus([hu('2024-09-20')], 100000, today);
+  assert.equal(huRed.level, 'red');
+  assert.equal(huRed.text, 'Hauptuntersuchung seit mehr als einem Monat überfällig.');
+  assert.match(huRed.note, /Termin/);
+  // 9: motorabhängig – Diesel kennt den Zahnriemen (kritisch), der Wasserboxer nicht
+  const dieselKeys = servicesFor('diesel').map((s) => s.key);
+  assert.ok(dieselKeys.includes('timingbelt') && !servicesFor('wbx21').some((s) => s.key === 'timingbelt'));
+  assert.equal(priorityOf({ key: 'timingbelt' }), 'critical');
+  assert.equal(priorityOf({ key: 'timingbelt-check' }), 'important');
+  assert.equal(lvl([late('timingbelt', { intervalMonths: 12 })]), 'red');
+  assert.equal(lvl([late('timingbelt-check'), late('valves'), late('fuelwater')]), 'yellow');
+  assert.equal(priorityOf({ key: 'coolantpipes' }), 'important', 'Sicherheits-Etikett, aber nur Gelb');
+  assert.equal(lvl([late('coolantpipes')]), 'yellow');
+  assert.equal(priorityOf({ key: 'custom-x' }), 'normal', 'eigene Punkte können nie Rot erzeugen');
+  assert.equal(lvl([late('custom-x')]), 'yellow');
+  // 10: fehlende Daten erzeugen keinen Status ohne Grundlage
+  const empty = vehicleStatus([mk('steering'), mk('brakecheck'), mk('hu', { intervalMonths: 24 })], 100000, today);
+  assert.equal(empty.level, 'green');
+  assert.equal(empty.text, '');
+  assert.equal(vehicleStatus([], 0, today).level, 'green');
+});

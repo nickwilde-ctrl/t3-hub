@@ -37,6 +37,28 @@ export const DEFAULT_SERVICES = [
 /** Gehört der Punkt zu den Sicherheits-Prüfpunkten? (nach Schlüssel, damit es auch für alte Einträge gilt) */
 export const isSafety = (s) => !!DEFAULT_SERVICES.find((d) => d.key === s.key)?.safety;
 
+/**
+ * Wichtigkeit eines Wartungspunkts für den Fahrzeugstatus (Startseite). Nachgeschlagen über den Schlüssel,
+ * damit sie auch für ältere gespeicherte Punkte gilt. Alles andere, auch eigene Punkte, ist „normal“.
+ * normal/important → Gelb, wenn überfällig · critical → Rot · legal (HU) → Gelb, nach einem Monat Rot.
+ * Unabhängig vom Etikett „Sicherheit“ im Serviceheft (isSafety).
+ */
+export const PRIORITY = {
+  oil: 'important', brakefluid: 'important', coolantpipes: 'important', 'timingbelt-check': 'important',
+  hu: 'legal',
+  brakecheck: 'critical', steering: 'critical', fuelhoses: 'critical', 'fuelhoses-new': 'critical', timingbelt: 'critical',
+};
+export const priorityOf = (s) => PRIORITY[s.key] || 'normal';
+
+/** Satz für den Fahrzeugstatus, wenn ein kritischer Punkt überfällig ist. Es ist eine fällige Prüfung, kein Defekt. */
+const CRITICAL_TEXT = {
+  brakecheck: 'Die Bremsen müssen geprüft werden.',
+  steering: 'Lenkung und Achsgelenke müssen geprüft werden.',
+  fuelhoses: 'Die Kraftstoffschläuche müssen geprüft werden.',
+  'fuelhoses-new': 'Die Kraftstoffschläuche sind zum Erneuern fällig.',
+  timingbelt: 'Der Zahnriemen ist zum Wechsel fällig.',
+};
+
 /** Wartungspunkte, die nicht zu einem normalen Service gehören (beim „Alles auf einmal eintragen“ nicht vorab anhaken). */
 export const NOT_IN_SERVICE = ['hu', 'fuelhoses-new'];
 
@@ -249,6 +271,45 @@ export function homeDue(services, km, today = new Date()) {
     next: g.urgent.length ? null : g.next,
     unknown: g.unknown.length,
   };
+}
+
+/**
+ * Fahrzeugstatus für die Startseite, nur aus den Wartungsdaten berechnet.
+ * Grün: nichts überfällig („bald fällig“ zählt nicht). Gelb: Normales überfällig, auch mehrfach.
+ * Rot: ein kritischer Punkt überfällig oder die HU mehr als einen Monat über der Zeit.
+ * Punkte ohne Eintrag (unknown) zählen nie.
+ * @returns {{level:'green'|'yellow'|'red', title:string, text:string, note:string, red:object[], yellow:object[]}}
+ */
+export function vehicleStatus(services, km, today = new Date()) {
+  const t = new Date(today); t.setHours(0, 0, 0, 0);
+  const over = services.map((s) => ({ s, st: serviceStatus(s, km, today) })).filter((x) => x.st.state === 'over');
+  const huLate = ({ st }) => {
+    if (!st.dueDate) return false;
+    const limit = new Date(st.dueDate); limit.setMonth(limit.getMonth() + 1);
+    return t > limit;
+  };
+  const isRed = (x) => { const p = priorityOf(x.s); return p === 'critical' || (p === 'legal' && huLate(x)); };
+  const red = over.filter(isRed);
+  const yellow = over.filter((x) => !isRed(x));
+  const list = (n) => `${n} Wartungspunkte sind`;
+  if (red.length) {
+    const only = red.length === 1 ? red[0] : null;
+    const critical = red.some((x) => priorityOf(x.s) === 'critical');
+    return {
+      level: 'red', title: 'Handlungsbedarf', red, yellow,
+      text: only ? (priorityOf(only.s) === 'legal' ? 'Hauptuntersuchung seit mehr als einem Monat überfällig.' : CRITICAL_TEXT[only.s.key] || `${only.s.name} ist überfällig.`)
+        : `${red.length} wichtige Punkte sind überfällig.`,
+      note: critical ? 'Das heißt nicht, dass etwas kaputt ist. Die Prüfung ist nur fällig.' : 'Das ist ein Termin und sagt nichts über den Zustand des Busses.',
+    };
+  }
+  if (yellow.length) {
+    return {
+      level: 'yellow', title: 'Wartung erforderlich', red, yellow, note: '',
+      text: yellow.length === 1 ? `${yellow[0].s.name} ist fällig.` : `${list(yellow.length)} fällig.`,
+    };
+  }
+  const next = planGroups(services, km, today).next;
+  return { level: 'green', title: 'Alles im grünen Bereich', red, yellow, note: '', text: next ? `${next.s.name} ${dueShort(next.st)}.` : '' };
 }
 
 /** Wann ist der Punkt nach einem Eintrag wieder fällig? z. B. „bei 145.730 km oder bis 08.2027“. */

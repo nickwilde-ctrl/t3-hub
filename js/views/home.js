@@ -1,5 +1,5 @@
 import { de, esc, fmtDate, fmtMonthYear } from '../format.js';
-import { homeDue, dueShort } from '../logic/services.js';
+import { homeDue, dueShort, vehicleStatus } from '../logic/services.js';
 import { fuelStats } from '../logic/fuel.js';
 import { lineChart } from './charts.js';
 
@@ -26,10 +26,20 @@ export const pill = (state) => `<span class="pill ${CLS[state]}">${PILL[state]}<
 const dueText = (st) => (st.state === 'over' ? statusText(st) : 'Fällig ' + dueShort(st));
 const dueRow = ({ s, st }) => `<button type="button" class="row row-btn" data-edit-service="${s.id}"><div class="t">${esc(s.name)}</div><div class="s">${esc(dueText(st))}</div><div class="r">${pill(st.state)}</div></button>`;
 
+const STATUS_ICON = { green: 'ok', yellow: 'soon', red: 'over' };
+
+/** Fahrzeugstatus oben auf der Startseite (Grün / Gelb / Rot), berechnet in vehicleStatus. */
+function statusCard(services, km) {
+  const v = vehicleStatus(services, km);
+  const lamp = { green: 'Grün', yellow: 'Gelb', red: 'Rot' }[v.level];
+  return `<section class="sec"><div class="card vstatus ${STATUS_ICON[v.level]}" role="status"><span class="lamp" aria-hidden="true"></span>
+    <div><h3><span class="sr">${lamp}: </span>${esc(v.title)}</h3>${v.text ? `<p>${esc(v.text)}</p>` : ''}${v.note ? `<p class="vs-note">${esc(v.note)}</p>` : ''}</div></div></section>`;
+}
+
 export function homeView({ services, fuels, km }) {
   const h = homeDue(services, km);
   const rows = h.due.map(dueRow).join('')
-    + (h.next ? `<div class="row"><div class="t">Alles im grünen Bereich</div><div class="s">${esc(h.next.s.name)} ${esc(dueShort(h.next.st))}</div></div>` : '');
+    + (h.next ? dueRow(h.next) : '');
   const extra = [
     h.moreDue ? `<button type="button" class="link-row" data-tab="wartung"><span>${h.moreDue === 1 ? 'Noch 1 Punkt ist' : 'Noch ' + h.moreDue + ' Punkte sind'} dran</span><span aria-hidden="true">›</span></button>` : '',
     h.unknown ? `<button type="button" class="link-row quiet" data-action="bulk-done"><span>${h.unknown === 1 ? '1 Punkt hat' : h.unknown + ' Punkte haben'} noch kein Datum</span><span class="go">Eintragen ›</span></button>` : '',
@@ -38,6 +48,7 @@ export function homeView({ services, fuels, km }) {
   const last = s.rows[s.rows.length - 1];
   const recent = s.series.slice(-20).map((r) => ({ date: r.date, y: r.cons, tip: `<b>${de(r.cons, 1)} l/100 km</b><br>${fmtDate(r.date)}` }));
   return `
+  ${statusCard(services, km)}
   <section class="sec"><div class="sec-head"><h2>${h.due.length ? 'Als Nächstes fällig' : 'Als Nächstes'}</h2><button type="button" class="add" data-tab="wartung">Alle</button></div>
     ${rows ? `<div class="card list">${rows}</div>` : ''}${extra ? `<div class="links">${extra}</div>` : ''}</section>
   <section class="sec"><div class="sec-head"><h2>Tanken</h2><button type="button" class="add" data-action="add-fuel">+ Tankung</button></div>
