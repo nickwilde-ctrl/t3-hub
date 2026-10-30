@@ -54,7 +54,7 @@ let root = null;
 
 /**
  * Öffnet die Diagnose.
- * ctx: { tree, identity, sessions(): Liste der Protokolle, save(session), today(), openGuide(id), openLog(prefill), onClose() }
+ * ctx: { tree, identity, sessions(): Liste der Protokolle, save(session), remove(id), today(), openGuide(id), openLog(prefill), onClose() }
  * resume: true springt direkt in die laufende Diagnose.
  */
 export function openDiagnose(ctx, { resume = false } = {}) {
@@ -133,8 +133,16 @@ export function openDiagnose(ctx, { resume = false } = {}) {
   const showProtocol = (s, back) => {
     const sm = summary(tree, s);
     body(`<div class="eyebrow">Protokoll</div><h2 class="g-title">${esc(tree.title)}</h2>${protocolHtml(sm)}
-      <div class="dx-actions"><button type="button" class="btn" id="dx-share">Protokoll teilen oder kopieren</button></div>`, { back });
+      <div class="dx-actions"><button type="button" class="btn" id="dx-share">Protokoll teilen oder kopieren</button>${s.status === 'running' ? '' : '<button type="button" class="btn ghost" id="dx-del">Protokoll löschen</button>'}</div>`, { back });
     root.querySelector('#dx-share').onclick = () => share(summaryText(sm, fmtDate));
+    const del = root.querySelector('#dx-del');
+    if (del) del.onclick = async () => {
+      if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = 'Wirklich löschen? Das lässt sich nicht rückgängig machen.'; return; }
+      await ctx.remove(s.id);
+      session = null; viewing = null; view = 'start';
+      toast('Protokoll gelöscht');
+      show();
+    };
     if (back) root.querySelector('#dx-back').onclick = () => { viewing = null; view = 'start'; show(); };
   };
 
@@ -242,6 +250,7 @@ export function openDiagnose(ctx, { resume = false } = {}) {
 
   function show() {
     if (view === 'protocol' && viewing) { showProtocol(viewing, true); return; }
+    if (session?.status === 'abandoned') session = null;
     if (!session) { start(); return; }
     if (session.status === 'finished') { endScreen(); return; }
     if (view === 'reason') { reasonScreen(); return; }

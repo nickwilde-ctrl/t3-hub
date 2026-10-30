@@ -34,7 +34,7 @@ import { startCard, bulkDoneSheet, startRestoreCard } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.61';
+const APP_VERSION = '0.62';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -223,6 +223,7 @@ document.addEventListener('click', (e) => {
       vehicleId: state.vehicle.id,
       sessions: () => state.diagnoses,
       save: (s) => saveItem('diagnoses', s),
+      remove: (id) => deleteItem('diagnoses', id),
       today: todayIso,
       openGuide: showGuide,
       openLog: (prefill) => logSheet(null, { ...wOps, prefill }),
