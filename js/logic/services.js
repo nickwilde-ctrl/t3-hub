@@ -1,7 +1,7 @@
 // Wartungsintervalle: Fälligkeit nach Kilometern und/oder Monaten – was zuerst eintritt.
 
-export const SOON_KM = 1000;
-export const SOON_DAYS = 45;
+export const SOON_KM = 500;
+export const SOON_DAYS = 30;
 
 /**
  * Startwerte für den VW T3 mit Wasserboxer (Benziner). Werksangaben waren nicht verlässlich zu finden;

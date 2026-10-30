@@ -124,12 +124,12 @@ test('Fällig-Seite: Kurztext, Gruppen und nächste Fälligkeit', async () => {
   const { dueShort, planGroups, nextDueText, serviceStatus } = await import('../js/logic/services.js');
   const today = new Date('2026-10-27T12:00:00');
   const oil = { id: 'a', key: 'oil', intervalKm: 5500, intervalMonths: 12, lastKm: 140230, lastDate: '2026-08-26' };
-  const cool = { id: 'b', key: 'coolant', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-12-05' };
+  const cool = { id: 'b', key: 'coolant', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-11-20' };
   const hu = { id: 'c', key: 'hu', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2025-12-31' };
   const plugs = { id: 'd', key: 'plugs', intervalKm: 30000, intervalMonths: null, lastKm: null, lastDate: null };
   const brake = { id: 'e', key: 'brakefluid', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-01-01' };
   assert.equal(dueShort(serviceStatus(oil, 142380, today)), 'in 3.350 km');
-  assert.equal(dueShort(serviceStatus(cool, 142380, today)), 'in 39 Tagen');
+  assert.equal(dueShort(serviceStatus(cool, 142380, today)), 'in 24 Tagen');
   assert.equal(dueShort(serviceStatus(hu, 142380, today)), 'bis 12.2027');
   assert.equal(dueShort(serviceStatus(plugs, 142380, today)), 'noch nicht eingetragen');
   assert.equal(dueShort(serviceStatus(brake, 142380, today)), 'überfällig');
@@ -147,7 +147,7 @@ test('Startseite: nur fällige Punkte, sonst der nächste', async () => {
   const { homeDue } = await import('../js/logic/services.js');
   const today = new Date('2026-10-27T12:00:00');
   const oil = { id: 'a', key: 'oil', intervalKm: 5500, intervalMonths: 12, lastKm: 140230, lastDate: '2026-08-26' };
-  const cool = { id: 'b', key: 'coolant', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-12-05' };
+  const cool = { id: 'b', key: 'coolant', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-11-20' };
   const hu = { id: 'c', key: 'hu', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2025-12-31' };
   const plugs = { id: 'd', key: 'plugs', intervalKm: 30000, intervalMonths: null, lastKm: null, lastDate: null };
   const brake = { id: 'e', key: 'brakefluid', intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-01-01' };
@@ -186,4 +186,21 @@ test('Sammel-Eintrag: der Stand kommt aus dem Eintrag, Löschen nimmt ihn wieder
   assert.equal(withLastDone(plugs, [{ ...sammel, date: '2026-10-21', km: 143000 }]).lastKm, 143000, 'Änderung wirkt sofort');
   assert.equal(withLastDone(oil, []).lastDate, null, 'ohne den gelöschten Eintrag ist der Punkt wieder offen');
   assert.equal(withLastDone(plugs, []).lastKm, 100000, 'und der frühere Stand gilt wieder');
+});
+
+test('Vorwarnschwelle: bald fällig ab 500 km oder 30 Tagen, was zuerst kommt', async () => {
+  const { serviceStatus, SOON_KM, SOON_DAYS } = await import('../js/logic/services.js');
+  assert.equal(SOON_KM, 500);
+  assert.equal(SOON_DAYS, 30);
+  const today = new Date('2026-10-27T12:00:00');
+  const byKm = (rest) => serviceStatus({ intervalKm: 5000, lastKm: 1000 - 5000 + rest, lastDate: null }, 1000, today).state;
+  assert.equal(byKm(501), 'ok');
+  assert.equal(byKm(499), 'soon');
+  assert.equal(byKm(0), 'over');
+  const byDays = (rest) => { const d = new Date(today); d.setDate(d.getDate() + rest); d.setFullYear(d.getFullYear() - 1); return serviceStatus({ intervalMonths: 12, lastDate: d.toISOString().slice(0, 10) }, 0, today).state; };
+  assert.equal(byDays(31), 'ok');
+  assert.equal(byDays(29), 'soon');
+  assert.equal(byDays(0), 'over');
+  // beides: der zuerst erreichte Wert zählt
+  assert.equal(serviceStatus({ intervalKm: 5000, intervalMonths: 12, lastKm: 1000 - 5000 + 400, lastDate: '2026-10-27' }, 1000, today).state, 'soon');
 });

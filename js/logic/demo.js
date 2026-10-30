@@ -65,7 +65,7 @@ export function demoData(today = iso(new Date())) {
       airfilter: { km: km - 21000, date: daysAgo(today, 900) },
       fuelfilter: { km: km - 21000, date: daysAgo(today, 900) },
       gearoil: { km: km - 30000, date: daysAgo(today, 1300) },
-      coolant: { km: km - 9000, date: daysAgo(today, 690) }, // bald fällig
+      coolant: { km: km - 9000, date: daysAgo(today, 710) }, // bald fällig
     },
   };
 }

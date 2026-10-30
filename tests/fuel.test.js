@@ -47,7 +47,7 @@ test('Wartung: unbekannt, ok, bald, fällig', () => {
   const today = new Date('2026-10-07T12:00:00');
   assert.equal(serviceStatus({ intervalKm: 7500, intervalMonths: 12, lastKm: null, lastDate: null }, 14000, today).state, 'unknown');
   assert.equal(serviceStatus({ intervalKm: 7500, intervalMonths: 12, lastKm: 10000, lastDate: '2026-05-01' }, 14000, today).state, 'ok');
-  assert.equal(serviceStatus({ intervalKm: 7500, intervalMonths: 12, lastKm: 7000, lastDate: '2026-05-01' }, 14000, today).state, 'soon');
+  assert.equal(serviceStatus({ intervalKm: 7500, intervalMonths: 12, lastKm: 6700, lastDate: '2026-05-01' }, 14000, today).state, 'soon');
   assert.equal(serviceStatus({ intervalKm: null, intervalMonths: 24, lastKm: null, lastDate: '2024-09-20' }, 14000, today).state, 'over');
 });
 
