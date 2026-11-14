@@ -34,7 +34,7 @@ import { startCard, bulkDoneSheet, startRestoreCard } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.62';
+const APP_VERSION = '0.63';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 const TABS = [
@@ -73,16 +73,29 @@ const VIEWS = {
     : wsub === 'eintraege' ? eintraegeView(state.log)
       : wsub === 'alle' ? alleView(services(), currentKm(), engineFamilyOf(state.vehicle || {}))
         : faelligView(services(), currentKm())),
-  tanken: () => tankenView(state),
+  tanken: () => '<h1 class="page-title">Tanken</h1>' + tankenView(state),
   touren: () => tourenView(state, currentKm()),
-  mehr: () => (msub === 'elektrik' && state.wiring ? '<button type="button" class="back-link" data-msub="">‹ Zurück zu Mehr</button><h1 class="page-title">Elektrik</h1>' + elektrikView(state.wiring, { diagnose: appliesTo(MV_NO_START, vehicleIdentity(state.vehicle)).ok }) : costCard(state, currentKm()) + diagnoseCard(MV_NO_START, vehicleIdentity(state.vehicle), state.diagnoses) + vehicleCard(state.vehicle) + specsCard(state.vehicle) + elektrikCard(state.wiring) + modsCard(state.vehicle)
-    + startRestoreCard(state.vehicle)
-    + dataCard(state)
-    + feedbackCard()
-    + installCard()
-    + gameCard()
-    + aboutCard()
-    + `<p class="foot">T3 Hub · Version ${APP_VERSION} · Deine Daten bleiben auf diesem Gerät.</p>`),
+  mehr: () => {
+    const back = '<button type="button" class="back-link" data-msub="">‹ Mehr</button>';
+    const pages = {
+      kosten: () => costCard(state, currentKm()),
+      diagnose: () => diagnoseCard(MV_NO_START, vehicleIdentity(state.vehicle), state.diagnoses),
+      akte: () => vehicleCard(state.vehicle),
+      sollwerte: () => specsCard(state.vehicle),
+      anbauten: () => modsCard(state.vehicle),
+      daten: () => startRestoreCard(state.vehicle) + dataCard(state) + installCard(),
+      feedback: () => feedbackCard(),
+      about: () => aboutCard() + gameCard() + `<p class="foot">T3 Hub · Version ${APP_VERSION} · Deine Daten bleiben auf diesem Gerät.</p>`,
+    };
+    if (msub === 'elektrik' && state.wiring) return back + '<h1 class="page-title">Elektrik</h1>' + elektrikView(state.wiring, { diagnose: appliesTo(MV_NO_START, vehicleIdentity(state.vehicle)).ok });
+    if (pages[msub]) return back + pages[msub]();
+    const row = (id, label, sub) => `<button type="button" class="menu-row" data-msub="${id}"><span><b>${label}</b>${sub ? `<span class="faint">${sub}</span>` : ''}</span><span aria-hidden="true">›</span></button>`;
+    return '<h1 class="page-title">Mehr</h1>'
+      + '<div class="menu-group">' + row('kosten', 'Kosten') + row('diagnose', 'Diagnose') + (state.wiring ? row('elektrik', 'Elektrik', 'nur auf diesem Gerät') : '') + '</div>'
+      + '<div class="menu-group">' + row('akte', 'Fahrzeugakte') + row('sollwerte', 'Sollwerte') + row('anbauten', 'Anbauten') + '</div>'
+      + '<div class="menu-group">' + row('daten', 'Daten & Backup') + row('feedback', 'Feedback') + row('about', 'Über T3 Hub') + '</div>'
+      + `<p class="foot">Version ${APP_VERSION}</p>`;
+  },
 };
 
 function render() {
@@ -109,13 +122,12 @@ function render() {
       `<button type="button" data-tab="${id}" ${tab === id ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg>${label}</button>`,
   ).join('');
   // Das Cockpit gehört auf die Startseite; im Serviceheft und unter Elektrik zählt der Platz für den Inhalt.
-  document.getElementById('cockpit').hidden = tab === 'wartung' || (tab === 'mehr' && msub === 'elektrik');
-  document.getElementById('view').innerHTML = (state.vehicle.demo && tab !== 'wartung' ? demoBanner() : '') + VIEWS[tab]();
+  document.getElementById('cockpit').hidden = tab !== 'home';
+  document.getElementById('view').innerHTML = (state.vehicle.demo && tab === 'home' ? demoBanner() : '') + VIEWS[tab]();
 }
 
 /** Hinweis, solange der Beispielbus aktiv ist. */
-const demoBanner = () => `<div class="card demo-banner"><div><b>Das ist ein Beispielbus.</b> Schau dich in Ruhe um und probier alles aus.</div>
-  <button type="button" class="btn" data-action="leave-demo">Eigenen Bus einrichten</button></div>`;
+const demoBanner = () => `<div class="demo-line"><span>Beispielbus</span><button type="button" data-action="leave-demo">Eigenen Bus einrichten ›</button></div>`;
 
 document.addEventListener('click', (e) => {
   const menu = document.querySelector('details.photo-menu[open]');

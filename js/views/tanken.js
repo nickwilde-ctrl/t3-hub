@@ -49,12 +49,10 @@ function auswertung(state) {
     ${s.best ? minmax(val(de(s.best.cons, 1), 'l', s.best.date), 'Bester Wert', val(de(s.worst.cons, 1), 'l', s.worst.date), 'Höchster Wert') : ''}
     ${checkLine(consumptionCheck(state.fuels))}</div></section>
   <section class="sec"><div class="sec-head"><h2>Verbrauch je Monat</h2><span class="label">l/100 km</span></div>
-    <div class="card pad">${barChart('mon', months, { label: 'Verbrauch je Monat', step: 5, dec: 1 })}
-    <p class="hint">Jede Volltankung zählt zu dem Monat, in dem sie war. Monate ohne Volltankung fehlen.</p></div></section>
+    <div class="card pad">${barChart('mon', months, { label: 'Verbrauch je Monat', step: 5, dec: 1 })}</div></section>
   <section class="sec"><div class="sec-head"><h2>Spritpreise</h2><span class="label">€/l je Tankung</span></div>
     <div class="card pad">${lineChart('price', pricePts, { label: 'Spritpreis je Tankung', step: 0.2, dec: 2, avg: s.avgPrice, avgDec: 3 })}
-    ${minmax(val(de(s.cheapest.pricePerLiter, 3), '€', s.cheapest.date), 'Günstigste', val(de(s.priciest.pricePerLiter, 3), '€', s.priciest.date), 'Teuerste')}</div></section>
-  <p class="hint">Tippe auf ein Diagramm, um einzelne Werte zu sehen.</p>`;
+    ${minmax(val(de(s.cheapest.pricePerLiter, 3), '€', s.cheapest.date), 'Günstigste', val(de(s.priciest.pricePerLiter, 3), '€', s.priciest.date), 'Teuerste')}</div></section>`;
 }
 
 function tankbuch(state) {
@@ -67,7 +65,7 @@ function tankbuch(state) {
       <div class="s">${fmtDate(f.date)} · ${de(f.liters, 2)} l · ${de(f.pricePerLiter, 3)} €/l · ${eurExact(f.liters * f.pricePerLiter)}${f.note ? ' · ' + esc(f.note) : ''}</div>
       <div class="r">${f.cons != null ? `<span class="num big">${de(f.cons, 1)}</span><div class="label">l/100 km</div>` : `<span class="hint">${f.full ? 'Startwert' : 'zählt zur nächsten<br>Volltankung'}</span>`}</div>
     </button>`).join('')}</div>
-    <p class="hint">Antippen zum Bearbeiten oder Löschen. „+ km“ ist die Strecke seit der Tankung davor. Verbrauch wird zwischen zwei Volltankungen berechnet, Teiltankungen dazwischen zählen mit.</p></section>`;
+    <p class="hint">Antippen zum Bearbeiten.</p></section>`;
 }
 
 /** Formular für eine neue oder bestehende Tankung. */
@@ -184,9 +182,9 @@ export function fuelSheet(state, fuel, { save, remove, currentKm }) {
 
 /** Erklärt die Verbrauchs-Lampe im Cockpit. */
 function checkLine(c) {
-  if (c.state === 'none') return '<p class="hint cons-check"><span class="lamp" style="background:var(--muted)"></span>Ab vier Volltankungen bewertet die App die letzte Tankung gegen den Schnitt deines Busses.</p>';
+  if (c.state === 'none') return '<p class="hint cons-check"><span class="lamp" style="background:var(--muted)"></span>Bewertung ab vier Volltankungen.</p>';
   const d = `${c.diff > 0 ? '+' : '−'}${de(Math.abs(c.diff), 0)}\u00a0%`;
   return c.state === 'high'
-    ? `<p class="hint cons-check"><span class="lamp" style="background:var(--warn)"></span>Letzte Tankung ${de(c.last, 1)} l/100 km – deutlich über deinem bisherigen Schnitt von ${de(c.base, 1)} (${d}). Einmal ist kein Grund zur Sorge (Dachlast, Autobahn, Stau). Bleibt es mehrmals so, lohnt ein Blick auf Reifendruck, Luftfilter und Lambdasonde.</p>`
-    : `<p class="hint cons-check"><span class="lamp" style="background:var(--ok)"></span>Letzte Tankung ${de(c.last, 1)} l/100 km – im üblichen Bereich deines Busses (Schnitt bisher ${de(c.base, 1)}, ${d}). Die Lampe im Cockpit wird orange, wenn eine Tankung mehr als 15 % darüber liegt.</p>`;
+    ? `<p class="hint cons-check"><span class="lamp" style="background:var(--warn)"></span>Letzte Tankung ${de(c.last, 1)} l/100 km – ${d} über deinem Schnitt.</p>`
+    : `<p class="hint cons-check"><span class="lamp" style="background:var(--ok)"></span>Letzte Tankung ${de(c.last, 1)} l/100 km – im üblichen Bereich.</p>`;
 }
