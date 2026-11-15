@@ -34,7 +34,7 @@ import { startCard, bulkDoneSheet, startRestoreCard } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.66';
+const APP_VERSION = '0.67';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 import { icon } from './views/icons.js';

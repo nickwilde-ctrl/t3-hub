@@ -598,3 +598,23 @@ body.in-setup{overflow:hidden}
 .chron-row .chron-ico{grid-column:1}
 .chron-row .t,.chron-row .s{grid-column:2}
 .chron-row .r{grid-column:3;font-weight:600}
+/* 0.67 – Design „Instrument“: kantig, technisch, wie die Armaturentafel */
+:root{--r-card:6px;--r-field:5px;--r-pill:6px;--r-sm:4px;--hair:rgba(236,230,216,.16);--shadow:none;--lift:transparent}
+.sec-head h2{font-size:17px;text-transform:uppercase;letter-spacing:.14em;padding-left:10px;border-left:3px solid var(--amber);line-height:1.1}
+.page-title{font-size:28px;text-transform:uppercase;letter-spacing:.1em;padding-bottom:8px;border-bottom:2px solid var(--amber);display:inline-block}
+.page-head .page-title{padding-bottom:4px}
+.btn{border-radius:6px;text-transform:uppercase;letter-spacing:.08em;font-size:14px}
+.add{text-transform:uppercase;letter-spacing:.08em;font-size:12px;background:transparent;border-color:color-mix(in srgb,var(--amber) 50%,transparent)}
+.seg button{border-radius:4px;text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+.quick{text-transform:uppercase;letter-spacing:.1em;font-size:11px}
+.quick>span{border-radius:6px;background:var(--inst-bg);border:1px solid color-mix(in srgb,var(--amber) 55%,transparent);box-shadow:none;width:100%;height:54px}
+.menu-ico,.chron-ico{border-radius:4px;background:var(--inst-bg);border:1px solid var(--hair)}
+.menu-row b,.row .t{letter-spacing:.02em}
+.vstatus{border-left:3px solid currentColor}
+.next-card{border-left-width:3px}
+.pill{border-radius:4px;text-transform:uppercase;letter-spacing:.08em;font-size:11px}
+nav.tabs button{text-transform:uppercase;letter-spacing:.1em;font-size:10px}
+.demo-line{border-radius:6px}
+.field label.att-add{display:inline-flex;align-items:center;text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .quick>span,:root:not([data-theme="dark"]) .menu-ico,:root:not([data-theme="dark"]) .chron-ico{background:var(--panel)}}
+:root[data-theme="light"] .quick>span,:root[data-theme="light"] .menu-ico,:root[data-theme="light"] .chron-ico{background:var(--panel)}
