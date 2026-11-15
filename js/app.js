@@ -34,11 +34,12 @@ import { startCard, bulkDoneSheet, startRestoreCard } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.65';
+const APP_VERSION = '0.66';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 import { icon } from './views/icons.js';
 import { quickBar } from './views/home.js';
+import { recentCard, chronikView } from './views/chronik.js';
 
 const TABS = [
   ['home', 'Home', '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'],
@@ -71,7 +72,7 @@ const pushNav = () => {
 const elektrikCard = (w) => (w ? `<section class="sec"><button type="button" class="card link-card" data-msub="elektrik"><span><b>Elektrik</b><br><span class="faint">Fehlersuche, Kabel und Stromkarte · nur auf diesem Gerät</span></span><span aria-hidden="true">›</span></button></section>` : '');
 
 const VIEWS = {
-  home: () => quickBar() + (showStart(state.vehicle, services(), currentKm()) ? startCard(state.vehicle, services(), currentKm()) : '') + (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + diagnoseRunningCard(MV_NO_START, state.diagnoses) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
+  home: () => quickBar() + (showStart(state.vehicle, services(), currentKm()) ? startCard(state.vehicle, services(), currentKm()) : '') + (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + diagnoseRunningCard(MV_NO_START, state.diagnoses) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }) + recentCard(state),
   wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides(), engineFamilyOf(state.vehicle), state.vehicle.engineCode)
     : wsub === 'eintraege' ? eintraegeView(state.log)
       : wsub === 'alle' ? alleView(services(), currentKm(), engineFamilyOf(state.vehicle || {}))
@@ -82,6 +83,7 @@ const VIEWS = {
     const back = '<button type="button" class="back-link" data-msub="">‹ Mehr</button>';
     const pages = {
       kosten: () => costCard(state, currentKm()),
+      chronik: () => chronikView(state),
       diagnose: () => diagnoseCard(MV_NO_START, vehicleIdentity(state.vehicle), state.diagnoses),
       akte: () => vehicleCard(state.vehicle),
       sollwerte: () => specsCard(state.vehicle),
@@ -94,7 +96,7 @@ const VIEWS = {
     if (pages[msub]) return back + pages[msub]();
     const row = (id, ico, label, sub) => `<button type="button" class="menu-row" data-msub="${id}"><span class="menu-ico">${icon(ico)}</span><span class="menu-t"><b>${label}</b><span class="faint">${sub}</span></span><span aria-hidden="true">›</span></button>`;
     return '<h1 class="page-title">Mehr</h1>'
-      + '<div class="menu-group">' + row('kosten', 'euro', 'Kosten', 'Was der Bus im Jahr kostet') + row('diagnose', 'search', 'Diagnose', 'Fehler finden, Schritt für Schritt') + (state.wiring ? row('elektrik', 'bolt', 'Elektrik', 'Kabel und Stromkarte') : '') + '</div>'
+      + '<div class="menu-group">' + row('chronik', 'clock', 'Chronik', 'Alles, was mit dem Bus passiert ist') + row('kosten', 'euro', 'Kosten', 'Was der Bus im Jahr kostet') + row('diagnose', 'search', 'Diagnose', 'Fehler finden, Schritt für Schritt') + (state.wiring ? row('elektrik', 'bolt', 'Elektrik', 'Kabel und Stromkarte') : '') + '</div>'
       + '<div class="menu-group">' + row('akte', 'doc', 'Fahrzeugakte', 'Daten und Papiere deines Busses') + row('sollwerte', 'list', 'Sollwerte', 'Prüfwerte und Füllmengen deines Motors') + row('anbauten', 'box', 'Anbauten & Eintragungen', 'Zubehör und Umbauten') + '</div>'
       + '<div class="menu-group">' + row('daten', 'save', 'Daten & Backup', 'Sichern und wiederherstellen') + row('feedback', 'chat', 'Feedback', 'Sag, was fehlt oder stört') + row('about', 'info', 'Über T3 Hub', 'Version, Impressum, Datenschutz') + '</div>'
       + `<p class="foot">Version ${APP_VERSION}</p>`;

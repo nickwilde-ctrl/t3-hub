@@ -56,12 +56,11 @@ export function homeView({ services, fuels, km }) {
   ${statusCard(services, km)}
   <section class="sec"><div class="sec-head"><h2>${h.due.length ? 'Als Nächstes fällig' : 'Als Nächstes'}</h2><button type="button" class="add" data-tab="wartung">Alle</button></div>
     ${rows ? `<div class="card list">${rows}</div>` : ''}${extra ? `<div class="links">${extra}</div>` : ''}</section>
-  <section class="sec"><div class="sec-head"><h2>Tanken</h2><button type="button" class="add" data-tab="tanken">Alle</button></div>
+  ${last && recent.length < 2 ? '' : `<section class="sec"><div class="sec-head"><h2>Tanken</h2><button type="button" class="add" data-tab="tanken">Alle</button></div>
     ${last
-      ? `<div class="card list"><button type="button" class="row row-btn" data-tab="tanken"><div class="t">Letzte Tankung</div><div class="s">${fmtDate(last.date)} · ${de(last.liters, 1)} l · ${de(last.pricePerLiter, 3)} €/l</div><div class="r"><span class="num big">${de(last.liters * last.pricePerLiter, 0)} €</span></div></button></div>
-         ${recent.length >= 2 ? `<div class="card pad">${lineChart('home-cons', recent, { label: 'Verbrauch der letzten Volltankungen', step: 2, dec: 0, avg: s.avgConsumption, avgDec: 1 })}<p class="hint">Verbrauch der letzten ${recent.length} Volltankungen in l/100 km</p></div>` : ''}`
+      ? `<div class="card pad">${lineChart('home-cons', recent, { label: 'Verbrauch der letzten Volltankungen', step: 2, dec: 0, avg: s.avgConsumption, avgDec: 1 })}<p class="hint">Verbrauch der letzten ${recent.length} Volltankungen in l/100 km</p></div>`
       : emptyState('fuel', 'Noch keine Tankung', 'Nach dem ersten Volltanken siehst du hier deinen Verbrauch.')}
-  </section>`;
+  </section>`}`;
 }
 
 export function comingSoon(title, step, text) {

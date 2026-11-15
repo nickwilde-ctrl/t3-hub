@@ -12,6 +12,7 @@ const P = {
   box: '<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>',
   save: '<path d="M12 4v10M8 10l4 4 4-4M5 18h14"/>',
   chat: '<path d="M5 5h14v10H10l-5 4z"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
   info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5"/><circle cx="12" cy="8" r=".6"/>',
 };
 export const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${P[name] || ''}</svg>`;

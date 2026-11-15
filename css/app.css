@@ -591,3 +591,10 @@ body.in-setup{overflow:hidden}
 .chip.act{border-color:color-mix(in srgb,var(--amber) 55%,transparent);color:var(--amber);border-radius:var(--r-pill);padding:7px 12px;font:600 var(--fs-small) var(--f-body);letter-spacing:0;text-transform:none}
 .photo-btn{background:color-mix(in srgb,var(--amber) 12%,transparent);color:var(--amber);border:1px solid color-mix(in srgb,var(--amber) 50%,transparent);font-weight:600;border-radius:var(--r-pill)}
 .btn.wide.ghost{border-color:color-mix(in srgb,var(--amber) 50%,transparent);color:var(--amber)}
+/* 0.66 – Chronik */
+.chron-row{grid-template-columns:38px 1fr auto;column-gap:12px}
+.chron-ico{grid-row:1 / span 2;display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:color-mix(in srgb,var(--amber) 13%,transparent);color:var(--amber)}
+.chron-ico .ico{width:21px;height:21px}
+.chron-row .chron-ico{grid-column:1}
+.chron-row .t,.chron-row .s{grid-column:2}
+.chron-row .r{grid-column:3;font-weight:600}

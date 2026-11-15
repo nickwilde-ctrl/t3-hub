@@ -2,7 +2,7 @@
 // Eigene Dateien: erst aus dem Netz (damit Updates sofort ankommen), bei Funkloch aus dem Speicher.
 // Schriften von Google: einmal laden, dann aus dem Speicher.
 // Bei jeder Änderung an den App-Dateien VERSION erhöhen.
-const VERSION = 'v0.65.0';
+const VERSION = 'v0.66.0';
 const CACHE = 't3hub-' + VERSION;
 const CORE = [
   './',
@@ -10,6 +10,8 @@ const CORE = [
   './manifest.webmanifest',
   './css/app.css',
   './js/views/icons.js',
+  './js/views/chronik.js',
+  './js/logic/timeline.js',
   './css/fonts.css',
   './fonts/Barlow-Regular.woff',
   './fonts/Barlow-Medium.woff',
