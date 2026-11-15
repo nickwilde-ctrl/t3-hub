@@ -11,12 +11,12 @@ let sub = 'auswertung';
 export const setSub = (s) => { sub = s; };
 
 export function tankenView(state) {
-  const tabs = `<div class="tank-head"><div class="seg sub" role="tablist">
+  const head = (btn) => `<div class="sec-head page-head"><h1 class="page-title">Tanken</h1>${btn ? '<button type="button" class="btn add-main" data-action="add-fuel" aria-label="Tankung eintragen">+ Tankung</button>' : ''}</div>`;
+  const tabs = `${head(true)}<div class="seg sub tank-seg" role="tablist">
     <button type="button" data-sub="auswertung" aria-pressed="${sub === 'auswertung'}">Auswertung</button>
-    <button type="button" data-sub="tankbuch" aria-pressed="${sub === 'tankbuch'}">Tankbuch</button></div>
-    <button type="button" class="btn add-main" data-action="add-fuel" aria-label="Tankung eintragen">+ Tankung</button></div>`;
+    <button type="button" data-sub="tankbuch" aria-pressed="${sub === 'tankbuch'}">Tankbuch</button></div>`;
   if (!state.fuels.length) {
-    return `<section class="sec">${emptyState('fuel', 'Noch keine Tankung', 'Trag nach dem Tanken Liter, Preis und Tachostand ein. Den Verbrauch rechnet die App.', '<button type="button" class="btn" data-action="add-fuel">+ Erste Tankung eintragen</button><button type="button" class="text-link" data-msub-go="daten">Tankungen aus Road Trip übernehmen</button>')}</section>`;
+    return `${head(false)}<section class="sec">${emptyState('fuel', 'Noch keine Tankung', 'Trag nach dem Tanken Liter, Preis und Tachostand ein. Den Verbrauch rechnet die App.', '<button type="button" class="btn" data-action="add-fuel">+ Erste Tankung eintragen</button><button type="button" class="text-link" data-msub-go="daten">Tankungen aus Road Trip übernehmen</button>')}</section>`;
   }
   return tabs + (sub === 'auswertung' ? auswertung(state) : tankbuch(state));
 }

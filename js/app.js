@@ -34,7 +34,7 @@ import { startCard, bulkDoneSheet, startRestoreCard } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.64';
+const APP_VERSION = '0.65';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
 
 import { icon } from './views/icons.js';
@@ -76,7 +76,7 @@ const VIEWS = {
     : wsub === 'eintraege' ? eintraegeView(state.log)
       : wsub === 'alle' ? alleView(services(), currentKm(), engineFamilyOf(state.vehicle || {}))
         : faelligView(services(), currentKm())),
-  tanken: () => '<h1 class="page-title">Tanken</h1>' + tankenView(state),
+  tanken: () => tankenView(state),
   touren: () => tourenView(state, currentKm()),
   mehr: () => {
     const back = '<button type="button" class="back-link" data-msub="">‹ Mehr</button>';
@@ -95,7 +95,7 @@ const VIEWS = {
     const row = (id, ico, label, sub) => `<button type="button" class="menu-row" data-msub="${id}"><span class="menu-ico">${icon(ico)}</span><span class="menu-t"><b>${label}</b><span class="faint">${sub}</span></span><span aria-hidden="true">›</span></button>`;
     return '<h1 class="page-title">Mehr</h1>'
       + '<div class="menu-group">' + row('kosten', 'euro', 'Kosten', 'Was der Bus im Jahr kostet') + row('diagnose', 'search', 'Diagnose', 'Fehler finden, Schritt für Schritt') + (state.wiring ? row('elektrik', 'bolt', 'Elektrik', 'Kabel und Stromkarte') : '') + '</div>'
-      + '<div class="menu-group">' + row('akte', 'doc', 'Fahrzeugakte', 'Daten und Papiere deines Busses') + row('sollwerte', 'list', 'Sollwerte', 'Prüfwerte für deinen Motor') + row('anbauten', 'box', 'Anbauten', 'Umbauten und Zubehör') + '</div>'
+      + '<div class="menu-group">' + row('akte', 'doc', 'Fahrzeugakte', 'Daten und Papiere deines Busses') + row('sollwerte', 'list', 'Sollwerte', 'Prüfwerte und Füllmengen deines Motors') + row('anbauten', 'box', 'Anbauten & Eintragungen', 'Zubehör und Umbauten') + '</div>'
       + '<div class="menu-group">' + row('daten', 'save', 'Daten & Backup', 'Sichern und wiederherstellen') + row('feedback', 'chat', 'Feedback', 'Sag, was fehlt oder stört') + row('about', 'info', 'Über T3 Hub', 'Version, Impressum, Datenschutz') + '</div>'
       + `<p class="foot">Version ${APP_VERSION}</p>`;
   },

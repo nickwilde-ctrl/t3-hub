@@ -44,7 +44,7 @@ export function faelligView(services, km) {
     : `<section class="sec"><div class="card next-card"><div class="label">Als Nächstes</div><h2>Noch nichts eingetragen</h2><p class="hint" style="margin:0">Trag ein, wann zuletzt Ölwechsel, HU und Co. gemacht wurden – dann zeigt die App hier, was als Nächstes dran ist.</p></div></section>`;
   const more = g.urgent.length > 1 ? `<p class="hint urgent-hint">Außerdem jetzt dran: ${g.urgent.slice(1).map((x) => esc(x.s.name)).join(', ')}</p>` : '';
   return `${hero}${more}
-  <button type="button" class="btn wide" data-action="service-done">+ Service eintragen</button>
+  <button type="button" class="btn wide${n ? ' ghost' : ''}" data-action="service-done">+ Service eintragen</button>
   ${g.then.length ? `<section class="sec"><div class="sec-head"><h2 class="muted-h">Danach</h2></div><div class="card list">${g.then.map(dueRow).join('')}</div></section>` : ''}
   <section class="sec links">
     <button type="button" class="link-row" data-wsub="alle"><span>Alle ${g.total} Wartungspunkte</span><span aria-hidden="true">›</span></button>

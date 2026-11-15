@@ -586,3 +586,8 @@ body.in-setup{overflow:hidden}
 .menu-row>.menu-t{display:flex;flex-direction:column;gap:1px;flex:1;color:var(--fg);font-size:inherit}
 .menu-t .faint{font-size:var(--fs-small)}
 .st-links{display:flex;justify-content:space-between;gap:12px}
+/* 0.65 – einheitliche Köpfe und Knöpfe */
+.tank-seg{margin-bottom:18px}
+.chip.act{border-color:color-mix(in srgb,var(--amber) 55%,transparent);color:var(--amber);border-radius:var(--r-pill);padding:7px 12px;font:600 var(--fs-small) var(--f-body);letter-spacing:0;text-transform:none}
+.photo-btn{background:color-mix(in srgb,var(--amber) 12%,transparent);color:var(--amber);border:1px solid color-mix(in srgb,var(--amber) 50%,transparent);font-weight:600;border-radius:var(--r-pill)}
+.btn.wide.ghost{border-color:color-mix(in srgb,var(--amber) 50%,transparent);color:var(--amber)}
