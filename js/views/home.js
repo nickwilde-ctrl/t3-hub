@@ -2,6 +2,11 @@ import { de, esc, fmtDate, fmtMonthYear } from '../format.js';
 import { homeDue, dueShort, vehicleStatus } from '../logic/services.js';
 import { fuelStats } from '../logic/fuel.js';
 import { lineChart } from './charts.js';
+import { icon, emptyState } from './icons.js';
+
+const quick = (action, ico, label) => `<button type="button" class="quick" data-action="${action}"><span>${icon(ico)}</span>${label}</button>`;
+/** Die vier häufigsten Handgriffe, direkt unter dem Cockpit. */
+export const quickBar = () => `<div class="quick-bar" role="group" aria-label="Schnell eintragen">${quick('add-fuel', 'fuel', 'Tanken')}${quick('service-done', 'wrench', 'Service')}${quick('add-tour', 'map', 'Tour')}${quick('set-km', 'gauge', 'km-Stand')}</div>`;
 
 const PILL = { ok: 'OK', soon: 'Bald', over: 'Fällig', unknown: 'Offen' };
 const CLS = { ok: 'ok', soon: 'soon', over: 'over', unknown: 'unk' };
@@ -51,11 +56,11 @@ export function homeView({ services, fuels, km }) {
   ${statusCard(services, km)}
   <section class="sec"><div class="sec-head"><h2>${h.due.length ? 'Als Nächstes fällig' : 'Als Nächstes'}</h2><button type="button" class="add" data-tab="wartung">Alle</button></div>
     ${rows ? `<div class="card list">${rows}</div>` : ''}${extra ? `<div class="links">${extra}</div>` : ''}</section>
-  <section class="sec"><div class="sec-head"><h2>Tanken</h2><button type="button" class="add" data-action="add-fuel">+ Tankung</button></div>
+  <section class="sec"><div class="sec-head"><h2>Tanken</h2><button type="button" class="add" data-tab="tanken">Alle</button></div>
     ${last
       ? `<div class="card list"><button type="button" class="row row-btn" data-tab="tanken"><div class="t">Letzte Tankung</div><div class="s">${fmtDate(last.date)} · ${de(last.liters, 1)} l · ${de(last.pricePerLiter, 3)} €/l</div><div class="r"><span class="num big">${de(last.liters * last.pricePerLiter, 0)} €</span></div></button></div>
          ${recent.length >= 2 ? `<div class="card pad">${lineChart('home-cons', recent, { label: 'Verbrauch der letzten Volltankungen', step: 2, dec: 0, avg: s.avgConsumption, avgDec: 1 })}<p class="hint">Verbrauch der letzten ${recent.length} Volltankungen in l/100 km</p></div>` : ''}`
-      : `<div class="card soon-card"><h3>Noch keine Tankungen</h3><p>Trag deine erste Tankung ein. Hast du bisher die App Road Trip benutzt? Unter Mehr → Daten übernimmst du deine alten Tankungen.</p></div>`}
+      : emptyState('fuel', 'Noch keine Tankung', 'Nach dem ersten Volltanken siehst du hier deinen Verbrauch.')}
   </section>`;
 }
 

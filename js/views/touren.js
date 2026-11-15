@@ -1,4 +1,5 @@
 // Reiter „Touren“ und Kostenübersicht im Reiter „Mehr“.
+import { emptyState } from './icons.js';
 import { de, eur, eurExact, esc, fmtDate, todayIso, plural } from '../format.js';
 import { parseNumber } from '../logic/fuel.js';
 import { tourStats, fuelsInTour, costsByCategory, costYears, COST_CATEGORIES, TRIP_CATEGORIES, compareTours } from '../logic/costs.js';
@@ -18,10 +19,9 @@ export function tourenView(state, km) {
   if (open) return tourDetail(state, open, km);
   openTourId = null;
   const tours = [...state.tours].sort((a, b) => b.from.localeCompare(a.from));
-  const head = `<div class="sec-head"><h2>Touren</h2><button type="button" class="add" data-action="add-tour">+ Tour</button></div>`;
+  const head = `<div class="sec-head page-head"><h1 class="page-title">Touren</h1>${tours.length ? '<button type="button" class="btn add-main" data-action="add-tour">+ Tour</button>' : ''}</div>`;
   if (!tours.length) {
-    return `<section class="sec">${head}<div class="card soon-card"><h3>Noch keine Touren</h3>
-      <p>Leg eine Reise an, zum Beispiel „Dänemark“. Tankungen im Reisezeitraum ordnet die App automatisch zu. Während eine Tour läuft, landen neue Tankungen direkt darin.</p></div></section>`;
+    return `<section class="sec">${head}${emptyState('map', 'Noch keine Tour', 'Leg eine Reise an. Tankungen, Stellplätze und Ausgaben sammelt die App dann dort.', '<button type="button" class="btn" data-action="add-tour">+ Erste Tour anlegen</button>')}</section>`;
   }
   const cards = tours.map((t) => {
     const s = tourStats(t, state.fuels, km);

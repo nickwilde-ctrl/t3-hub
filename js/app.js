@@ -34,8 +34,11 @@ import { startCard, bulkDoneSheet, startRestoreCard } from './views/start.js';
 import { showStart } from './logic/start.js';
 import { elektrikView, setElPart, setElQuery, refreshWireResults, startFault, startWire, removeWiringSheet } from './views/elektrik.js';
 
-const APP_VERSION = '0.63';
+const APP_VERSION = '0.64';
 import { showSetup, closeSetup, setupAtWelcome } from './views/setup.js';
+
+import { icon } from './views/icons.js';
+import { quickBar } from './views/home.js';
 
 const TABS = [
   ['home', 'Home', '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'],
@@ -68,7 +71,7 @@ const pushNav = () => {
 const elektrikCard = (w) => (w ? `<section class="sec"><button type="button" class="card link-card" data-msub="elektrik"><span><b>Elektrik</b><br><span class="faint">Fehlersuche, Kabel und Stromkarte · nur auf diesem Gerät</span></span><span aria-hidden="true">›</span></button></section>` : '');
 
 const VIEWS = {
-  home: () => (showStart(state.vehicle, services(), currentKm()) ? startCard(state.vehicle, services(), currentKm()) : '') + (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + diagnoseRunningCard(MV_NO_START, state.diagnoses) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
+  home: () => quickBar() + (showStart(state.vehicle, services(), currentKm()) ? startCard(state.vehicle, services(), currentKm()) : '') + (state.vehicle.demo ? '' : backupReminder(state)) + runningCard(state) + diagnoseRunningCard(MV_NO_START, state.diagnoses) + homeView({ services: services(), fuels: state.fuels, km: currentKm() }),
   wartung: () => wartungTabs(wsub) + (wsub === 'anleitungen' ? guidesView(allGuides(), engineFamilyOf(state.vehicle), state.vehicle.engineCode)
     : wsub === 'eintraege' ? eintraegeView(state.log)
       : wsub === 'alle' ? alleView(services(), currentKm(), engineFamilyOf(state.vehicle || {}))
@@ -89,11 +92,11 @@ const VIEWS = {
     };
     if (msub === 'elektrik' && state.wiring) return back + '<h1 class="page-title">Elektrik</h1>' + elektrikView(state.wiring, { diagnose: appliesTo(MV_NO_START, vehicleIdentity(state.vehicle)).ok });
     if (pages[msub]) return back + pages[msub]();
-    const row = (id, label, sub) => `<button type="button" class="menu-row" data-msub="${id}"><span><b>${label}</b>${sub ? `<span class="faint">${sub}</span>` : ''}</span><span aria-hidden="true">›</span></button>`;
+    const row = (id, ico, label, sub) => `<button type="button" class="menu-row" data-msub="${id}"><span class="menu-ico">${icon(ico)}</span><span class="menu-t"><b>${label}</b><span class="faint">${sub}</span></span><span aria-hidden="true">›</span></button>`;
     return '<h1 class="page-title">Mehr</h1>'
-      + '<div class="menu-group">' + row('kosten', 'Kosten') + row('diagnose', 'Diagnose') + (state.wiring ? row('elektrik', 'Elektrik', 'nur auf diesem Gerät') : '') + '</div>'
-      + '<div class="menu-group">' + row('akte', 'Fahrzeugakte') + row('sollwerte', 'Sollwerte') + row('anbauten', 'Anbauten') + '</div>'
-      + '<div class="menu-group">' + row('daten', 'Daten & Backup') + row('feedback', 'Feedback') + row('about', 'Über T3 Hub') + '</div>'
+      + '<div class="menu-group">' + row('kosten', 'euro', 'Kosten', 'Was der Bus im Jahr kostet') + row('diagnose', 'search', 'Diagnose', 'Fehler finden, Schritt für Schritt') + (state.wiring ? row('elektrik', 'bolt', 'Elektrik', 'Kabel und Stromkarte') : '') + '</div>'
+      + '<div class="menu-group">' + row('akte', 'doc', 'Fahrzeugakte', 'Daten und Papiere deines Busses') + row('sollwerte', 'list', 'Sollwerte', 'Prüfwerte für deinen Motor') + row('anbauten', 'box', 'Anbauten', 'Umbauten und Zubehör') + '</div>'
+      + '<div class="menu-group">' + row('daten', 'save', 'Daten & Backup', 'Sichern und wiederherstellen') + row('feedback', 'chat', 'Feedback', 'Sag, was fehlt oder stört') + row('about', 'info', 'Über T3 Hub', 'Version, Impressum, Datenschutz') + '</div>'
       + `<p class="foot">Version ${APP_VERSION}</p>`;
   },
 };
@@ -189,6 +192,8 @@ document.addEventListener('click', (e) => {
   }
   const wsubBtn = e.target.closest('[data-wsub]');
   if (wsubBtn) { wsub = wsubBtn.dataset.wsub; pushNav(); render(); window.scrollTo(0, 0); return; }
+  const msubGo = e.target.closest('[data-msub-go]');
+  if (msubGo) { tab = 'mehr'; msub = msubGo.dataset.msubGo; pushNav(); render(); window.scrollTo(0, 0); return; }
   const msubBtn = e.target.closest('[data-msub]');
   if (msubBtn) { msub = msubBtn.dataset.msub; pushNav(); render(); window.scrollTo(0, 0); return; }
   const elPart = e.target.closest('[data-el-part]');

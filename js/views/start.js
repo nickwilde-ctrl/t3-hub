@@ -9,15 +9,15 @@ import { NOT_IN_SERVICE, serviceStatus } from '../logic/services.js';
 import { byField } from './wartung.js';
 
 const TEXT = {
-  km: ['Kilometerstand eintragen', 'Tippe oben im Cockpit auf den Tachostand.', { action: 'set-km', label: 'Eintragen' }],
-  hu: ['Letzte HU eintragen', 'Das Datum steht auf dem letzten Prüfbericht. Weißt du nur, wann die nächste fällig ist (Plakette hinten am Kennzeichen, Fahrzeugschein), zieh einfach zwei Jahre ab.', { service: 'hu', label: 'Eintragen' }],
-  oil: ['Letzten Ölwechsel eintragen', 'Oft klebt ein Zettel im Motorraum oder an der Tür. Sonst steht es auf der letzten Werkstattrechnung oder im Serviceheft.', { service: 'oil', label: 'Eintragen' }],
-  rest: ['Der Rest ist unbekannt? Ganz normal.', 'Bei einem gebrauchten T3 weiß das kaum jemand. Lass beim nächsten Werkstattbesuch einen Komplettservice machen (Inspektion mit allen Flüssigkeiten und Filtern) und trag danach alles auf einmal ein.', { action: 'bulk-done', label: 'Alles auf einmal eintragen' }],
+  km: ['Tachostand eintragen', 'Steht im Tacho', { action: 'set-km' }],
+  hu: ['Letzte HU eintragen', 'Datum vom Prüfbericht', { service: 'hu' }],
+  oil: ['Letzten Ölwechsel eintragen', 'Zettel im Motorraum oder Rechnung', { service: 'oil' }],
+  rest: ['Alles andere auf einmal eintragen', 'Was du nicht weißt, bleibt einfach offen', { action: 'bulk-done' }],
 };
 
 /** Unter Mehr: die ausgeblendete Einstiegskarte wieder holen. Nur sichtbar, solange sie ausgeblendet ist. */
 export const startRestoreCard = (vehicle) => (vehicle && !vehicle.demo && vehicle.startHidden
-  ? `<section class="sec"><button type="button" class="card link-card" data-action="start-show"><span><b>Einstiegshilfe wieder anzeigen</b><br><span class="faint">Die Karte „So fängst du an“ auf der Startseite</span></span><span aria-hidden="true">›</span></button></section>`
+  ? `<section class="sec"><button type="button" class="card link-card" data-action="start-show"><span><b>Einstiegshilfe wieder anzeigen</b><br><span class="faint">Die Karte „Erste Schritte“ auf der Startseite</span></span><span aria-hidden="true">›</span></button></section>`
   : '');
 
 /** Karte für die Startseite. services = Wartungspunkte mit letztem Stand. */
@@ -36,17 +36,16 @@ export function startCard(vehicle, services, km) {
       ${foot}</div></section>`;
   }
   const done = steps.filter((s) => s.done).length;
-  return `<section class="sec"><div class="card st-card"><div class="label">So fängst du an · ${done} von ${steps.length} erledigt</div>
-    <h3>Willkommen an Bord!</h3>
-    <p>T3 Hub rechnet aus, wann Ölwechsel, HU und Co. fällig sind. Dafür muss die App einmal wissen, wann sie zuletzt gemacht wurden. „Offen“ heißt nur: noch nicht eingetragen. Kein Grund zur Sorge.</p>
+  const row = (n, isDone, title, hint, attr) => `<li class="${isDone ? 'done' : ''}"><button type="button" class="st-row" ${isDone ? 'disabled' : attr}><span class="st-n" aria-hidden="true">${isDone ? '✓' : n}</span><span class="st-t"><b>${esc(title)}</b>${isDone ? '' : `<small>${esc(hint)}</small>`}</span>${isDone ? '' : '<span class="st-go" aria-hidden="true">›</span>'}</button></li>`;
+  return `<section class="sec"><div class="card st-card"><div class="st-top"><h3>Erste Schritte</h3><span class="label">${done} von ${steps.length}</span></div>
+    <div class="st-bar" aria-hidden="true"><i style="width:${Math.round((done / steps.length) * 100)}%"></i></div>
     <ol class="st-steps">${steps.map((s, i) => {
-      const [title, text, btn] = TEXT[s.id];
-      const attr = btn.action ? `data-action="${btn.action}"` : `data-start-service="${btn.service}"`;
-      return `<li class="${s.done ? 'done' : ''}"><span class="st-n" aria-hidden="true">${s.done ? '✓' : i + 1}</span><div><b>${esc(title)}</b>${s.done ? '' : `<p>${esc(text)}</p><button type="button" class="add" ${attr}>${esc(btn.label)}</button>`}</div></li>`;
+      const [title, hint, btn] = TEXT[s.id];
+      return row(i + 1, s.done, title, hint, btn.action ? `data-action="${btn.action}"` : `data-start-service="${btn.service}"`);
     }).join('')}
-      <li><span class="st-n" aria-hidden="true">${steps.length + 1}</span><div><b>Deinen Bus kennenlernen</b><p>Die Anleitung „Frühjahrscheck“ zeigt Schritt für Schritt, was du selbst nachsehen kannst – mit Taschenlampe und Auffahrrampen, ohne zu schrauben.</p><button type="button" class="add" data-open-guide="fruehjahrscheck">Anleitung öffnen</button></div></li>
+      ${row(steps.length + 1, false, 'Bus kennenlernen', 'Anleitung „Frühjahrscheck“, ohne Schrauben', 'data-open-guide="fruehjahrscheck"')}
     </ol>
-    ${foot}</div></section>`;
+    <div class="st-links"><button type="button" class="text-link" data-action="start-level">Ich kenne mich aus</button><button type="button" class="text-link" data-action="start-hide">Ausblenden</button></div></div></section>`;
 }
 
 /**

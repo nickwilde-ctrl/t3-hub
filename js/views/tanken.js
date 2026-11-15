@@ -1,4 +1,5 @@
 // Reiter „Tanken“: Auswertung und Tankbuch, dazu das Formular für Tankungen.
+import { emptyState } from './icons.js';
 import { de, eur, eurExact, esc, fmtDate, todayIso, plural } from '../format.js';
 import { fuelStats, consumptionByMonth, withConsumption, completeFill, parseNumber, consumptionCheck, distanceSince } from '../logic/fuel.js';
 import { lineChart, barChart, MONTHS } from './charts.js';
@@ -15,9 +16,7 @@ export function tankenView(state) {
     <button type="button" data-sub="tankbuch" aria-pressed="${sub === 'tankbuch'}">Tankbuch</button></div>
     <button type="button" class="btn add-main" data-action="add-fuel" aria-label="Tankung eintragen">+ Tankung</button></div>`;
   if (!state.fuels.length) {
-    return `<section class="sec"><div class="card soon-card"><h3>Noch keine Tankungen</h3>
-      <p>Trag deine erste Tankung ein. Hast du bisher die App Road Trip benutzt? Unter Mehr → Daten übernimmst du deine alten Tankungen.</p>
-      <button type="button" class="btn" data-action="add-fuel" style="justify-self:start;margin-top:6px">+ Tankung eintragen</button></div></section>`;
+    return `<section class="sec">${emptyState('fuel', 'Noch keine Tankung', 'Trag nach dem Tanken Liter, Preis und Tachostand ein. Den Verbrauch rechnet die App.', '<button type="button" class="btn" data-action="add-fuel">+ Erste Tankung eintragen</button><button type="button" class="text-link" data-msub-go="daten">Tankungen aus Road Trip übernehmen</button>')}</section>`;
   }
   return tabs + (sub === 'auswertung' ? auswertung(state) : tankbuch(state));
 }
